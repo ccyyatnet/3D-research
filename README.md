@@ -34,22 +34,6 @@
 - **部件生成**：开放词汇部件生成、语义部件分割与组合式生成
 - **统一多模态**：AR + Diffusion 混合架构、跨任务能力迁移
 
-## 🛠️ 如何添加一篇新解读
-
-本站基于 GitHub Pages（`main` 分支 `/docs` 目录）部署：
-
-```bash
-# 1. 将新的解读网页放入 docs/（首页固定为 docs/index.html，子页面可放 docs/<name>/index.html）
-cp new_report.html docs/<paper-name>/index.html
-
-# 2. 提交并推送，约 1 分钟后线上自动更新
-git add docs/
-git commit -m "Add <paper-name> reading notes"
-git push origin main
-```
-
-推送后访问 `https://ccyyatnet.github.io/3D-research/<paper-name>/`。
-
 ## 📄 License
 
 本项目基于 [Apache License 2.0](LICENSE) 开源。网页中论文内容版权归原作者所有，本仓库仅作学习与研究分享之用。
