@@ -61,6 +61,20 @@
   .rw-links a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
   .rw-links a.deep{background:#eef5ff;border-color:#c7d9f8;color:var(--blue)}
   .rw-card.hl{border-color:#c7d9f8;background:linear-gradient(180deg,#f5f9ff,#fff)}
+  /* ===== 用户评分 & 评论 ===== */
+  .review{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  .rev-row{display:flex;align-items:center;gap:8px}
+  .stars{display:inline-flex;cursor:pointer;user-select:none}
+  .star{position:relative;width:18px;height:18px;font-size:16px;line-height:18px;color:#d7dee9}
+  .star::before{content:"★";position:absolute;left:0;top:0}
+  .star .fill{position:absolute;left:0;top:0;overflow:hidden;color:#f5a623;height:18px;width:0}
+  .star .fill::before{content:"★";position:absolute;left:0;top:0;width:18px}
+  .rev-val{font-size:12.5px;font-weight:700;color:#d97706;min-width:26px}
+  .rev-saved{font-size:11px;color:#16a34a;opacity:0;transition:opacity .3s}
+  .rev-saved.show{opacity:1}
+  .rev-cmt{margin-top:8px;width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12.5px;color:var(--ink);background:#fbfcfe;outline:none;font-family:inherit}
+  .rev-cmt:focus{border-color:var(--blue);background:#fff}
+  .rev-hint{font-size:12px;color:var(--ink3);margin:-8px 0 16px}
   .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2)}
   .callout b{color:var(--ink)}
   .trend{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}
@@ -125,6 +139,7 @@
       <button class="dir-tab" data-cat="scene">场景/世界生成<span class="cnt">4</span></button>
       <button class="dir-tab" data-cat="part">部件/纹理/编辑<span class="cnt">2</span></button>
     </div>
+    <p class="rev-hint">⭐ 每张卡片下方可评分（支持半星）与简短评论，内容自动保存在本机浏览器（localStorage），刷新/重开自动加载。</p>
     <div class="rw-grid" id="paperGrid">
 
       <!-- 统一多模态 -->
@@ -196,7 +211,64 @@ document.querySelectorAll('.dir-tab').forEach(btn=>{
   });
 });
 
-/* charts */
+/* ===== 用户评分 & 评论（localStorage 自动保存/加载） ===== */
+(function(){
+  const KEY='paperReviews_v1';
+  let store={};
+  try{store=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){store={}}
+  const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
+  let timer=null, savedEls=[];
+  const debounceSave=()=>{clearTimeout(timer);timer=setTimeout(()=>{persist();savedEls.forEach(el=>{el.textContent='✓ 已保存';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1200)});},400)};
+
+  document.querySelectorAll('#paperGrid .rw-card').forEach(card=>{
+    const a=card.querySelector('.rw-links a[href*="arxiv.org/abs/"]');
+    if(!a)return;
+    const id=a.href.split('/abs/')[1].replace(/[^\d.]/g,'');
+
+    const box=document.createElement('div');box.className='review';
+    const row=document.createElement('div');row.className='rev-row';
+    const stars=document.createElement('div');stars.className='stars';stars.title='点击评分（左半=半星），再次点击同分值可清除';
+    const val=document.createElement('span');val.className='rev-val';
+    const saved=document.createElement('span');saved.className='rev-saved';savedEls.push(saved);
+    row.append(stars,val,saved);
+    const cmt=document.createElement('input');cmt.className='rev-cmt';cmt.type='text';cmt.maxLength=120;cmt.placeholder='简短评论（自动保存）…';
+    cmt.value=(store[id]&&store[id].c)||'';
+    box.append(row,cmt);
+    card.appendChild(box);
+
+    const fills=[];
+    for(let i=0;i<5;i++){
+      const s=document.createElement('span');s.className='star';
+      const f=document.createElement('span');f.className='fill';
+      s.appendChild(f);stars.appendChild(s);fills.push(f);
+    }
+    const render=v=>{
+      fills.forEach((f,i)=>{f.style.width=(Math.max(0,Math.min(1,v-i))*100)+'%'});
+      val.textContent=v>0?v.toFixed(1):'';
+    };
+    let cur=(store[id]&&store[id].r)||0;
+    render(cur);
+    const valFromEvent=e=>{
+      const r=stars.getBoundingClientRect();
+      const x=Math.min(Math.max(e.clientX-r.left,0),r.width-0.01);
+      const sw=r.width/5, idx=Math.floor(x/sw);
+      return Math.min(5,idx+((x-idx*sw)<sw/2?0.5:1));
+    };
+    stars.addEventListener('mousemove',e=>render(valFromEvent(e)));
+    stars.addEventListener('mouseleave',()=>render(cur));
+    stars.addEventListener('click',e=>{
+      const v=valFromEvent(e);
+      cur=(v===cur)?0:v;
+      store[id]=Object.assign(store[id]||{},{r:cur});
+      render(cur);debounceSave();
+    });
+    cmt.addEventListener('input',()=>{
+      store[id]=Object.assign(store[id]||{},{c:cmt.value});
+      debounceSave();
+    });
+  });
+})();
+
 const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
 Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
 new Chart(document.getElementById('catDonut'),{type:'doughnut',
