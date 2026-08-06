@@ -14,4 +14,6 @@ git push origin main
 
 推送后访问 `https://ccyyatnet.github.io/3D-research/<paper-name>/`。
 
-同时在仓库根目录 `README.md` 的「📚 论文解读列表」表格中补一行记录。
+同时需要：
+1. 在门户首页 `docs/index.html` 的「内容导航」中添加对应卡片（追加在"筹备中"占位卡之前）；
+2. 在仓库根目录 `README.md` 的「📚 内容列表」表格中补一行记录。

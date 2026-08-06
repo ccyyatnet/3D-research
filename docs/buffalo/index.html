@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunyuan3D-Buffalo 1.0 论文可视化解读</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+
+  /* ===== Nav ===== */
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px;color:var(--ink)}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+
+  /* ===== Hero ===== */
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:34px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:860px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta a,.hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .hero .meta a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+
+  /* ===== Sections ===== */
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+
+  /* ===== Related work cards ===== */
+  .dir-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .dir-tab{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 18px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;box-shadow:var(--shadow)}
+  .dir-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .dir-panel{display:none}
+  .dir-panel.show{display:block}
+  .paradigm{font-size:13.5px;font-weight:700;color:var(--ink2);margin:20px 0 10px;padding-left:10px;border-left:3px solid var(--line)}
+  .rw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .rw-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
+  .rw-card:hover{transform:translateY(-2px);border-color:#c7d6f5}
+  .rw-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .rw-name{font-weight:700;font-size:15px}
+  .rw-year{flex-shrink:0;font-size:11.5px;font-weight:700;background:#eef2fb;color:var(--blue);border-radius:6px;padding:2px 8px}
+  .rw-venue{font-size:11.5px;color:var(--ink3);margin-top:2px}
+  .rw-desc{font-size:13px;color:var(--ink2);margin-top:8px;flex:1}
+  .rw-links{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .rw-links a{font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;border:1px solid var(--line);color:var(--ink2)}
+  .rw-links a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+  .rw-links a.gh::before{content:"⌥ "}
+  .rw-links a.todo{border-style:dashed;color:var(--ink3)}
+  .rw-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  .rw-card.hl .rw-year{background:#fde8d4;color:#b45309}
+
+  /* ===== Data section ===== */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .chart-box{position:relative;height:300px}
+  .chart-box.sm{height:240px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .mini-stat{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .mini-stat div{flex:1;min-width:100px;background:#f6f9ff;border:1px solid #e2eafb;border-radius:10px;padding:10px 12px;text-align:center}
+  .mini-stat b{display:block;font-size:20px;color:var(--blue)}
+  .mini-stat span{font-size:12px;color:var(--ink3)}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;margin-top:8px}
+  .pipe .stage{flex:1;min-width:170px;background:#f8faff;border:1px solid #dfe8fa;border-radius:12px;padding:14px 16px;position:relative}
+  .pipe .stage + .stage{margin-left:26px}
+  .pipe .stage + .stage::before{content:"→";position:absolute;left:-22px;top:50%;transform:translateY(-50%);color:var(--blue);font-weight:700}
+  .pipe .stage .no{display:inline-block;background:var(--blue);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 8px;margin-bottom:6px}
+  .pipe .stage h4{font-size:14px;margin-bottom:4px}
+  .pipe .stage p{font-size:12.5px;color:var(--ink2)}
+  .pipe.orange .stage{background:#fffaf4;border-color:#f3dfc8}
+  .pipe.orange .stage .no{background:var(--orange)}
+  .pipe.orange .stage + .stage::before{color:var(--orange)}
+  .pipe.teal .stage{background:#f4fcfa;border-color:#cdeae4}
+  .pipe.teal .stage .no{background:var(--teal)}
+  .pipe.teal .stage + .stage::before{color:var(--teal)}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  td.num{font-variant-numeric:tabular-nums;text-align:right}
+  th.num{text-align:right}
+  .best{font-weight:700;color:var(--blue)}
+  .badge{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;white-space:nowrap}
+  .badge.open{background:#e4f7ec;color:#15803d}
+  .badge.part{background:#fff4e0;color:#b45309}
+  .badge.closed{background:#f3e8ff;color:#7e22ce}
+  .badge.na{background:#eef1f6;color:#64748b}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+
+  /* results */
+  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .kpi b{font-size:24px;color:var(--blue)}
+  .kpi span{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+
+  @media (max-width:960px){
+    .rw-grid{grid-template-columns:repeat(2,1fr)}
+    .grid2,.grid3,.stats,.kpi-row{grid-template-columns:1fr}
+    .pipe .stage{min-width:100%}
+    .pipe .stage + .stage{margin-left:0;margin-top:22px}
+    .pipe .stage + .stage::before{left:50%;top:-20px;transform:translateX(-50%) rotate(90deg)}
+  }
+  @media (max-width:600px){.rw-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">Hunyuan3D-<span>Buffalo 1.0</span> · 论文解读</div>
+    <div class="links"><a href="../index.html" style="font-weight:700;color:#2563eb">&#8592; 返回首页</a>
+      <a href="#related">① 相关工作</a>
+      <a href="#data">② 数据细节</a>
+      <a href="#results">③ 实验结果</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">arXiv:2608.02711 · cs.CV · 2026-08-03 · 腾讯混元</span>
+    <h1>Hunyuan3D-Buffalo 1.0：<em>统一</em>的可扩展 3D 生成、理解与编辑多模态模型</h1>
+    <p class="sub">单一架构同时支持 <b>3D 理解</b>、<b>文生 3D</b>、<b>指令引导 3D 编辑</b> 与 <b>文本引用部件生成</b> 四大任务；构建 87M 规模 3D 多模态语料，并证明「生成 → 编辑」「理解 → 编辑」的跨任务能力迁移。</p>
+    <div class="meta">
+      <a href="https://arxiv.org/abs/2608.02711" target="_blank">📄 arXiv 论文</a>
+      <a href="https://tencent-hunyuan.github.io/Hunyuan3D-Buffalo1.0/" target="_blank">🌐 项目主页</a>
+      <span class="pill">作者：Junliang Ye*, Kenkun Liu*, Guocun Wang*, Yang Li*† 等 15 人</span>
+      <span class="pill">Project Leaders: Yang Li / Zhuo Chen / Chunchao Guo</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>87M</b><span>3D 多模态训练样本（≈ Nano3D 的 100×）</span></div>
+      <div class="stat"><b>4 in 1</b><span>理解 / 生成 / 编辑 / 部件生成统一架构</span></div>
+      <div class="stat"><b>56.6%</b><span>文生 3D 人类评估整体偏好率（最强基线 18.4%）</span></div>
+      <div class="stat"><b>−86.7%</b><span>3D 编辑平均 Chamfer Distance 相对 Omni123 降幅</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 1. RELATED WORK ================= -->
+<section id="related">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 1 · Related Work</div>
+      <h2>三大方向相关工作图谱</h2>
+      <p>按论文 Related Work 梳理 3D 生成、3D 编辑、3D 部件生成三条技术路线。每张卡片包含工作简称、发表时间、核心贡献与链接（arXiv / GitHub；标「待补全」的为占位链接，后续补全）。<b>橙色高亮卡片</b>为与本文直接相关的关键前序工作。</p>
+    </div>
+
+    <div class="dir-tabs">
+      <button class="dir-tab active" data-dir="gen">🧊 3D 生成（Generation）</button>
+      <button class="dir-tab" data-dir="edit">✏️ 3D 编辑（Editing）</button>
+      <button class="dir-tab" data-dir="part">🧩 3D 部件生成（Part Generation）</button>
+    </div>
+
+    <!-- ===== 3D Generation ===== -->
+    <div class="dir-panel show" id="dir-gen">
+      <p class="paradigm">范式 A · 基于优化的 2D 先验蒸馏（SDS 类）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">DreamFusion</span><span class="rw-year">2022.09</span></div><div class="rw-venue">arXiv · Google</div><p class="rw-desc">开山之作：提出 Score Distillation Sampling（SDS），将 2D 扩散先验蒸馏进 NeRF，无需 3D 监督即可文生 3D。</p><div class="rw-links"><a href="https://arxiv.org/abs/2209.14988" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Magic3D</span><span class="rw-year">2023 · CVPR</span></div><div class="rw-venue">NVIDIA</div><p class="rw-desc">两阶段 coarse-to-fine：先 NeRF 粗生成再 mesh 精修，实现高分辨率高质量文生 3D。</p><div class="rw-links"><a href="https://arxiv.org/abs/2211.10440" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Fantasia3D</span><span class="rw-year">2023 · ICCV</span></div><div class="rw-venue">NVIDIA 等</div><p class="rw-desc">解耦几何与外观建模（DMET + BRDF），生成带材质的高质量 3D 资产。</p><div class="rw-links"><a href="https://arxiv.org/abs/2303.13873" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">ProlificDreamer</span><span class="rw-year">2023 · NeurIPS</span></div><div class="rw-venue">清华等</div><p class="rw-desc">提出 VSD（变分分数蒸馏），大幅提升 SDS 类方法的保真度与多样性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2305.16213" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">MVDream</span><span class="rw-year">2023.08</span></div><div class="rw-venue">字节等</div><p class="rw-desc">多视角扩散模型，缓解多视角不一致（Janus）问题。</p><div class="rw-links"><a href="https://arxiv.org/abs/2308.16512" target="_blank">arXiv</a></div></div>
+      </div>
+
+      <p class="paradigm">范式 B · 3D 原生潜空间前馈生成（3D VAE + Diffusion）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">3DShape2VecSet</span><span class="rw-year">2023 · TOG</span></div><div class="rw-venue">TUM 等</div><p class="rw-desc">VecSet 3D 形状表示 + 神经场扩散，奠定 3D 原生潜空间生成路线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2301.11445" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Michelangelo</span><span class="rw-year">2023 · NeurIPS</span></div><div class="rw-venue">腾讯等</div><p class="rw-desc">形状-图像-文本对齐潜空间，支持多模态条件 3D 生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2306.17115" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">CLAY</span><span class="rw-year">2024 · TOG</span></div><div class="rw-venue">上海AI Lab 等</div><p class="rw-desc">大规模可控 3D 资产生成模型，多分辨率 VAE + DiT。</p><div class="rw-links"><a href="https://arxiv.org/abs/2406.13876" target="_blank">arXiv</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">TRELLIS</span><span class="rw-year">2024.12 · CVPR'25</span></div><div class="rw-venue">Microsoft · ★ 本文 Nano3D-v2 体素编辑骨干</div><p class="rw-desc">Structured Latents（SLAT）统一多 3D 表示，多功能高质量生成；本文编辑数据流水线 Stage 3 直接复用其体素 Transformer。</p><div class="rw-links"><a href="https://arxiv.org/abs/2412.01506" target="_blank">arXiv</a><a class="gh" href="https://github.com/microsoft/TRELLIS" target="_blank">GitHub（开源）</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">TripoSG</span><span class="rw-year">2025.02</span></div><div class="rw-venue">VAST</div><p class="rw-desc">大规模 Rectified Flow 高保真 3D 形状合成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2502.06608" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Hunyuan3D 2.5</span><span class="rw-year">2025.06</span></div><div class="rw-venue">腾讯混元</div><p class="rw-desc">极致细节的高保真 3D 资产生成（本文 DiT 由 Hunyuan3D-2.1 初始化，同属该系列）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2506.16504" target="_blank">arXiv</a><a class="gh" href="https://github.com/Tencent-Hunyuan/Hunyuan3D-2" target="_blank">GitHub（开源）</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Craftsman3D</span><span class="rw-year">2024.05</span></div><div class="rw-venue">腾讯PCG 等</div><p class="rw-desc">3D 原生生成 + 交互式几何细化器，产出高保真网格。</p><div class="rw-links"><a href="https://arxiv.org/abs/2405.14979" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Sparc3D</span><span class="rw-year">2025.05</span></div><div class="rw-venue">南洋理工等</div><p class="rw-desc">稀疏表示 + 稀疏构建，实现高分辨率 3D 形状建模。</p><div class="rw-links"><a href="https://arxiv.org/abs/2505.14521" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Ultra3D</span><span class="rw-year">2025.07</span></div><div class="rw-venue">北大等</div><p class="rw-desc">Part Attention 机制，兼顾效率与高保真的 3D 生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2507.17745" target="_blank">arXiv</a></div></div>
+      </div>
+
+      <p class="paradigm">范式 C · 自回归艺术家级网格生成（Low-poly / Artist Mesh）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">MeshAnything</span><span class="rw-year">2024.06</span></div><div class="rw-venue">南洋理工等</div><p class="rw-desc">将顶点/面 tokenize 后用自回归 Transformer 生成艺术家级拓扑网格。</p><div class="rw-links"><a href="https://arxiv.org/abs/2406.10163" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">MeshAnything V2</span><span class="rw-year">2025 · ICCV</span></div><div class="rw-venue">同上团队</div><p class="rw-desc">相邻网格 tokenization（AMT），更长序列更高效。</p><div class="rw-links"><a href="https://arxiv.org/abs/2407.15225" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Meshtron</span><span class="rw-year">2024.12</span></div><div class="rw-venue">NVIDIA</div><p class="rw-desc">大规模高保真、艺术家风格 3D 网格生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2412.09548" target="_blank">arXiv</a></div></div>
+      </div>
+    </div>
+
+    <!-- ===== 3D Editing ===== -->
+    <div class="dir-panel" id="dir-edit">
+      <p class="paradigm">路线 1 · 逐实例优化（SDS / 2D 扩散先验）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Instruct-NeRF2NeRF</span><span class="rw-year">2023 · ICCV</span></div><div class="rw-venue">UCB</div><p class="rw-desc">经典指令编辑：用 InstructPix2Pix 迭代更新 NeRF 训练集，文本指令编辑 3D 场景。</p><div class="rw-links"><a href="https://arxiv.org/abs/2303.12789" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Shap-Editor</span><span class="rw-year">2023.12</span></div><div class="rw-venue">TUM 等</div><p class="rw-desc">在 3D 潜空间做前馈式指令编辑，秒级完成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2312.09246" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Vox-E</span><span class="rw-year">2023.03</span></div><div class="rw-venue">Reichman 等</div><p class="rw-desc">文本引导的体素级 3D 物体编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2303.12048" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">TIP-Editor</span><span class="rw-year">2024.01</span></div><div class="rw-venue">腾讯等</div><p class="rw-desc">同时遵循文本与图像提示的精确 3D 编辑器。</p><div class="rw-links"><a href="https://arxiv.org/abs/2401.14828" target="_blank">arXiv</a></div></div>
+      </div>
+
+      <p class="paradigm">路线 2 · 2D 编辑 + 3D 重建（Lifting）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Tailor3D</span><span class="rw-year">2024.07</span></div><div class="rw-venue">CUHK 等</div><p class="rw-desc">双面图像（前后视角）编辑驱动的定制 3D 资产编辑与生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2407.06191" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Instant3dit</span><span class="rw-year">2024.12</span></div><div class="rw-venue">KAUST 等</div><p class="rw-desc">多视角 inpainting 实现快速 3D 物体编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2412.00518" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">MVInpainter</span><span class="rw-year">2024.08</span></div><div class="rw-venue">—</div><p class="rw-desc">学习多视角一致 inpainting，弥合 2D 编辑与 3D 编辑鸿沟。</p><div class="rw-links"><a href="https://arxiv.org/abs/2408.08000" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">EditP23</span><span class="rw-year">2025.06</span></div><div class="rw-venue">—</div><p class="rw-desc">将图像提示传播到多视角实现 3D 编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2506.20652" target="_blank">arXiv</a></div></div>
+      </div>
+
+      <p class="paradigm">路线 3 · Training-free（冻结 3D 先验 + 潜空间编辑）</p>
+      <div class="rw-grid">
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">Nano3D</span><span class="rw-year">2025.10 · ICLR'26</span></div><div class="rw-venue">清华/生数 · ★ 本文 Nano3D-v2 的直接前身</div><p class="rw-desc">将 FlowEdit 融入 TRELLIS 做无 mask 局部 3D 编辑，Voxel/SLAT-Merge 保持未编辑区域一致；官方开源 Nano3D-Edit-100k 数据。</p><div class="rw-links"><a href="https://arxiv.org/abs/2510.15019" target="_blank">arXiv</a><a class="gh" href="https://github.com/JAMESYJL/Nano3D" target="_blank">GitHub（开源）</a><a href="https://huggingface.co/datasets/yejunliang23/Nano3D-Edit-100k" target="_blank">数据集</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">VoxHammer</span><span class="rw-year">2025.08 · 3DV'26 Oral</span></div><div class="rw-venue">北航/人大/腾讯混元 · ★ Edit3D-Bench 构建方</div><p class="rw-desc">Training-free：inversion 轨迹 + 保留区 KV/latent 替换，在原生 3D 潜空间精确连贯编辑；需人工指定 3D 框，难以规模化。</p><div class="rw-links"><a href="https://arxiv.org/abs/2508.19247" target="_blank">arXiv</a><a class="gh" href="https://github.com/Nelipot-Lee/VoxHammer" target="_blank">GitHub（开源）</a></div></div>
+      </div>
+
+      <p class="paradigm">路线 4 · 训练式前馈编辑（构造配对数据微调生成器）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">3DEditFormer</span><span class="rw-year">2025.10</span></div><div class="rw-venue">—</div><p class="rw-desc">面向可扩展、一致 3D 编辑的前馈模型（Edit3D-Bench 基线之一）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2510.02994" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Steer3D</span><span class="rw-year">2026.05</span></div><div class="rw-venue">—</div><p class="rw-desc">从语义部件变换中学习前馈 3D 编辑；Buffalo 在 Edit3D-Bench 上的最强 F1 基线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2605.27351" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Omni-3DEdit</span><span class="rw-year">2026 · CVPR</span></div><div class="rw-venue">—</div><p class="rw-desc">单次前馈完成通用多类型 3D 编辑。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">ShapeUp</span><span class="rw-year">2026.02</span></div><div class="rw-venue">—</div><p class="rw-desc">可扩展的图像条件 3D 编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2602.05676" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">EditVerse3D</span><span class="rw-year">2026.07</span></div><div class="rw-venue">—</div><p class="rw-desc">区域感知学习的高质量 3D 物体编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.07187" target="_blank">arXiv</a></div></div>
+      </div>
+    </div>
+
+    <!-- ===== 3D Part Generation ===== -->
+    <div class="dir-panel" id="dir-part">
+      <p class="paradigm">数据集 / 基准</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">PartNet</span><span class="rw-year">2019 · CVPR</span></div><div class="rw-venue">Stanford 等</div><p class="rw-desc">大规模细粒度层次化部件理解基准，固定部件类别体系的早期代表。</p><div class="rw-links"><a href="https://arxiv.org/abs/1812.02713" target="_blank">arXiv</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">PartNeXt</span><span class="rw-year">2025.10 · NeurIPS D&amp;B</span></div><div class="rw-venue">★ 本文部件数据来源之一</div><p class="rw-desc">23k+ 带纹理模型、50 类细粒度层次化部件标注，支持部件分割与 3D 部件问答；本文用语义网格合并工具将其转为指令数据。</p><div class="rw-links"><a href="https://arxiv.org/abs/2510.20155" target="_blank">arXiv</a><a class="gh" href="https://github.com/AuthorityWang/PartNeXt" target="_blank">GitHub（开源）</a></div></div>
+      </div>
+
+      <p class="paradigm">专用部件生成 / 分割管线</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Frankenstein</span><span class="rw-year">2024 · SIGGRAPH Asia</span></div><div class="rw-venue">—</div><p class="rw-desc">单 tri-plane 一次性生成语义组合的 3D 场景部件。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">PhyCage</span><span class="rw-year">2024</span></div><div class="rw-venue">—</div><p class="rw-desc">引入物理仿真保证部件间合理性的组合式 3D 资产生成。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">PartField</span><span class="rw-year">2025 · ICCV</span></div><div class="rw-venue">NVIDIA 等</div><p class="rw-desc">学习连续 3D 特征场用于开放部件分割及下游任务。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">OmniPart</span><span class="rw-year">2025.07 · SIGGRAPH Asia</span></div><div class="rw-venue">HKU 等</div><p class="rw-desc">语义解耦 + 结构内聚的部件感知 3D 生成（多扩散分支路线代表）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2507.06165" target="_blank">arXiv</a><a class="gh" href="https://github.com/HKU-MMLab/OmniPart" target="_blank">GitHub（开源）</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">X-Part</span><span class="rw-year">2025.09</span></div><div class="rw-venue">腾讯混元</div><p class="rw-desc">高保真、结构一致的形状部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2509.08643" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">P3-SAM</span><span class="rw-year">2025.09</span></div><div class="rw-venue">腾讯混元</div><p class="rw-desc">原生 3D 部件分割模型（SAM 思路迁移到 3D）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2509.06784" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">AR Surface Cutting</span><span class="rw-year">2025.06</span></div><div class="rw-venue">腾讯混元</div><p class="rw-desc">自回归表面切割实现部件级结构划分。</p><div class="rw-links"><a href="https://arxiv.org/abs/2506.18017" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">MoCa</span><span class="rw-year">2025.12</span></div><div class="rw-venue">腾讯混元</div><p class="rw-desc">Mixture-of-Components 注意力，可扩展组合式 3D 生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2512.07628" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">CubePart</span><span class="rw-year">2026.05</span></div><div class="rw-venue">Roblox 等</div><p class="rw-desc">开放词汇、文本可控的部件生成框架——与本文能力最接近的专用方法。</p><div class="rw-links"><a href="https://arxiv.org/abs/2605.28763" target="_blank">arXiv</a></div></div>
+      </div>
+
+      <div class="callout">💡 <b>本文定位：</b>上述工作要么是固定部件词表、要么是依赖几何专用模块的独立管线。Buffalo 首次证明<b>文本引用部件生成可以作为统一 3D 多模态大模型的原生子任务</b>完成（"segment the wheels" 一条指令即可），无需专用管线。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2. DATA ================= -->
+<section id="data" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 2 · Data Curation</div>
+      <h2>87M 数据引擎细节 &amp; 开源情况</h2>
+      <p>统一 3D 建模的最大瓶颈是数据。Buffalo 构建了三套互补语料：25M 理解样本 + 50M 文生 3D 对 + 12M 编辑对（Nano3D-v2 生成），总规模 ≈ Nano3D 数据的 100×、Omni123 的 12×。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3 style="font-size:16px;margin-bottom:6px">语料总构成（87M）</h3>
+        <div class="chart-box"><canvas id="corpusDonut"></canvas></div>
+        <p class="chart-note">表 1（论文 Table 1）：3D 理解 ~25M / 文生 3D ~50M / 3D 编辑 ~12M（人物编辑 7M + 物体编辑 3M + 部件生成 2M）。</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size:16px;margin-bottom:6px">理解语料（25M）与编辑语料（12M）细分</h3>
+        <div class="chart-box"><canvas id="subBars"></canvas></div>
+        <p class="chart-note">理解语料：3D 点云-文本对话 15M（Part-X-MLLM + ShapeLLM-Omni + 自建）为核心，另混纯文本 7M、图文 3M 以保住语言与 2D 多模态能力。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title">① 文生 3D 数据 · 全自动 5 阶段流水线（~50M 对）</h3>
+    <div class="card">
+      <div class="pipe">
+        <div class="stage"><span class="no">Stage 1</span><h4>层级提示词体系</h4><p>L0 生成模式 → L1 类别（20 大类加权）→ L2/L3 子类型，数千叶子概念 + 风格（15 种）/颜色/材质/姿态属性词表</p></div>
+        <div class="stage"><span class="no">Stage 2</span><h4>组合式提示词合成</h4><p>语义角色感知交互采样（如"骑士挥剑"）；属性轴 ~30% 概率随机丢弃 + 5 轴质量后缀扩展表达空间</p></div>
+        <div class="stage"><span class="no">Stage 3</span><h4>资产生成与渲染</h4><p>提示词 → 图像 → image-to-3D → 多视角白底渲染 + 表面点云采样；编辑增强子集做差分 mask 与一致性 QC</p></div>
+        <div class="stage"><span class="no">Stage 4</span><h4>多层标注 + 几何打分</h4><p>Gemini 以多视角渲染为准生成 6 级 caption（详细→标签）+ 0-10 整数几何质量分（惩罚截断/漂浮件/破拓扑等）</p></div>
+        <div class="stage"><span class="no">Stage 5</span><h4>质量过滤与打包</h4><p>按几何分阈值过滤（最干净子集 τ=10），打包为 (点云, caption 字典, L1 类别) 三元组 → ~5×10⁷ 对</p></div>
+      </div>
+      <div class="mini-stat">
+        <div><b>6 级</b><span>caption 粒度（≤120 词详细版 → ≤8 关键词标签）</span></div>
+        <div><b>0-10</b><span>几何质量分（带校准锚点，强制用满量程）</span></div>
+        <div><b>τ=10</b><span>最干净子集过滤阈值</span></div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">② 3D 编辑数据 · Nano3D-v2 流水线（~12M 对）</h3>
+    <div class="card">
+      <div class="pipe orange">
+        <div class="stage"><span class="no">Stage 1</span><h4>锚点视角选择</h4><p>渲染 8 个标准视角，VLM 选出语义最显著的编辑锚点视角，用 <b>Qwen-Image</b> 执行 2D 指令编辑</p></div>
+        <div class="stage"><span class="no">Stage 2</span><h4>编辑规划（学习式）</h4><p>源/编辑图像素差 → 2D mask；训练自回归 Transformer 从 2D mask + 源体素预测 <b>3D 编辑包围盒</b>（框外体素冻结）</p></div>
+        <div class="stage"><span class="no">Stage 3</span><h4>体素编辑</h4><p><b>TRELLIS</b> 体素 Transformer + FlowEdit 采样；Voxel-Merge 将框外体素替换回源值，杜绝全局身份漂移</p></div>
+        <div class="stage"><span class="no">Stage 4</span><h4>精细几何 + 纹理</h4><p><b>LATTICE</b> 做亚体素 inversion inpainting 细化；<b>NaTex</b> 做纹理 inpainting，边界 7 体素带 alpha 融合（latent 分辨率 128³）</p></div>
+        <div class="stage"><span class="no">Stage 5</span><h4>标注与过滤</h4><p>VLM 完整性过滤 → 重新标注指令（Addition/Replacement/Removal，仅描述几何变化）→ 4 维度验证（完整性/指令对齐/区域一致/可见性）</p></div>
+      </div>
+      <p class="chart-note" style="margin-top:12px">相比 Nano3D 的两大升级：① 用<b>学习式 3D 编辑区定位</b>替代启发式估计（小目标/遮挡/视角相关编辑更准）；② 增加 LATTICE + NaTex <b>高保真细化</b>阶段，突破 TRELLIS 背骨干的几何质量上限。支持多轮编辑。</p>
+    </div>
+
+    <h3 class="block-title c-teal">③ 部件生成数据 · 语义网格合并工具（~2M，含于编辑语料）</h3>
+    <div class="card">
+      <div class="pipe teal">
+        <div class="stage"><span class="no">Stage 1</span><h4>语义部件词表发现</h4><p>VLM 看多视角渲染，为每个物体推断紧凑、互斥的部件概念集（轮/翼/把手/头…）</p></div>
+        <div class="stage"><span class="no">Stage 2</span><h4>组件→部件归并</h4><p>逐个红色高亮渲染原始网格组件，VLM 在封闭词表（+unmatched）中投票归属，同概念组件合并为"宏观部件"</p></div>
+        <div class="stage"><span class="no">Stage 3</span><h4>质量过滤与打包</h4><p>VLM 复核高亮区域与概念匹配度；同一归一化变换导出 (整体, 部件, 剩余) 三元组 → "segment/remove the wheels" 指令样本</p></div>
+      </div>
+      <p class="chart-note" style="margin-top:12px">动机：HY3D-Bench 等数据集的原始部件是建模/导出产生的几何碎片，<b>过度分割且无语义标签</b>（一个轮子被拆成多个不连通组件），需先合并成"语言可引用"的宏观部件才能做指令微调数据。</p>
+    </div>
+
+    <h3 class="block-title c-purple">④ 涉及的数据集 / 模型工具及开源情况</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>名称</th><th>类型</th><th>在本文中的角色</th><th>发表</th><th>开源情况</th><th>链接</th></tr></thead>
+        <tbody>
+          <tr><td><b>Part-X-MLLM</b> 数据</td><td>3D 理解对话数据</td><td>理解语料 3D 部分来源（部件级/物体级对话）</td><td>2025.11 · ICLR'26</td><td><span class="badge open">开源</span></td><td><a href="https://github.com/AiEson/Part-X-MLLM" target="_blank">GitHub</a> · <a href="https://arxiv.org/abs/2511.13647" target="_blank">arXiv</a></td></tr>
+          <tr><td><b>ShapeLLM-Omni</b>（3D-Alpaca / UniPart-Bench）</td><td>3D 数据 + 评测基准</td><td>理解语料来源；UniPart-Bench 为理解评测基准</td><td>2025.06</td><td><span class="badge open">开源</span>（权重 + 50k 编辑对）</td><td><a href="https://github.com/JAMESYJL/ShapeLLM-Omni" target="_blank">GitHub</a> · <a href="https://arxiv.org/abs/2506.01853" target="_blank">arXiv</a></td></tr>
+          <tr><td><b>PartNeXt</b></td><td>部件标注数据集</td><td>部件生成指令数据来源（23k+ 模型 / 50 类）</td><td>2025.10 · NeurIPS D&amp;B</td><td><span class="badge open">开源</span>（GitHub + HF）</td><td><a href="https://github.com/AuthorityWang/PartNeXt" target="_blank">GitHub</a> · <a href="https://huggingface.co/datasets/AuWang/PartNeXt" target="_blank">HF</a></td></tr>
+          <tr><td><b>HY3D-Bench</b></td><td>3D 资产数据集</td><td>部件数据来源（原始 mesh 级部件分解，需语义合并）</td><td>2026.02</td><td><span class="badge part">论文已发布</span></td><td><a href="https://arxiv.org/abs/2602.03907" target="_blank">arXiv</a></td></tr>
+          <tr><td><b>Nano3D-Edit-100k</b></td><td>编辑配对数据</td><td>Nano3D（前身方法）官方 100k 编辑数据，本文 12M 的 1/100</td><td>2025.10</td><td><span class="badge open">开源</span>（HF）</td><td><a href="https://huggingface.co/datasets/yejunliang23/Nano3D-Edit-100k" target="_blank">HF</a></td></tr>
+          <tr><td><b>Edit3D-Bench</b></td><td>编辑评测基准</td><td>编辑任务评测（add/remove 配对 mesh + CD/F1）</td><td>2025.08（VoxHammer）</td><td><span class="badge open">开源</span>（随 VoxHammer）</td><td><a href="https://github.com/Nelipot-Lee/VoxHammer" target="_blank">GitHub</a></td></tr>
+          <tr><td><b>Qwen-Image</b></td><td>2D 编辑模型</td><td>Nano3D-v2 Stage 1：锚点视角指令编辑</td><td>2025.08</td><td><span class="badge open">开源</span></td><td><a href="https://github.com/QwenLM/Qwen-Image" target="_blank">GitHub</a> · <a href="https://arxiv.org/abs/2508.02324" target="_blank">arXiv</a></td></tr>
+          <tr><td><b>TRELLIS</b></td><td>3D 生成骨干</td><td>Nano3D-v2 Stage 3：体素 Transformer + FlowEdit</td><td>2024.12 · CVPR'25</td><td><span class="badge open">开源</span>（MIT）</td><td><a href="https://github.com/microsoft/TRELLIS" target="_blank">GitHub</a> · <a href="https://arxiv.org/abs/2412.01506" target="_blank">arXiv</a></td></tr>
+          <tr><td><b>LATTICE</b></td><td>高保真几何生成</td><td>Nano3D-v2 Stage 4.1：亚体素几何细化</td><td>2025.12</td><td><span class="badge part">论文已发布</span></td><td><a href="https://arxiv.org/abs/2512.03052" target="_blank">arXiv</a></td></tr>
+          <tr><td><b>NaTex</b></td><td>纹理生成</td><td>Nano3D-v2 Stage 4.2：纹理 inpainting（latent 128³）</td><td>2025.11</td><td><span class="badge part">论文已发布</span></td><td><a href="https://arxiv.org/abs/2511.16317" target="_blank">arXiv</a></td></tr>
+          <tr><td><b>Hunyuan3D-2.1</b></td><td>3D 生成骨干</td><td>Buffalo 3D-DiT 的初始化权重</td><td>2025</td><td><span class="badge open">开源</span></td><td><a href="https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1" target="_blank">GitHub</a></td></tr>
+          <tr><td><b>Gemini</b></td><td>通用 VLM</td><td>文生 3D 数据 6 级 caption + 几何打分（内部 API）</td><td>—</td><td><span class="badge closed">闭源</span></td><td><span style="color:var(--ink3)">仅 API</span></td></tr>
+          <tr><td><b>Buffalo 87M 语料本体</b></td><td>训练语料</td><td>25M + 50M + 12M</td><td>2026.08</td><td><span class="badge na">暂未开源</span></td><td><span style="color:var(--ink3)">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="block-title">附：模型架构与训练流程速览</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">架构：Hunyuan3D-VLM + 3D-DiT</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">双路 3D 编码：几何（XYZ+法向量）+ 外观（RGB）→ VecSet 编码 → Q-Former 压缩为 <b>512 token</b>；词表新增 <b>133 个特殊 token</b>（点云定界 + <code>&lt;boxs&gt;/&lt;boxe&gt;</code> + 128 个量化坐标 token）支持 3D grounding。VLM（Qwen-VL 初始化）经 <b>MLP Connector</b> 将隐状态注入 3D-DiT（Hunyuan3D-2.1 初始化）交叉注意力。编辑/部件生成额外把<b>源物体表示与噪声 latent 拼接</b>进 DiT 自注意力，保住未编辑区域。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">训练：4 阶段</h4>
+        <p style="font-size:13.5px;color:var(--ink2)"><b>S1</b> 3D-VLM 训练（对齐→指令微调，之后冻结）；<b>S2</b> 文生 3D 预训练（50M 对）；<b>S3</b> Omni 预训练（生成:编辑=1:1，编辑数据 4× 重复）；<b>S4</b> 三任务分支持续预训练（编辑/部件分支仍混 50% 生成数据）。生成阶段统一用 <b>flow-matching</b> 目标。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 3. RESULTS ================= -->
+<section id="results">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 3 · Experiments</div>
+      <h2>各任务对比指标</h2>
+      <p>覆盖理解（UniPart-Bench）、文生 3D（人类评估 + 数据规模消融）、3D 编辑（Edit3D-Bench）三大定量任务；部件生成为定性展示。</p>
+    </div>
+
+    <!-- 3.1 Understanding -->
+    <h3 class="block-title">3.1 3D 理解 · UniPart-Bench（越高越好）</h3>
+    <div class="kpi-row">
+      <div class="kpi"><b>85.47</b><span>部件问答 SBERT（最优基线 UniVerse3D 83.11）</span></div>
+      <div class="kpi"><b>89.06</b><span>部件问答 SimCSE（最优基线 87.16）</span></div>
+      <div class="kpi"><b>0.864</b><span>纯框列出 IoU（Table 4，全任务共 8 项）</span></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">部件级问答（Part Q&amp;A）</h4><div class="chart-box"><canvas id="qaChart"></canvas></div></div>
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">物体级描述（Object Captioning）</h4><div class="chart-box"><canvas id="capChart"></canvas></div></div>
+    </div>
+    <h3 class="block-title" style="margin-top:26px">Table 3 · 完整数值（论文原表）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th rowspan="2">模型</th><th colspan="5">部件问答 Part Q&amp;A</th><th colspan="5">物体描述 Captioning</th></tr>
+        <tr><th class="num">SBERT</th><th class="num">SimCSE</th><th class="num">BLEU-1</th><th class="num">ROUGE-L</th><th class="num">METEOR</th><th class="num">SBERT</th><th class="num">SimCSE</th><th class="num">BLEU-1</th><th class="num">ROUGE-L</th><th class="num">METEOR</th></tr></thead>
+        <tbody>
+          <tr><td>GPT4Point</td><td class="num">48.32</td><td class="num">45.17</td><td class="num">15.16</td><td class="num">22.55</td><td class="num">16.19</td><td class="num">25.60</td><td class="num">27.00</td><td class="num">11.50</td><td class="num">12.00</td><td class="num">12.70</td></tr>
+          <tr><td>PointLLM-7B</td><td class="num">61.30</td><td class="num">58.48</td><td class="num">21.78</td><td class="num">29.26</td><td class="num">22.45</td><td class="num">42.79</td><td class="num">42.44</td><td class="num">11.58</td><td class="num">14.39</td><td class="num">16.90</td></tr>
+          <tr><td>PointLLM-13B</td><td class="num">56.36</td><td class="num">51.47</td><td class="num">21.40</td><td class="num">29.16</td><td class="num">21.80</td><td class="num">43.51</td><td class="num">43.12</td><td class="num">13.54</td><td class="num">15.74</td><td class="num">17.45</td></tr>
+          <tr><td>ShapeLLM-13B</td><td class="num">61.19</td><td class="num">57.26</td><td class="num">23.32</td><td class="num">32.56</td><td class="num">24.45</td><td class="num">25.15</td><td class="num">27.14</td><td class="num">11.77</td><td class="num">12.14</td><td class="num">12.84</td></tr>
+          <tr><td>ShapeLLM-Omni-7B</td><td class="num">57.35</td><td class="num">51.16</td><td class="num">22.77</td><td class="num">29.57</td><td class="num">23.24</td><td class="num">31.18</td><td class="num">31.93</td><td class="num">17.79</td><td class="num">19.04</td><td class="num">14.30</td></tr>
+          <tr><td>Part-X-MLLM</td><td class="num">78.98</td><td class="num">84.25</td><td class="num">40.54</td><td class="num">42.26</td><td class="num">34.24</td><td class="num">53.82</td><td class="num">51.97</td><td class="num">36.04</td><td class="num">38.11</td><td class="num">30.71</td></tr>
+          <tr><td>UniVerse3D</td><td class="num">83.11</td><td class="num">87.16</td><td class="num">46.79</td><td class="num">43.94</td><td class="num">42.05</td><td class="num">65.18</td><td class="num">66.25</td><td class="num">42.75</td><td class="num">44.17</td><td class="num">41.11</td></tr>
+          <tr><td><b>Hunyuan3D-VLM (Ours)</b></td><td class="num best">85.47</td><td class="num best">89.06</td><td class="num best">49.95</td><td class="num best">45.01</td><td class="num best">45.79</td><td class="num best">72.94</td><td class="num best">73.60</td><td class="num best">50.93</td><td class="num best">52.84</td><td class="num best">50.47</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3.2 Text-to-3D -->
+    <h3 class="block-title c-indigo" style="margin-top:40px">3.2 文生 3D · 人类评估偏好率（%，越高越好，随机基线 25%）</h3>
+    <div class="kpi-row">
+      <div class="kpi"><b>55.2%</b><span>文本对齐偏好率（Omni123 17.5%）</span></div>
+      <div class="kpi"><b>57.1%</b><span>几何质量偏好率（Omni123 21.0%）</span></div>
+      <div class="kpi"><b>56.6%</b><span>整体偏好率 —— 超最强基线 2 倍以上</span></div>
+    </div>
+    <div class="card"><div class="chart-box"><canvas id="t2mChart"></canvas></div>
+      <p class="chart-note">100 个多样 prompt（2~54 词，平均 ~28 词），四方匿名随机对比；排名在所有评估者、短标签与长描述子集上均一致。</p>
+    </div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>模型</th><th class="num">文本对齐</th><th class="num">几何质量</th><th class="num">整体偏好</th></tr></thead>
+        <tbody>
+          <tr><td>UniVerse3D</td><td class="num">8.2</td><td class="num">7.4</td><td class="num">8.3</td></tr>
+          <tr><td>TRELLIS</td><td class="num">14.9</td><td class="num">12.4</td><td class="num">14.4</td></tr>
+          <tr><td>Omni123</td><td class="num">17.5</td><td class="num">21.0</td><td class="num">18.4</td></tr>
+          <tr><td><b>Hunyuan3D-Buffalo 1.0 (Ours)</b></td><td class="num best">55.2</td><td class="num best">57.1</td><td class="num best">56.6</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="block-title c-indigo" style="margin-top:34px">数据规模消融（%，越高越好，随机基线 33.3%）</h3>
+    <div class="card"><div class="chart-box sm"><canvas id="scaleChart"></canvas></div>
+      <p class="chart-note">300w → 1500w → 5000w 训练样本，整体偏好率 8.4% → 28.6% → 57.5%，<b>单调上升且未饱和</b> —— 数据规模是生成质量的关键驱动力。</p>
+    </div>
+
+    <!-- 3.3 Editing -->
+    <h3 class="block-title c-orange" style="margin-top:40px">3.3 3D 编辑 · Edit3D-Bench（CD ↓ / F1 ↑）</h3>
+    <div class="kpi-row">
+      <div class="kpi"><b>0.0091</b><span>平均 CD（Omni123 0.0684 → 降 86.7%）</span></div>
+      <div class="kpi"><b>0.6515</b><span>平均 F1（Steer3D 0.2729 → 提升 2.39×）</span></div>
+      <div class="kpi"><b>VLM &gt; CLIP</b><span>3D-VLM 条件化优于 CLIP：CD 0.0158→0.0091</span></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">平均 Chamfer Distance ↓（越低越好）</h4><div class="chart-box"><canvas id="cdChart"></canvas></div></div>
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">平均 F1 Score ↑（越高越好）</h4><div class="chart-box"><canvas id="f1Chart"></canvas></div></div>
+    </div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>方法</th><th class="num">Add CD↓</th><th class="num">Add F1↑</th><th class="num">Remove CD↓</th><th class="num">Remove F1↑</th><th class="num">Avg CD↓</th><th class="num">Avg F1↑</th></tr></thead>
+        <tbody>
+          <tr><td>ShapeLLM-Omni</td><td class="num">0.2546</td><td class="num">0.0877</td><td class="num">0.2237</td><td class="num">0.1166</td><td class="num">0.2392</td><td class="num">0.1022</td></tr>
+          <tr><td>3DEditFormer</td><td class="num">0.1676</td><td class="num">0.1955</td><td class="num">0.1342</td><td class="num">0.1836</td><td class="num">0.1509</td><td class="num">0.1896</td></tr>
+          <tr><td>Tailor3D</td><td class="num">0.1661</td><td class="num">0.1217</td><td class="num">0.1755</td><td class="num">0.1352</td><td class="num">0.1708</td><td class="num">0.1285</td></tr>
+          <tr><td>Steer3D</td><td class="num">0.1404</td><td class="num">0.2414</td><td class="num">0.0976</td><td class="num">0.3044</td><td class="num">0.1190</td><td class="num">0.2729</td></tr>
+          <tr><td>Omni123</td><td class="num">0.0736</td><td class="num">0.1743</td><td class="num">0.0632</td><td class="num">0.2259</td><td class="num">0.0684</td><td class="num">0.2001</td></tr>
+          <tr><td><b>Buffalo w/ CLIP (Ours)</b></td><td class="num">0.0154</td><td class="num best">0.5657</td><td class="num">0.0162</td><td class="num">0.7015</td><td class="num">0.0158</td><td class="num">0.6336</td></tr>
+          <tr><td><b>Buffalo w/ 3D-VLM (Ours)</b></td><td class="num best">0.0127</td><td class="num">0.5610</td><td class="num best">0.0054</td><td class="num best">0.7420</td><td class="num best">0.0091</td><td class="num best">0.6515</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">🔑 <b>跨任务协同（论文核心发现）：</b>① <b>生成 → 编辑</b>：Omni 预训练阶段仅多加 1,000 条"鸡头"文生 3D 样本（不加任何编辑数据），模型即学会"把头换成鸡头"的编辑 —— 编辑能力随生成能力涌现，而文生 3D 数据成本远低于编辑数据；② <b>理解 → 编辑</b>：3D-VLM 条件化显著优于 CLIP，细粒度语义/空间推理帮助定位编辑区域、理解指令、保护未编辑区域。</div>
+
+    <!-- 3.4 Part Generation -->
+    <h3 class="block-title c-teal" style="margin-top:40px">3.4 文本引用部件生成（定性）</h3>
+    <div class="card">
+      <p style="font-size:14px;color:var(--ink2)">论文 Fig. 11 定性展示：开放词汇文本查询（如 "segment the wheels"）即可从章鱼、车辆等多样物体中精确提取对应几何部件；多部件提取后可重组为组合式逐部件生成结果。该能力作为统一 3D MLLM 的<b>原生子任务</b>实现，而非专用管线 —— 体现了框架的通用性。论文未给出该任务的定量基准对比。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    数据来源：Hunyuan3D-Buffalo 1.0 (arXiv:2608.02711v1, 2026-08-03) 正文 Table 1-7 · 页面由 WorkBuddy 生成 · 相关工作卡片中「链接待补全」为占位项
+  </div>
+</footer>
+
+<script>
+/* ---------- direction tabs ---------- */
+document.querySelectorAll('.dir-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.dir-tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.dir-panel').forEach(p=>p.classList.remove('show'));
+    btn.classList.add('active');
+    document.getElementById('dir-'+btn.dataset.dir).classList.add('show');
+  });
+});
+
+/* ---------- charts ---------- */
+const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
+Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
+const C={blue:'#2563eb',indigo:'#6366f1',orange:'#ea8a3c',teal:'#0d9488',purple:'#8b5cf6',gray:'#b6c2d2',gold:'#d97706',green:'#16a34a'};
+const noLegend={plugins:{legend:{display:false}}};
+
+/* corpus donut */
+new Chart(document.getElementById('corpusDonut'),{type:'doughnut',
+  data:{labels:['文生 3D 对 ~50M','3D 理解样本 ~25M','3D 编辑对 ~12M'],
+    datasets:[{data:[50,25,12],backgroundColor:[C.blue,C.teal,C.orange],borderColor:'#fff',borderWidth:3}]},
+  options:{maintainAspectRatio:false,cutout:'58%',
+    plugins:{legend:{position:'right',labels:{boxWidth:14,padding:12}},
+      tooltip:{callbacks:{label:c=>` ${c.label}（占 ${(c.parsed/87*100).toFixed(1)}%）`}}}}});
+
+/* subset bars */
+new Chart(document.getElementById('subBars'),{type:'bar',
+  data:{labels:['3D 点云-文本对话','纯文本','图文','人物编辑','物体编辑','部件生成'],
+    datasets:[{data:[15,7,3,7,3,2],
+      backgroundColor:[C.teal,C.teal,C.teal,C.orange,C.orange,C.orange],borderRadius:6}]},
+  options:{indexAxis:'y',maintainAspectRatio:false,...noLegend,
+    scales:{x:{title:{display:true,text:'样本量（M）'}},y:{ticks:{font:{size:11.5}}}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.x}M`}}}}});
+
+/* understanding charts */
+const models7=['GPT4Point','PointLLM-7B','ShapeLLM-13B','ShapeLLM-Omni','Part-X-MLLM','UniVerse3D','Ours'];
+const mkBar=(id,datasets,models)=>new Chart(document.getElementById(id),{type:'bar',
+  data:{labels:models,datasets},
+  options:{maintainAspectRatio:false,
+    scales:{y:{beginAtZero:true},x:{ticks:{font:{size:10.5},maxRotation:45,minRotation:45}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:8}}}}});
+mkBar('qaChart',[
+  {label:'SBERT',data:[48.32,61.30,61.19,57.35,78.98,83.11,85.47],backgroundColor:C.blue,borderRadius:4},
+  {label:'SimCSE',data:[45.17,58.48,57.26,51.16,84.25,87.16,89.06],backgroundColor:C.indigo,borderRadius:4},
+  {label:'BLEU-1',data:[15.16,21.78,23.32,22.77,40.54,46.79,49.95],backgroundColor:C.teal,borderRadius:4},
+  {label:'ROUGE-L',data:[22.55,29.26,32.56,29.57,42.26,43.94,45.01],backgroundColor:C.orange,borderRadius:4},
+  {label:'METEOR',data:[16.19,22.45,24.45,23.24,34.24,42.05,45.79],backgroundColor:C.gray,borderRadius:4}
+],models7);
+mkBar('capChart',[
+  {label:'SBERT',data:[25.60,42.79,25.15,31.18,53.82,65.18,72.94],backgroundColor:C.blue,borderRadius:4},
+  {label:'SimCSE',data:[27.00,42.44,27.14,31.93,51.97,66.25,73.60],backgroundColor:C.indigo,borderRadius:4},
+  {label:'BLEU-1',data:[11.50,11.58,11.77,17.79,36.04,42.75,50.93],backgroundColor:C.teal,borderRadius:4},
+  {label:'ROUGE-L',data:[12.00,14.39,12.14,19.04,38.11,44.17,52.84],backgroundColor:C.orange,borderRadius:4},
+  {label:'METEOR',data:[12.70,16.90,12.84,14.30,30.71,41.11,50.47],backgroundColor:C.gray,borderRadius:4}
+],models7);
+
+/* text-to-3D preference */
+new Chart(document.getElementById('t2mChart'),{type:'bar',
+  data:{labels:['UniVerse3D','TRELLIS','Omni123','Buffalo 1.0 (Ours)'],
+    datasets:[
+      {label:'文本对齐',data:[8.2,14.9,17.5,55.2],backgroundColor:C.blue,borderRadius:5},
+      {label:'几何质量',data:[7.4,12.4,21.0,57.1],backgroundColor:C.indigo,borderRadius:5},
+      {label:'整体偏好',data:[8.3,14.4,18.4,56.6],backgroundColor:C.orange,borderRadius:5}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{beginAtZero:true,max:65,title:{display:true,text:'偏好率（%）'}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:10}},
+      annotation:{}}}});
+
+/* data scaling */
+new Chart(document.getElementById('scaleChart'),{type:'bar',
+  data:{labels:['300w (3M)','1500w (15M)','5000w (50M)'],
+    datasets:[
+      {label:'文本对齐',data:[9.9,28.8,54.5],backgroundColor:C.blue,borderRadius:5},
+      {label:'几何质量',data:[8.8,29.0,57.4],backgroundColor:C.indigo,borderRadius:5},
+      {label:'整体偏好',data:[8.4,28.6,57.5],backgroundColor:C.orange,borderRadius:5}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{beginAtZero:true,max:65,title:{display:true,text:'偏好率（%）'}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:10}}}}});
+
+/* editing CD / F1 (horizontal, sorted) */
+const editMethods=['Buffalo w/ 3D-VLM','Buffalo w/ CLIP','Omni123','Steer3D','3DEditFormer','Tailor3D','ShapeLLM-Omni'];
+const cdVals=[0.0091,0.0158,0.0684,0.1190,0.1509,0.1708,0.2392];
+const f1Vals=[0.6515,0.6336,0.2001,0.2729,0.1896,0.1285,0.1022];
+const cdColors=editMethods.map(m=>m.startsWith('Buffalo')?C.orange:C.gray);
+const f1Colors=editMethods.map(m=>m.startsWith('Buffalo')?C.green:C.gray);
+new Chart(document.getElementById('cdChart'),{type:'bar',
+  data:{labels:editMethods,datasets:[{data:cdVals,backgroundColor:cdColors,borderRadius:5}]},
+  options:{indexAxis:'y',maintainAspectRatio:false,...noLegend,
+    scales:{x:{title:{display:true,text:'Avg CD ↓'}},y:{ticks:{font:{size:11.5}}}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` CD = ${c.parsed.x}`}}}}});
+new Chart(document.getElementById('f1Chart'),{type:'bar',
+  data:{labels:editMethods,datasets:[{data:f1Vals,backgroundColor:f1Colors,borderRadius:5}]},
+  options:{indexAxis:'y',maintainAspectRatio:false,...noLegend,
+    scales:{x:{title:{display:true,text:'Avg F1 ↑'}},y:{ticks:{font:{size:11.5}}}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` F1 = ${c.parsed.x}`}}}}});
+</script>
+</body>
+</html>

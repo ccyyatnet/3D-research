@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026年6月以来 3D 生成论文速览 · 3D-Research</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:48px 0 32px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:32px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15px;margin-top:10px;max-width:860px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:24px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:12.5px;color:var(--ink3)}
+  section{padding:36px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  .chart-box{position:relative;height:260px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .dir-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 20px}
+  .dir-tab{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:600;color:var(--ink2);cursor:pointer;box-shadow:var(--shadow)}
+  .dir-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .dir-tab .cnt{opacity:.7;font-weight:500;margin-left:4px}
+  .rw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .rw-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
+  .rw-card:hover{transform:translateY(-2px);border-color:#c7d6f5}
+  .rw-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .rw-name{font-weight:700;font-size:14.5px;line-height:1.4}
+  .rw-year{flex-shrink:0;font-size:11.5px;font-weight:700;background:#eef2fb;color:var(--blue);border-radius:6px;padding:2px 8px;white-space:nowrap}
+  .rw-cat{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;margin-top:6px}
+  .cat-unified{background:#ede9fe;color:#6d28d9}
+  .cat-t2i{background:#e0e9ff;color:#1d4ed8}
+  .cat-ff{background:#dff5ef;color:#0f766e}
+  .cat-scene{background:#fde8d4;color:#b45309}
+  .cat-part{background:#ffe4e0;color:#c2410c}
+  .rw-desc{font-size:13px;color:var(--ink2);margin-top:8px;flex:1}
+  .rw-links{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .rw-links a{font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;border:1px solid var(--line);color:var(--ink2)}
+  .rw-links a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+  .rw-links a.deep{background:#eef5ff;border-color:#c7d9f8;color:var(--blue)}
+  .rw-card.hl{border-color:#c7d9f8;background:linear-gradient(180deg,#f5f9ff,#fff)}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2)}
+  .callout b{color:var(--ink)}
+  .trend{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}
+  .trend .card{font-size:14px;color:var(--ink2)}
+  .trend .card b{color:var(--ink)}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  @media (max-width:960px){.rw-grid{grid-template-columns:repeat(2,1fr)}.grid2,.stats,.trend{grid-template-columns:1fr}}
+  @media (max-width:600px){.rw-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 前沿追踪</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#papers">论文列表</a>
+      <a href="#trends">趋势观察</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">前沿追踪 · 检索日期 2026-08-06 · ArXiv cs.CV / cs.GR / cs.AI</span>
+    <h1>2026 年 6 月以来 <em>3D 生成</em>论文速览</h1>
+    <p class="sub">覆盖文生 3D（Text-to-3D）、图生 3D（Image-to-3D）、Feed-forward 3D 重建、3D 场景/世界生成、部件与纹理生成等方向，共收录 <b>25 篇</b>。</p>
+    <div class="stats">
+      <div class="stat"><b>25 篇</b><span>收录论文（6 月 3 篇 / 7 月 11 篇 / 8 月 11 篇）</span></div>
+      <div class="stat"><b>5 个方向</b><span>统一多模态 / 文图生 3D / FF 重建 / 场景生成 / 部件纹理</span></div>
+      <div class="stat"><b>11 篇</b><span>Feed-forward 3DGS 重建（今夏最热方向）</span></div>
+      <div class="stat"><b>1 篇已精读</b><span>Hunyuan3D-Buffalo 1.0（含完整深度解读页）</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="grid2">
+      <div class="card">
+        <h3 style="font-size:16px;margin-bottom:6px">方向分布</h3>
+        <div class="chart-box"><canvas id="catDonut"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:16px;margin-bottom:6px">发表时间分布（按月）</h3>
+        <div class="chart-box"><canvas id="monthBar"></canvas></div>
+        <p class="chart-note">8 月仅统计至 8 月 6 日，密度已超 7 月全月的 2 倍 —— 3D 生成正处于加速期。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="papers" style="padding-top:8px">
+  <div class="wrap">
+    <h2 style="font-size:22px;margin-bottom:14px;letter-spacing:-.3px">论文列表</h2>
+    <div class="dir-tabs">
+      <button class="dir-tab active" data-cat="all">全部<span class="cnt">25</span></button>
+      <button class="dir-tab" data-cat="unified">统一多模态<span class="cnt">1</span></button>
+      <button class="dir-tab" data-cat="t2i">文/图生 3D<span class="cnt">7</span></button>
+      <button class="dir-tab" data-cat="ff">Feed-forward 重建<span class="cnt">11</span></button>
+      <button class="dir-tab" data-cat="scene">场景/世界生成<span class="cnt">4</span></button>
+      <button class="dir-tab" data-cat="part">部件/纹理/编辑<span class="cnt">2</span></button>
+    </div>
+    <div class="rw-grid" id="paperGrid">
+
+      <!-- 统一多模态 -->
+      <div class="rw-card hl" data-cat="unified"><div class="rw-top"><span class="rw-name">Hunyuan3D-Buffalo 1.0</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-unified">统一多模态</span><p class="rw-desc">腾讯混元：单架构统一 3D 理解/生成/编辑/部件生成；87M 语料 + Nano3D-v2 数据引擎；编辑 CD ↓86.7%。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02711" target="_blank">arXiv:2608.02711</a><a class="deep" href="../buffalo/index.html">📖 深度解读页</a></div></div>
+
+      <!-- 文/图生 3D -->
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">DreamStyle3D</span><span class="rw-year">07-27</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">双注意力解耦的高效风格化 3D 资产生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.24721" target="_blank">arXiv:2607.24721</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">3DCarGen</span><span class="rw-year">06-23</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">3D 一致多视图合成驱动的可扩展汽车 3D 生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.24257" target="_blank">arXiv:2606.24257</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">4DHumanDiff</span><span class="rw-year">07-30</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">文本直接生成 360° 一致的动态 4D 高斯人体。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.27634" target="_blank">arXiv:2607.27634</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">Fashion-3DLR</span><span class="rw-year">07-25</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">成对时尚元素组合的可控 3D 服装生成（智能设计）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.23189" target="_blank">arXiv:2607.23189</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">S-Avatar</span><span class="rw-year">07-30</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">单张图像扩散引导的高斯头部头像生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.28164" target="_blank">arXiv:2607.28164</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">G-Skin</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">用生成视觉先验绑定 3D 高斯，单图高质量重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01726" target="_blank">arXiv:2608.01726</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">PhotoHOI</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">单张 RGB 照片合成 3D 手-物交互。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01905" target="_blank">arXiv:2608.01905</a></div></div>
+
+      <!-- Feed-forward 重建 -->
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">UniqueSplat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">视角条件 3DGS，可泛化的稀疏视角重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02145" target="_blank">arXiv:2608.02145</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">StreamSplat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">流式前馈 3DGS，面向实时场景重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01659" target="_blank">arXiv:2608.01659</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">QuerySplat</span><span class="rw-year">08-02</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">几何/外观解耦表示的前馈 3DGS 预测。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01186" target="_blank">arXiv:2608.01186</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">DerainSplat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">稀疏雨中视角的前馈去雨 3DGS 重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02191" target="_blank">arXiv:2608.02191</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">StereoSplat+</span><span class="rw-year">07-09</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">双目前馈 3DGS + 扩散辅助渐进推理。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.08808" target="_blank">arXiv:2607.08808</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">NoDrift3R</span><span class="rw-year">07-08</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">Raymap 引导耦合，无位姿输入的防漂移前馈 3D 重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.07168" target="_blank">arXiv:2607.07168</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">AdaptiveSplat</span><span class="rw-year">07-05</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">纹理感知的可控 3D 高斯分配，提升前馈重建细节。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.04256" target="_blank">arXiv:2607.04256</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">SAF3R</span><span class="rw-year">07-03</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">动态稀疏注意力加速前馈 3D 重建 Transformer。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.03612" target="_blank">arXiv:2607.03612</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">VLRC</span><span class="rw-year">07-02</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">视觉-语言重投影一致性作为可扩展信号，改进前馈 3D 预训练。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.02707" target="_blank">arXiv:2607.02707</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">FastPano3D</span><span class="rw-year">06-29</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">单张全景图前馈室内 3D 重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.30352" target="_blank">arXiv:2606.30352</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">Scene &amp; Human in One World</span><span class="rw-year">06-26</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">场景与人物单次前馈联合重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.27720" target="_blank">arXiv:2606.27720</a></div></div>
+
+      <!-- 场景/世界生成 -->
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Beyond Global Latents (Sparse Grid VAE)</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">腾讯混元：分块稀疏网格 VAE，突破全局 latent 瓶颈的可扩展 3D 建模。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02016" target="_blank">arXiv:2608.02016</a></div></div>
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Graph-Validated VLM Scene Gen</span><span class="rw-year">08-04</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">全局图验证优化的 VLM 驱动 3D 室内场景生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.03064" target="_blank">arXiv:2608.03064</a></div></div>
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">EmbodiedGen V2</span><span class="rw-year">07-08</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">智能体式、仿真就绪的 3D 世界引擎（具身 AI）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.07459" target="_blank">arXiv:2607.07459</a></div></div>
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Glob3R</span><span class="rw-year">07-10</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">3D 基础模型驱动的全局 Structure-from-Motion。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.09225" target="_blank">arXiv:2607.09225</a></div></div>
+
+      <!-- 部件/纹理/编辑 -->
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">PartMat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-part">部件/纹理</span><p class="rw-desc">单一全局 latent 的材质感知 3D 部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01825" target="_blank">arXiv:2608.01825</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">EditFlow3D</span><span class="rw-year">08-04</span></div><span class="rw-cat cat-part">部件/编辑</span><p class="rw-desc">轨迹保持的 3D 资产自动局部编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.03179" target="_blank">arXiv:2608.03179</a></div></div>
+
+    </div>
+  </div>
+</section>
+
+<section id="trends" style="padding-top:8px">
+  <div class="wrap">
+    <h2 style="font-size:22px;margin-bottom:6px;letter-spacing:-.3px">趋势观察</h2>
+    <div class="trend">
+      <div class="card">🚀 <b>Feed-forward 3DGS 重建是绝对主力</b>（11/25 篇）：各团队在流式推理（StreamSplat）、无位姿输入（NoDrift3R）、恶劣条件（DerainSplat）、表示解耦（QuerySplat）上持续内卷。</div>
+      <div class="card">🎨 <b>文/图生 3D 转向可控性与垂直场景</b>：风格化（DreamStyle3D）、服装（Fashion-3DLR）、汽车（3DCarGen）、动态人体（4DHumanDiff），从"生成万物"走向"按需生成"。</div>
+      <div class="card">🌍 <b>3D 世界引擎/基础模型兴起</b>：EmbodiedGen V2、Glob3R 对标 2D 基础模型路线，面向具身智能与全局重建。</div>
+      <div class="card">🧠 <b>VLM 深度赋能 3D 生成</b>：VLRC 用 VLM 信号预训练、图验证 VLM 场景生成、Buffalo 统一理解-生成-编辑，"理解驱动生成"成为新范式。</div>
+    </div>
+    <div class="callout" style="margin-top:16px">📌 <b>检索说明：</b>数据来源 ArXiv API（cs.CV / cs.GR / cs.AI，提交日期 ≥ 2026-06-01，按提交日期倒序检索约 99 条命中后人工筛选 25 条）。8 月数据截至 2026-08-06，合集将持续更新。</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">3D-Research · 前沿追踪合集 · 生成于 2026-08-06 · <a href="../index.html">返回首页</a></div>
+</footer>
+
+<script>
+/* category filter */
+document.querySelectorAll('.dir-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.dir-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat=btn.dataset.cat;
+    document.querySelectorAll('#paperGrid .rw-card').forEach(c=>{
+      c.style.display=(cat==='all'||c.dataset.cat===cat)?'flex':'none';
+    });
+  });
+});
+
+/* charts */
+const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
+Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
+new Chart(document.getElementById('catDonut'),{type:'doughnut',
+  data:{labels:['Feed-forward 重建 11','文/图生 3D 7','场景/世界生成 4','部件/纹理/编辑 2','统一多模态 1'],
+    datasets:[{data:[11,7,4,2,1],backgroundColor:['#0d9488','#2563eb','#ea8a3c','#f97066','#8b5cf6'],borderColor:'#fff',borderWidth:3}]},
+  options:{maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:14,padding:10}}}}});
+new Chart(document.getElementById('monthBar'),{type:'bar',
+  data:{labels:['2026-06','2026-07','2026-08（截至 8/6）'],
+    datasets:[{data:[3,11,11],backgroundColor:['#b6c2d2','#6366f1','#2563eb'],borderRadius:8}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,title:{display:true,text:'论文数（篇）'},ticks:{stepSize:2}}}}});
+</script>
+</body>
+</html>
