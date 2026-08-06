@@ -3,7 +3,7 @@
 > 3D AIGC 研究进展追踪与论文深度解读 —— 覆盖 3D 生成（Generation）、3D 编辑（Editing）、3D 理解（Understanding）、部件生成（Part Generation）与统一多模态 3D 大模型等方向。
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-online-brightgreen?logo=github)](https://ccyyatnet.github.io/3D-research/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 **在线阅读：https://ccyyatnet.github.io/3D-research/**
 
@@ -52,4 +52,4 @@ git push origin main
 
 ## 📄 License
 
-本项目基于 [MIT License](LICENSE) 开源。网页中论文内容版权归原作者所有，本仓库仅作学习与研究分享之用。
+本项目基于 [Apache License 2.0](LICENSE) 开源。网页中论文内容版权归原作者所有，本仓库仅作学习与研究分享之用。
