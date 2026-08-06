@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EditFlow3D 论文深度解读 · 3D-Research</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:34px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:880px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta a,.hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .hero .meta a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .dir-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .dir-tab{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 18px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;box-shadow:var(--shadow)}
+  .dir-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .dir-panel{display:none}
+  .dir-panel.show{display:block}
+  .paradigm{font-size:13.5px;font-weight:700;color:var(--ink2);margin:20px 0 10px;padding-left:10px;border-left:3px solid var(--line)}
+  .rw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .rw-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
+  .rw-card:hover{transform:translateY(-2px);border-color:#c7d6f5}
+  .rw-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .rw-name{font-weight:700;font-size:15px}
+  .rw-year{flex-shrink:0;font-size:11.5px;font-weight:700;background:#eef2fb;color:var(--blue);border-radius:6px;padding:2px 8px;white-space:nowrap}
+  .rw-venue{font-size:11.5px;color:var(--ink3);margin-top:2px}
+  .rw-desc{font-size:13px;color:var(--ink2);margin-top:8px;flex:1}
+  .rw-links{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .rw-links a{font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;border:1px solid var(--line);color:var(--ink2)}
+  .rw-links a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+  .rw-links a.gh::before{content:"⌥ "}
+  .rw-links a.todo{border-style:dashed;color:var(--ink3)}
+  .rw-links a.site{background:#eef5ff;border-color:#c7d9f8;color:var(--blue)}
+  .rw-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  .rw-card.hl .rw-year{background:#fde8d4;color:#b45309}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .chart-box{position:relative;height:300px}
+  .chart-box.sm{height:240px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .mini-stat{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .mini-stat div{flex:1;min-width:100px;background:#f6f9ff;border:1px solid #e2eafb;border-radius:10px;padding:10px 12px;text-align:center}
+  .mini-stat b{display:block;font-size:20px;color:var(--blue)}
+  .mini-stat span{font-size:12px;color:var(--ink3)}
+  .pipe{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;margin-top:8px}
+  .pipe .stage{flex:1;min-width:150px;background:#f8faff;border:1px solid #dfe8fa;border-radius:12px;padding:14px 16px;position:relative}
+  .pipe .stage + .stage{margin-left:26px}
+  .pipe .stage + .stage::before{content:"→";position:absolute;left:-22px;top:50%;transform:translateY(-50%);color:var(--blue);font-weight:700}
+  .pipe .stage .no{display:inline-block;background:var(--blue);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 8px;margin-bottom:6px}
+  .pipe .stage h4{font-size:14px;margin-bottom:4px}
+  .pipe .stage p{font-size:12.5px;color:var(--ink2)}
+  .pipe.teal .stage{background:#f4fcfa;border-color:#cdeae4}
+  .pipe.teal .stage .no{background:var(--teal)}
+  .pipe.teal .stage + .stage::before{color:var(--teal)}
+  .pipe.purple .stage{background:#faf7ff;border-color:#e4d8f8}
+  .pipe.purple .stage .no{background:var(--purple)}
+  .pipe.purple .stage + .stage::before{color:var(--purple)}
+  .pipe.orange .stage{background:#fffaf4;border-color:#f3dfc8}
+  .pipe.orange .stage .no{background:var(--orange)}
+  .pipe.orange .stage + .stage::before{color:var(--orange)}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  td.num{font-variant-numeric:tabular-nums;text-align:right}
+  th.num{text-align:right}
+  .best{font-weight:700;color:var(--blue)}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .kpi b{font-size:24px;color:var(--blue)}
+  .kpi span{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ed,#fff);border-color:#f3dfc8}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  @media (max-width:960px){
+    .rw-grid{grid-template-columns:repeat(2,1fr)}
+    .grid2,.grid3,.stats,.kpi-row{grid-template-columns:1fr}
+    .pipe .stage{min-width:100%}
+    .pipe .stage + .stage{margin-left:0;margin-top:22px}
+    .pipe .stage + .stage::before{left:50%;top:-20px;transform:translateX(-50%) rotate(90deg)}
+  }
+  @media (max-width:600px){.rw-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">EditFlow<span>3D</span> · 论文深度解读</div>
+    <div class="links"><a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#related">① 相关工作</a>
+      <a href="#method">② 方法详解</a>
+      <a href="#results">③ 实验结果</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">arXiv:2608.03179 · cs.CV · 2026-08-04 · 北航 / 上海交大 / 拓竹</span>
+    <h1>EditFlow3D：<em>轨迹保持</em>的 3D 资产生成自动化局部编辑</h1>
+    <p class="sub">Training-free / Inversion-free 框架：VLM 自动化工作流把指令变成「引导图 + 精修 3D mask」，再以<b>掩码差分流引导（DFG）</b>改目标、<b>轨迹保持引导（TPG）</b>护源资产——同时解决"编辑不准"与"保留区被污染"两大难题。</p>
+    <div class="meta">
+      <a href="https://arxiv.org/abs/2608.03179" target="_blank">📄 arXiv 论文</a>
+      <span class="pill">作者：Rui Nie, Chuang Wang*, Haitao Zhou, Jiahe Song, Buyu Li, Sheng Wang, Qian Yu†</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>0 训练</b><span>免训练、免反转（预训练骨干直接编辑）</span></div>
+      <div class="stat"><b>36.53</b><span>EditFlow-Bench PSNR（第二名 27.11）</span></div>
+      <div class="stat"><b>57%</b><span>视觉质量用户偏好率（三项全第一）</span></div>
+      <div class="stat"><b>&lt;1min</b><span>单 A800 完成一个资产的全部编辑</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 1. RELATED WORK ================= -->
+<section id="related">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 1 · Related Work</div>
+      <h2>相关工作图谱：3D 局部编辑的四大路线</h2>
+      <p>3D 局部编辑的核心矛盾是"目标修改 vs 源保持"的权衡。相关工作沿四条线展开。<b>橙色高亮</b>为与本文最直接相关的前序工作。</p>
+    </div>
+
+    <div class="dir-tabs">
+      <button class="dir-tab active" data-dir="opt">⚙️ 优化 / 视图类编辑</button>
+      <button class="dir-tab" data-dir="native">🧊 原生 3D 与 Flow 编辑</button>
+      <button class="dir-tab" data-dir="control">🎛️ 编辑控制构建</button>
+    </div>
+
+    <div class="dir-panel show" id="dir-opt">
+      <p class="paradigm">逐实例优化（SDS / 2D 先验）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Vox-E</span><span class="rw-year">2023 · ICCV</span></div><div class="rw-venue">Reichman 等</div><p class="rw-desc">文本引导的体素级 3D 物体编辑，需逐资产迭代优化。</p><div class="rw-links"><a href="https://arxiv.org/abs/2303.12048" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Instruct-NeRF2NeRF</span><span class="rw-year">2023 · ICCV</span></div><div class="rw-venue">UCB</div><p class="rw-desc">指令编辑 NeRF 场景的经典方法（迭代更新训练集）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2303.12789" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">DreamEditor</span><span class="rw-year">2023 · SIGGRAPH Asia</span></div><div class="rw-venue">—</div><p class="rw-desc">神经场上的文本驱动 3D 场景编辑。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">GaussianEditor</span><span class="rw-year">2024 · CVPR</span></div><div class="rw-venue">THU 等</div><p class="rw-desc">文本指令精细编辑 3D 高斯。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+      </div>
+      <p class="paradigm">2D 编辑 + 3D 重建/传播</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Instant3DiT</span><span class="rw-year">2024 · CVPR'25</span></div><div class="rw-venue">KAUST 等</div><p class="rw-desc">多视角 inpainting 后重建的快速 3D 编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2412.00518" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">PrEditor3D</span><span class="rw-year">2025 · CVPR</span></div><div class="rw-venue">—</div><p class="rw-desc">快速精确的 3D 形状编辑。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Pro3D-Editor</span><span class="rw-year">2025</span></div><div class="rw-venue">—</div><p class="rw-desc">渐进视图传播的一致、精确 3D 编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2506.00512" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">EditP23</span><span class="rw-year">2025</span></div><div class="rw-venue">—</div><p class="rw-desc">图像提示传播到多视图实现 3D 编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2506.20652" target="_blank">arXiv</a></div></div>
+      </div>
+      <div class="callout">⚠️ <b>两类方法的问题（论文指出的）</b>：优化类依赖优化/反转表示质量；视图类易出现跨视图不一致与重建误差，可能改动未编辑内容。</div>
+    </div>
+
+    <div class="dir-panel" id="dir-native">
+      <p class="paradigm">Flow 编辑基础</p>
+      <div class="rw-grid">
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">FlowEdit</span><span class="rw-year">2025 · ICCV</span></div><div class="rw-venue">Technion · ★ DFG 的 2D 灵感来源</div><p class="rw-desc">免反转的图像编辑：用源/目标条件速度场之差作为编辑方向。EditFlow3D 将其推广到 3D 稀疏表示空间。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+      </div>
+      <p class="paradigm">Training-free 原生 3D 编辑（直接对比对象）</p>
+      <div class="rw-grid">
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">Nano3D</span><span class="rw-year">2025.10 · ICLR'26</span></div><div class="rw-venue">清华/生数 · ★ 硬替换代表</div><p class="rw-desc">FlowEdit + TRELLIS，Voxel/SLAT-Merge <b>硬替换</b>框外体素保一致。</p><div class="rw-links"><a href="https://arxiv.org/abs/2510.15019" target="_blank">arXiv</a><a class="gh" href="https://github.com/JAMESYJL/Nano3D" target="_blank">GitHub</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">VoxHammer</span><span class="rw-year">2025.08 · 3DV'26 Oral</span></div><div class="rw-venue">北航/人大/腾讯混元 · ★ 硬替换代表</div><p class="rw-desc">Inversion 轨迹 + 保留区特征/KV 缓存<b>硬替换</b>；需人工指定 3D 框。</p><div class="rw-links"><a href="https://arxiv.org/abs/2508.19247" target="_blank">arXiv</a><a class="gh" href="https://github.com/Nelipot-Lee/VoxHammer" target="_blank">GitHub</a></div></div>
+      </div>
+      <p class="paradigm">训练式前馈编辑</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Easy3E</span><span class="rw-year">2026 · CVPR</span></div><div class="rw-venue">—</div><p class="rw-desc">修正体素流的前馈 3D 资产编辑，泛化依赖训练数据。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">PartFlow</span><span class="rw-year">2026</span></div><div class="rw-venue">—</div><p class="rw-desc">从语义部件变换学习前馈编辑（注：与本站 Buffalo 页中的 Steer3D 为同一 arXiv 号）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2605.27351" target="_blank">arXiv</a></div></div>
+      </div>
+      <p class="paradigm">骨干模型（本文运行于其上）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">TRELLIS (SLAT)</span><span class="rw-year">2024.12 · CVPR'25</span></div><div class="rw-venue">Microsoft</div><p class="rw-desc">结构化 3D 潜空间骨干（公平对比版本）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2412.01506" target="_blank">arXiv</a><a class="gh" href="https://github.com/microsoft/TRELLIS" target="_blank">GitHub</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">TRELLIS.2</span><span class="rw-year">2025.12</span></div><div class="rw-venue">Microsoft · ★ 本文默认骨干</div><p class="rw-desc">O-Voxel + 16× 压缩的高质量生成骨干，编辑结果质量的上限。</p><div class="rw-links"><a href="https://arxiv.org/abs/2512.14692" target="_blank">arXiv</a><a class="gh" href="https://github.com/microsoft/TRELLIS.2" target="_blank">GitHub</a><a class="site" href="../trellis2/index.html">本站解读</a></div></div>
+      </div>
+    </div>
+
+    <div class="dir-panel" id="dir-control">
+      <p class="paradigm">3D 部件分割 / 接地（mask 构建的原材料）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">SAMPart3D</span><span class="rw-year">2024</span></div><div class="rw-venue">HKU 等</div><p class="rw-desc">"分割 3D 物体任意部件"（Segment Any Part in 3D）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2411.07184" target="_blank">arXiv</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">P3-SAM</span><span class="rw-year">2025.09</span></div><div class="rw-venue">腾讯混元 · ★ mask 初始分割主力</div><p class="rw-desc">原生 3D 部件分割，提供语义部件 ID + 颜色编码的多视图分割图。</p><div class="rw-links"><a href="https://arxiv.org/abs/2509.06784" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">PartField</span><span class="rw-year">2025 · ICCV</span></div><div class="rw-venue">NVIDIA 等</div><p class="rw-desc">层次部件感知 3D 特征场，作为 mask 精修的辅助模型。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">S2AM3D</span><span class="rw-year">2026 · CVPR</span></div><div class="rw-venue">—</div><p class="rw-desc">尺度可控的 3D 点云部件分割，多粒度补充候选。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Part-X-MLLM</span><span class="rw-year">2025.11 · ICLR'26</span></div><div class="rw-venue">腾讯混元</div><p class="rw-desc">部件感知 3D 多模态大模型（部件接地与编辑指令）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2511.13647" target="_blank">arXiv</a><a class="gh" href="https://github.com/AiEson/Part-X-MLLM" target="_blank">GitHub</a></div></div>
+      </div>
+      <p class="paradigm">自动化编辑控制管线（最接近的竞争者）</p>
+      <div class="rw-grid">
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">Vinedresser3D</span><span class="rw-year">2026</span></div><div class="rw-venue">— · ★ 同为 VLM 自动管线</div><p class="rw-desc">MLLM 代理式文本引导 3D 编辑：解释指令、选视角、生成引导、识别区域，再做 inversion 编辑；但其自动 mask 精度有限。</p><div class="rw-links"><a href="https://arxiv.org/abs/2602.19542" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Qwen3-VL</span><span class="rw-year">2025.11</span></div><div class="rw-venue">阿里</div><p class="rw-desc">本文的多模态推理引擎（8B）：识别目标部件、排序视角、解析关系指令。</p><div class="rw-links"><a href="https://arxiv.org/abs/2511.21631" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">FLUX.1 Kontext</span><span class="rw-year">2025.06</span></div><div class="rw-venue">Black Forest Labs</div><p class="rw-desc">本文的引导图生成器（in-context 编辑），生成编辑后的视觉引导。</p><div class="rw-links"><a href="https://arxiv.org/abs/2506.15742" target="_blank">arXiv</a></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2. METHOD ================= -->
+<section id="method" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 2 · Method</div>
+      <h2>方法详解：自动化控制 + 局部流编辑</h2>
+      <p>两个阶段：Stage 1 把一条指令自动变成「可视化引导图 + 精修 3D mask」；Stage 2 在预训练模型原生空间里用 DFG + TPG 完成局部编辑。</p>
+    </div>
+
+    <h3 class="block-title">① Stage 1 · VLM 驱动的编辑控制构建</h3>
+    <div class="card">
+      <div class="pipe">
+        <div class="stage"><span class="no">1</span><h4>视角选择 + 引导图</h4><p>Qwen3-VL-8B 多视角理解资产、解析目标部件（含"左边的柱子"等关系指令）、判定 5 类操作、排序视角 → 选中最佳视角 → FLUX.1 Kontext 生成编辑引导图 I_edit</p></div>
+        <div class="stage"><span class="no">2</span><h4>P3-SAM 部件分解</h4><p>原生 3D 分割出语义部件（持久 ID + 颜色），多视角渲染后 VLM 依据指令选出目标部件 ID 集合 → 初始 mask M⁰</p></div>
+        <div class="stage"><span class="no">3</span><h4>多模型边界精修</h4><p>PartField/S2AM3D 的层次/多粒度分割补充：纯度(≥0.6)筛选 → 贪心最大化面积加权 F1 → 等权三模型共识（≥2/3 支持为可靠前景）</p></div>
+        <div class="stage"><span class="no">4</span><h4>法向感知图优化</h4><p>网格面图 + ICM 求解：平滑表面标签一致、法向突跳处允许翻转 → 边界停在几何部件交界处；连通性过滤 + 小碎片剔除 + 小孔填充</p></div>
+        <div class="stage"><span class="no">5</span><h4>操作感知体积化</h4><p>删除=+1 圈面环；替换/几何修改=+4 圈邻域；外观修改=窄边界；新增=锚点周围未占用稀疏坐标 → 最终 mask M_edit / M_keep</p></div>
+      </div>
+      <p class="chart-note" style="margin-top:12px">所有分割结果先映射到公共表面点集（10 万采样点，按最近邻），再统一到模型原生稀疏坐标——避免不同模型重网格带来的面索引不一致。</p>
+    </div>
+
+    <h3 class="block-title c-indigo">② Stage 2 · 局部 3D Flow 编辑（DFG + TPG）</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">DFG · 差分流引导（改哪里）</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">沿用 FlowEdit 的免反转原则：编辑状态初始化为源 latent <code>z_edit = x_src</code>；每步计算<b>差分速度</b> Δv_t = v_θ(z_tgt, c_edit) − v_θ(z_src, c_src)（4 个噪声样本求期望，CFG scale 5.0，25 步）；更新 <code>z_edit ← z_edit + γ·Δt·S_edit ⊙ Δv_t</code>——<b>mask 把结构更新严格锁进目标区域</b>。</p>
+        <div class="mini-stat"><div><b>25 步</b><span>DFG 流步数</span></div><div><b>×4</b><span>每步差分速度噪声平均</span></div><div><b>5.0</b><span>源/目标 CFG scale</span></div></div>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">TPG · 轨迹保持引导（护哪里）</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">关键洞察：DFG 只管结构更新，后续特征生成阶段目标条件<b>全局施加</b>，非目标区域仍会漂移。TPG 每步估计终端干净态 <code>x̂_0,t = z_tgt − t·v_θ(...)</code>，定义保持损失 <code>L_pres = ‖S_keep ⊙ (x̂_0,t − x_src)‖²</code>（12 步，λ=12），用<b>梯度软校正</b> <code>z_edit ← z_edit − λ·∇L_pres</code> 把保留区轨迹拉回源状态。</p>
+        <div class="mini-stat"><div><b>12 步</b><span>TPG 特征生成步数</span></div><div><b>λ=12</b><span>保持强度（20 会过约束）</span></div><div><b>软校正</b><span>不替换中间特征</span></div></div>
+      </div>
+    </div>
+    <div class="callout warn">🔑 <b>TPG vs 硬替换（论文的核心方法主张）</b>：Nano3D/VoxHammer 把保留区特征<b>直接替换</b>回源值——但源特征与演化中的编辑区不兼容：羽毛替换案例中帽子几何碎裂、柱子替换案例中柜子纹理污染。TPG 的梯度软校正不覆盖中间特征，保持编辑区与保留区的连续性，是"软约束替代硬替换"的方法级改进。</div>
+
+    <h3 class="block-title c-purple">③ EditFlow-Bench：补充评测基准</h3>
+    <div class="grid3">
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">100 个源资产</h4><p style="font-size:13.5px;color:var(--ink2)">GSO 真实扫描 30 + ABO 商品 30 + TRELLIS.2 生成 20 + Hunyuan3D 2.1 生成 20 —— 覆盖扫描/人工/生成三类来源，避免依赖单一资产源。</p></div>
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">200 个编辑案例</h4><p style="font-size:13.5px;color:var(--ink2)">5 类操作各 40 例：<b>增加 / 删除 / 替换 / 几何修改 / 外观修改</b>；Gemini 3 Pro 生成指令、FLUX 生成引导图，每资产两个不同案例。</p></div>
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">自动 mask + 人工验收</h4><p style="font-size:13.5px;color:var(--ink2)">mask 全自动构建（零手动标注），7 位评审 ~30 工时只做<b>通过/不通过二元检查</b>，失败即整体重造、绝不手修 —— 与 Edit3D-Bench 的 oracle mask 形成对照。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 3. RESULTS ================= -->
+<section id="results">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 3 · Experiments</div>
+      <h2>实验结果：双基准、消融、用户研究</h2>
+      <p>所有方法在双骨干（TRELLIS / TRELLIS.2）下同输入（同一源资产 + 同一引导图）；EditFlow-Bench 用自动 mask，Edit3D-Bench 按协议用 oracle mask。</p>
+    </div>
+
+    <h3 class="block-title">3.1 EditFlow-Bench 定量对比</h3>
+    <div class="kpi-row">
+      <div class="kpi"><b>36.53</b><span>PSNR ↑（第二名 Vinedresser3D 27.11）</span></div>
+      <div class="kpi"><b>0.904</b><span>SSIM ↑（第二名 0.842）</span></div>
+      <div class="kpi"><b>43.51</b><span>FID ↓（第二名 68.27）</span></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">保真度指标（PSNR ↑ / FID ↓）</h4><div class="chart-box"><canvas id="benchChart"></canvas></div></div>
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">对齐与保真（Sim ↑ / SSIM ↑ / LPIPS ↓）</h4><div class="chart-box"><canvas id="simChart"></canvas></div></div>
+    </div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>方法</th><th class="num">Sim.↑</th><th class="num">CD_keep↓</th><th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">LPIPS↓</th><th class="num">DINO-I↑</th><th class="num">FID↓</th><th class="num">Edit3D-Bench PSNR↑</th></tr></thead>
+        <tbody>
+          <tr><td>Nano3D</td><td class="num">0.275</td><td class="num">0.221</td><td class="num">25.42</td><td class="num">0.826</td><td class="num">0.153</td><td class="num">0.883</td><td class="num">74.50</td><td class="num">30.52</td></tr>
+          <tr><td>PartFlow</td><td class="num">0.287</td><td class="num">0.229</td><td class="num">26.18</td><td class="num">0.833</td><td class="num">0.149</td><td class="num">0.887</td><td class="num">72.30</td><td class="num">29.20</td></tr>
+          <tr><td>Vinedresser3D</td><td class="num">0.292</td><td class="num">0.207</td><td class="num">27.11</td><td class="num">0.839</td><td class="num">0.143</td><td class="num">0.891</td><td class="num">69.84</td><td class="num">28.68</td></tr>
+          <tr><td>VoxHammer</td><td class="num">0.284</td><td class="num">0.192</td><td class="num">24.81</td><td class="num">0.842</td><td class="num">0.136</td><td class="num">0.881</td><td class="num">71.35</td><td class="num">27.63</td></tr>
+          <tr><td>直接重建 TRELLIS</td><td class="num">0.292</td><td class="num">0.251</td><td class="num">25.84</td><td class="num">0.796</td><td class="num">0.189</td><td class="num">0.875</td><td class="num">75.12</td><td class="num">21.73</td></tr>
+          <tr><td>直接重建 TRELLIS.2</td><td class="num">0.314</td><td class="num">0.235</td><td class="num">27.62</td><td class="num">0.814</td><td class="num">0.174</td><td class="num">0.895</td><td class="num">68.27</td><td class="num">22.65</td></tr>
+          <tr><td><b>Ours (TRELLIS)</b></td><td class="num">0.299</td><td class="num best">0.158</td><td class="num">34.76</td><td class="num">0.892</td><td class="num">0.091</td><td class="num">0.923</td><td class="num">49.20</td><td class="num">36.84</td></tr>
+          <tr><td><b>Ours (TRELLIS.2)</b></td><td class="num best">0.318</td><td class="num">0.144</td><td class="num best">36.53</td><td class="num best">0.904</td><td class="num best">0.080</td><td class="num best">0.934</td><td class="num best">43.51</td><td class="num best">39.28</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note" style="margin-top:8px">观察：编辑基线普遍存在"目标对齐 vs 源保留"的权衡；直接重建基线目标对齐好但单视角约束弱 → 看不到的视角保真差。EditFlow3D 双骨干下均全面第一（TRELLIS 版本也优于所有基线，证明优势不来自骨干更强）。</p>
+
+    <h3 class="block-title c-indigo" style="margin-top:36px">3.2 消融研究（EditFlow-Bench）</h3>
+    <div class="card"><div class="chart-box"><canvas id="ablChart"></canvas></div>
+      <p class="chart-note"><b>Full</b> = 自适应视角 + mask 精修 + DFG + TPG。去掉 DFG 使 Sim 0.318→0.287（改得不准）；去掉 TPG 使 PSNR/FID 崩至 27.95/67.84（守不住）——两组件互补。固定视角与 mask 不精修也各有明显损失。</p>
+    </div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>变体</th><th class="num">Sim.↑</th><th class="num">CD_keep↓</th><th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">LPIPS↓</th><th class="num">DINO-I↑</th><th class="num">FID↓</th></tr></thead>
+        <tbody>
+          <tr><td><b>Full</b></td><td class="num best">0.318</td><td class="num best">0.144</td><td class="num best">36.53</td><td class="num best">0.904</td><td class="num best">0.080</td><td class="num best">0.934</td><td class="num best">43.51</td></tr>
+          <tr><td>Fixed View（固定视角）</td><td class="num">0.308</td><td class="num">0.167</td><td class="num">33.84</td><td class="num">0.892</td><td class="num">0.098</td><td class="num">0.923</td><td class="num">49.86</td></tr>
+          <tr><td>w/o mask Ref.（不精修）</td><td class="num">0.300</td><td class="num">0.186</td><td class="num">32.71</td><td class="num">0.881</td><td class="num">0.112</td><td class="num">0.915</td><td class="num">53.42</td></tr>
+          <tr><td>w/o DFG</td><td class="num">0.287</td><td class="num">0.213</td><td class="num">29.86</td><td class="num">0.858</td><td class="num">0.136</td><td class="num">0.897</td><td class="num">61.72</td></tr>
+          <tr><td>w/o TPG（λ=0）</td><td class="num">0.306</td><td class="num">0.194</td><td class="num">27.95</td><td class="num">0.846</td><td class="num">0.158</td><td class="num">0.889</td><td class="num">67.84</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note" style="margin-top:8px">TPG 强度 λ 灵敏度（附录）：0 → 周围壁炉几何/材质明显漂移；6 → 部分恢复；<b>12 → 最优平衡</b>；20 → 过约束干扰目标边界、出现残留伪影。</p>
+
+    <h3 class="block-title c-orange" style="margin-top:36px">3.3 用户研究（40 人 / 50 案例 / 每标准 400 次选择）</h3>
+    <div class="card"><div class="chart-box"><canvas id="userChart"></canvas></div>
+      <p class="chart-note">EditFlow3D 三项偏好率 43% / 57% / 49%，均第一（视觉质量优势最突出）。对比方法在"指令对齐"与"源保持"上各有取舍，无一全能。</p>
+    </div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>方法</th><th class="num">指令对齐</th><th class="num">视觉质量</th><th class="num">源保持</th></tr></thead>
+        <tbody>
+          <tr><td>Nano3D</td><td class="num">15%</td><td class="num">12%</td><td class="num">10%</td></tr>
+          <tr><td>PartFlow</td><td class="num">8%</td><td class="num">9%</td><td class="num">9%</td></tr>
+          <tr><td>VoxHammer</td><td class="num">15%</td><td class="num">14%</td><td class="num">19%</td></tr>
+          <tr><td>Vinedresser3D</td><td class="num">19%</td><td class="num">8%</td><td class="num">13%</td></tr>
+          <tr><td><b>EditFlow3D (Ours)</b></td><td class="num best">43%</td><td class="num best">57%</td><td class="num best">49%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="block-title c-teal" style="margin-top:36px">3.4 工程细节 & 与 Buffalo 的对照</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">工程配置</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">骨干 TRELLIS.2（默认）+ TRELLIS（公平对比）；Qwen3-VL-8B + FLUX.1 Kontext [dev]；<b>单张 A800（80GB）< 1 分钟/资产</b>（含 DFG + TPG + 最终生成，不含 VLM/分割/引导图前置耗时）。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">与 Buffalo（Nano3D-v2）的对照阅读</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">Nano3D-v2 用<b>硬体素替换</b>规模化造编辑数据 → 训练出会编辑的模型（把能力训进模型）；EditFlow3D 用<b>软轨迹校正</b>在推理时现场编辑（用模型的能力）。"如何保住未编辑区域"的两种答案恰好互补。</p>
+      </div>
+    </div>
+    <div class="callout">⚖️ <b>评注：</b>优点是全流程自动化 + 软约束机制 + 实验扎实（双骨干/双基准/5 类消融/40 人用户研究/λ 灵敏度）。可商榷处：① EditFlow-Bench 的人工二元验收虽避免手修，仍隐含选择效应；② 编辑质量受骨干与 2D 引导图质量双重制约；③ "&lt;1 分钟"未计入控制构建前置耗时。</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">数据来源：EditFlow3D (arXiv:2608.03179v1, 2026-08-04) 正文 Table 1-3 & 附录 · 页面由 3D-Research 生成 · <a href="../index.html">返回首页</a></div>
+</footer>
+
+<script>
+/* tabs */
+document.querySelectorAll('.dir-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.dir-tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.dir-panel').forEach(p=>p.classList.remove('show'));
+    btn.classList.add('active');
+    document.getElementById('dir-'+btn.dataset.dir).classList.add('show');
+  });
+});
+
+const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
+Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
+const C={blue:'#2563eb',indigo:'#6366f1',orange:'#ea8a3c',teal:'#0d9488',gray:'#b6c2d2',green:'#16a34a',purple:'#8b5cf6',red:'#dc4c4c'};
+const bench=['Nano3D','PartFlow','Vinedresser3D','VoxHammer','重建 TRELLIS','重建 TRELLIS.2','Ours(TRELLIS)','Ours(TRELLIS.2)'];
+const isOurs=i=>i>=6;
+
+/* benchmark PSNR + FID */
+new Chart(document.getElementById('benchChart'),{type:'bar',
+  data:{labels:bench,datasets:[
+    {label:'PSNR ↑',data:[25.42,26.18,27.11,24.81,25.84,27.62,34.76,36.53],
+     backgroundColor:bench.map((_,i)=>isOurs(i)?C.blue:C.gray),borderRadius:4,yAxisID:'y'},
+    {label:'FID ↓',data:[74.50,72.30,69.84,71.35,75.12,68.27,49.20,43.51],
+     backgroundColor:bench.map((_,i)=>isOurs(i)?C.orange:C.gray),borderRadius:4,yAxisID:'y1',type:'line',pointRadius:4,borderWidth:2.5}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{position:'left',title:{display:true,text:'PSNR (dB) ↑'}},
+            y1:{position:'right',title:{display:true,text:'FID ↓'},grid:{drawOnChartArea:false}},
+            x:{ticks:{font:{size:9.5},maxRotation:40,minRotation:40}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:8}}}}});
+
+/* Sim / SSIM / LPIPS */
+new Chart(document.getElementById('simChart'),{type:'bar',
+  data:{labels:bench,datasets:[
+    {label:'Sim. ↑',data:[0.275,0.287,0.292,0.284,0.292,0.314,0.299,0.318],backgroundColor:C.indigo,borderRadius:4},
+    {label:'SSIM ↑',data:[0.826,0.833,0.839,0.842,0.796,0.814,0.892,0.904],backgroundColor:C.teal,borderRadius:4},
+    {label:'LPIPS ↓',data:[0.153,0.149,0.143,0.136,0.189,0.174,0.091,0.080],backgroundColor:C.orange,borderRadius:4}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{min:0,title:{display:true,text:'得分'}},x:{ticks:{font:{size:9.5},maxRotation:40,minRotation:40}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:8}}}}});
+
+/* ablation */
+const abl=['Full','Fixed View','w/o mask Ref.','w/o DFG','w/o TPG(λ=0)'];
+new Chart(document.getElementById('ablChart'),{type:'bar',
+  data:{labels:abl,datasets:[
+    {label:'PSNR ↑',data:[36.53,33.84,32.71,29.86,27.95],backgroundColor:[C.blue,C.indigo,C.teal,C.orange,C.red],borderRadius:5,yAxisID:'y'},
+    {label:'FID ↓',data:[43.51,49.86,53.42,61.72,67.84],type:'line',pointRadius:5,borderWidth:2.5,backgroundColor:C.purple,borderColor:C.purple,yAxisID:'y1'}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{position:'left',min:20,title:{display:true,text:'PSNR (dB) ↑'}},
+            y1:{position:'right',title:{display:true,text:'FID ↓'},grid:{drawOnChartArea:false}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:8}}}}});
+
+/* user study */
+new Chart(document.getElementById('userChart'),{type:'bar',
+  data:{labels:['Nano3D','PartFlow','VoxHammer','Vinedresser3D','EditFlow3D'],
+    datasets:[
+      {label:'指令对齐',data:[15,8,15,19,43],backgroundColor:C.blue,borderRadius:4},
+      {label:'视觉质量',data:[12,9,14,8,57],backgroundColor:C.teal,borderRadius:4},
+      {label:'源保持',data:[10,9,19,13,49],backgroundColor:C.orange,borderRadius:4}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{beginAtZero:true,max:65,title:{display:true,text:'偏好率（%）'}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:8}}}}});
+</script>
+</body>
+</html>
