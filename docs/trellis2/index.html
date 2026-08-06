@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRELLIS 2 论文深度解读 · 3D-Research</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:34px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:880px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta a,.hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .hero .meta a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .dir-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .dir-tab{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 18px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;box-shadow:var(--shadow)}
+  .dir-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .dir-panel{display:none}
+  .dir-panel.show{display:block}
+  .paradigm{font-size:13.5px;font-weight:700;color:var(--ink2);margin:20px 0 10px;padding-left:10px;border-left:3px solid var(--line)}
+  .rw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .rw-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
+  .rw-card:hover{transform:translateY(-2px);border-color:#c7d6f5}
+  .rw-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .rw-name{font-weight:700;font-size:15px}
+  .rw-year{flex-shrink:0;font-size:11.5px;font-weight:700;background:#eef2fb;color:var(--blue);border-radius:6px;padding:2px 8px;white-space:nowrap}
+  .rw-venue{font-size:11.5px;color:var(--ink3);margin-top:2px}
+  .rw-desc{font-size:13px;color:var(--ink2);margin-top:8px;flex:1}
+  .rw-links{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .rw-links a{font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;border:1px solid var(--line);color:var(--ink2)}
+  .rw-links a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+  .rw-links a.gh::before{content:"⌥ "}
+  .rw-links a.todo{border-style:dashed;color:var(--ink3)}
+  .rw-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  .rw-card.hl .rw-year{background:#fde8d4;color:#b45309}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .chart-box{position:relative;height:300px}
+  .chart-box.sm{height:240px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .mini-stat{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .mini-stat div{flex:1;min-width:100px;background:#f6f9ff;border:1px solid #e2eafb;border-radius:10px;padding:10px 12px;text-align:center}
+  .mini-stat b{display:block;font-size:20px;color:var(--blue)}
+  .mini-stat span{font-size:12px;color:var(--ink3)}
+  .pipe{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;margin-top:8px}
+  .pipe .stage{flex:1;min-width:170px;background:#f8faff;border:1px solid #dfe8fa;border-radius:12px;padding:14px 16px;position:relative}
+  .pipe .stage + .stage{margin-left:26px}
+  .pipe .stage + .stage::before{content:"→";position:absolute;left:-22px;top:50%;transform:translateY(-50%);color:var(--blue);font-weight:700}
+  .pipe .stage .no{display:inline-block;background:var(--blue);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 8px;margin-bottom:6px}
+  .pipe .stage h4{font-size:14px;margin-bottom:4px}
+  .pipe .stage p{font-size:12.5px;color:var(--ink2)}
+  .pipe.teal .stage{background:#f4fcfa;border-color:#cdeae4}
+  .pipe.teal .stage .no{background:var(--teal)}
+  .pipe.teal .stage + .stage::before{color:var(--teal)}
+  .pipe.purple .stage{background:#faf7ff;border-color:#e4d8f8}
+  .pipe.purple .stage .no{background:var(--purple)}
+  .pipe.purple .stage + .stage::before{color:var(--purple)}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  td.num{font-variant-numeric:tabular-nums;text-align:right}
+  th.num{text-align:right}
+  .best{font-weight:700;color:var(--blue)}
+  .badge{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;white-space:nowrap}
+  .badge.open{background:#e4f7ec;color:#15803d}
+  .badge.part{background:#fff4e0;color:#b45309}
+  .badge.na{background:#eef1f6;color:#64748b}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .kpi b{font-size:24px;color:var(--blue)}
+  .kpi span{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  @media (max-width:960px){
+    .rw-grid{grid-template-columns:repeat(2,1fr)}
+    .grid2,.grid3,.stats,.kpi-row{grid-template-columns:1fr}
+    .pipe .stage{min-width:100%}
+    .pipe .stage + .stage{margin-left:0;margin-top:22px}
+    .pipe .stage + .stage::before{left:50%;top:-20px;transform:translateX(-50%) rotate(90deg)}
+  }
+  @media (max-width:600px){.rw-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">TRELLIS <span>2</span> · 论文深度解读</div>
+    <div class="links"><a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#related">① 相关工作</a>
+      <a href="#method">② 方法详解</a>
+      <a href="#results">③ 实验结果</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">arXiv:2512.14692 · cs.CV · 2025-12-16 · 清华 + Microsoft · 全量开源</span>
+    <h1>TRELLIS 2：<em>原生且紧凑</em>的结构化 3D 潜空间生成</h1>
+    <p class="sub">提出 <b>O-Voxel</b> 全向体素表示（任意拓扑 + 完整 PBR 材质含透明度）与 <b>Sparse Compression VAE</b>（16× 空间压缩），训练 4B 参数 flow-matching DiT——以更少的 token 实现重建与生成质量的全面跃升，且端到端零后处理。</p>
+    <div class="meta">
+      <a href="https://arxiv.org/abs/2512.14692" target="_blank">📄 arXiv 论文</a>
+      <a href="https://microsoft.github.io/TRELLIS.2" target="_blank">🌐 项目主页</a>
+      <a href="https://github.com/microsoft/TRELLIS.2" target="_blank">⌥ GitHub（代码/模型/数据开源）</a>
+      <span class="pill">作者：Jianfeng Xiang, Xiaoxue Chen 等（清华 + Microsoft Research）</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>16×</b><span>空间压缩率（此前体素方法最高 8×）</span></div>
+      <div class="stat"><b>9.6K</b><span>1024³ 全纹理资产的 latent token 数</span></div>
+      <div class="stat"><b>66.5%</b><span>图生 3D 用户偏好率（第二名 13.3%）</span></div>
+      <div class="stat"><b>~3s</b><span>512³ 全纹理资产生成耗时（H100）</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 1. RELATED WORK ================= -->
+<section id="related">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 1 · Related Work</div>
+      <h2>相关工作图谱：表示之争</h2>
+      <p>TRELLIS 2 的核心命题是"什么表示能同时做到任意拓扑 + 完整外观 + 高压缩 + 可学习"。相关工作沿三条线展开：3D 几何表示、潜空间两大范式、大规模 3D 资产生成系统。<b>橙色高亮卡片</b>为与本文直接相关的关键前序工作。</p>
+    </div>
+
+    <div class="dir-tabs">
+      <button class="dir-tab active" data-dir="repr">🧊 3D 几何表示</button>
+      <button class="dir-tab" data-dir="latent">🗜️ 潜空间范式</button>
+      <button class="dir-tab" data-dir="system">🏭 生成系统与纹理管线</button>
+    </div>
+
+    <div class="dir-panel show" id="dir-repr">
+      <p class="paradigm">隐式场表示（本文批判的主要对象）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Occupancy Networks</span><span class="rw-year">2019 · CVPR</span></div><div class="rw-venue">Tübingen</div><p class="rw-desc">占据场隐式表示的开山之作，函数空间学习 3D 重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/1812.03828" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">DeepSDF</span><span class="rw-year">2019 · CVPR</span></div><div class="rw-venue">MIT 等</div><p class="rw-desc">连续符号距离函数（SDF）形状表示——后续 iso-surface 路线的基石，但无法表达开放/非流形表面。</p><div class="rw-links"><a href="https://arxiv.org/abs/1901.05103" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">NeRF</span><span class="rw-year">2020 · ECCV</span></div><div class="rw-venue">UCB</div><p class="rw-desc">辐射场统一几何与外观，渲染逼真但几何质量差、采样成本高。</p><div class="rw-links"><a href="https://arxiv.org/abs/2003.08934" target="_blank">arXiv</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">Dual Contouring</span><span class="rw-year">2002 · SIGGRAPH</span></div><div class="rw-venue">Ju et al. · ★ Flexible Dual Grid 的灵感来源</div><p class="rw-desc">从带 Hermite 数据的符号网格提取表面；本文去掉场依赖，直接以网格交点驱动对偶顶点优化。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">FlexiCubes</span><span class="rw-year">2023 · TOG</span></div><div class="rw-venue">NVIDIA · ★ 切分权重 γ 的规则来源</div><p class="rw-desc">柔性等值面提取，梯度友好的网格优化；本文沿用其四边形自适应三角形切分规则。</p><div class="rw-links"><a href="https://arxiv.org/abs/2308.05371" target="_blank">arXiv</a></div></div>
+      </div>
+      <p class="paradigm">非结构化显式表示</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">PolyGen</span><span class="rw-year">2020 · ICML</span></div><div class="rw-venue">DeepMind</div><p class="rw-desc">网格顶点/面的自回归生成模型，显式但缺乏结构规律性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2002.10880" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Point-E</span><span class="rw-year">2022</span></div><div class="rw-venue">OpenAI</div><p class="rw-desc">文本到点云的快速生成系统，点云难以压缩成结构化潜空间。</p><div class="rw-links"><a href="https://arxiv.org/abs/2212.08751" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">3D Gaussian Splatting</span><span class="rw-year">2023 · TOG</span></div><div class="rw-venue">Inria 等</div><p class="rw-desc">显式高斯基元实时渲染；非结构化、难做 latent 压缩。</p><div class="rw-links"><a href="https://arxiv.org/abs/2308.04079" target="_blank">arXiv</a></div></div>
+      </div>
+      <p class="paradigm">结构化表示（场 + 稀疏体素，本文所属路线的直接前驱）</p>
+      <div class="rw-grid">
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">XCube</span><span class="rw-year">2024 · CVPR</span></div><div class="rw-venue">NVIDIA · ★ 早剪枝上采样机制来源</div><p class="rw-desc">稀疏体素层级的大规模 3D 生成；本文 SC-VAE 的上采样剪枝借鉴其思想。</p><div class="rw-links"><a href="https://arxiv.org/abs/2312.03806" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">SparseFlex</span><span class="rw-year">2025 · ICCV</span></div><div class="rw-venue">腾讯PCG 等</div><p class="rw-desc">高分辨率任意拓扑稀疏体素形状建模——重建实验最强基线，但 token 量大（1024³ 需 225K）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2503.21732" target="_blank">arXiv</a></div></div>
+      </div>
+    </div>
+
+    <div class="dir-panel" id="dir-latent">
+      <p class="paradigm">范式一：非结构化潜空间（Perceiver 式，压缩强但保真受限）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">LION</span><span class="rw-year">2022 · NeurIPS</span></div><div class="rw-venue">NVIDIA</div><p class="rw-desc">潜点云扩散模型，非结构化潜空间早期代表。</p><div class="rw-links"><a href="https://arxiv.org/abs/2210.06932" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Shap-E</span><span class="rw-year">2023.05</span></div><div class="rw-venue">OpenAI</div><p class="rw-desc">条件化 3D 隐式函数生成，非结构化潜空间最知名工作。</p><div class="rw-links"><a href="https://arxiv.org/abs/2305.02463" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">3DShape2VecSet</span><span class="rw-year">2023 · TOG</span></div><div class="rw-venue">TUM 等</div><p class="rw-desc">VecSet 神经场表示 + 生成扩散，影响深远的编码方案。</p><div class="rw-links"><a href="https://arxiv.org/abs/2301.11445" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Michelangelo</span><span class="rw-year">2024 · NeurIPS</span></div><div class="rw-venue">腾讯等</div><p class="rw-desc">形状-图像-文本对齐潜空间的条件生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2306.17115" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">CLAY</span><span class="rw-year">2024 · TOG</span></div><div class="rw-venue">上海AI Lab 等</div><p class="rw-desc">可控大规模 3D 资产生成模型（多分辨率 VAE + DiT）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2406.13876" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Dora</span><span class="rw-year">2025 · CVPR</span></div><div class="rw-venue">—</div><p class="rw-desc">Shape2VecSet 系 3D 形状 VAE 的采样与基准——重建实验基线之一。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+      </div>
+      <p class="paradigm">范式二：结构化潜空间（稀疏性先验，保真高但 token 多——本文突破口）</p>
+      <div class="rw-grid">
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">TRELLIS (SLAT)</span><span class="rw-year">2024.12 · CVPR'25</span></div><div class="rw-venue">Microsoft · ★ 本文直接前身</div><p class="rw-desc">Structured Latents：多视图特征 + 稀疏体素的统一表示。局限：依赖 2D 多视图信息、纯渲染监督、4× 压缩、token 量大。</p><div class="rw-links"><a href="https://arxiv.org/abs/2412.01506" target="_blank">arXiv</a><a class="gh" href="https://github.com/microsoft/TRELLIS" target="_blank">GitHub（开源）</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Direct3D-S2</span><span class="rw-year">2025.05</span></div><div class="rw-venue">—</div><p class="rw-desc">空间稀疏注意力实现 Gigascale 3D 生成——优化计算而非潜空间紧凑性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2505.17412" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Sparc3D</span><span class="rw-year">2025.05</span></div><div class="rw-venue">南洋理工等</div><p class="rw-desc">稀疏表示 + 稀疏构建的高分辨率 3D 建模。</p><div class="rw-links"><a href="https://arxiv.org/abs/2505.14521" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Ultra3D</span><span class="rw-year">2025.07</span></div><div class="rw-venue">北大等</div><p class="rw-desc">Part Attention 高效高保真生成——同为"优化网络计算"路线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2507.17745" target="_blank">arXiv</a></div></div>
+      </div>
+      <div class="callout">💡 <b>本文定位：</b>两大范式各有硬伤——非结构化保真受限、结构化 token 太多。SC-VAE 的答案是：<b>从原生 3D 数据（而非多视图 2D 特征）直接学习紧凑结构化潜空间</b>，16× 压缩兼得两者之长。</div>
+    </div>
+
+    <div class="dir-panel" id="dir-system">
+      <p class="paradigm">大规模 3D 资产生成（图生 3D 对比对象）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">3DTopia-XL</span><span class="rw-year">2024.09</span></div><div class="rw-venue">—</div><p class="rw-desc">Primitive diffusion 扩展高质量 3D 资产生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2409.12957" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Craftsman3D</span><span class="rw-year">2024.05</span></div><div class="rw-venue">腾讯PCG 等</div><p class="rw-desc">3D 原生生成 + 交互式几何细化器。</p><div class="rw-links"><a href="https://arxiv.org/abs/2405.14979" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">TripoSG</span><span class="rw-year">2025.02</span></div><div class="rw-venue">VAST</div><p class="rw-desc">大规模 rectified flow 高保真 3D 形状合成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2502.06608" target="_blank">arXiv</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Step1X-3D</span><span class="rw-year">2025.05</span></div><div class="rw-venue">阶跃星辰</div><p class="rw-desc">高保真可控纹理 3D 资产生成（生成对比基线）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2505.07747" target="_blank">arXiv</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">Hunyuan3D 2.1</span><span class="rw-year">2025.06</span></div><div class="rw-venue">腾讯混元 · ★ 最强对比基线</div><p class="rw-desc">两阶段管线（形状 + Hunyuan3D-Paint 多视图 PBR 纹理），生产级 PBR 资产——本文指出其多视图烘焙的对齐与一致性问题。</p><div class="rw-links"><a href="https://arxiv.org/abs/2506.15442" target="_blank">arXiv</a><a class="gh" href="https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1" target="_blank">GitHub（开源）</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Hi3DGen</span><span class="rw-year">2025.03</span></div><div class="rw-venue">CUHK(SZ) 等</div><p class="rw-desc">法向桥接的高保真图像到 3D 几何生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2503.22236" target="_blank">arXiv</a></div></div>
+      </div>
+      <p class="paradigm">纹理 / 材质生成（形状条件纹理对比对象）</p>
+      <div class="rw-grid">
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">Hunyuan3D-Paint</span><span class="rw-year">2025</span></div><div class="rw-venue">腾讯混元</div><p class="rw-desc">多视图 PBR 生成 + 融合——纹理生成对比基线；跨视图不一致导致 ghosting/模糊。</p><div class="rw-links"><a class="gh" href="https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1" target="_blank">GitHub（随 2.1 开源）</a></div></div>
+        <div class="rw-card"><div class="rw-top"><span class="rw-name">TEXGen</span><span class="rw-year">2024 · TOG</span></div><div class="rw-venue">—</div><p class="rw-desc">UV 空间网格纹理扩散生成——UV chart 歧义与接缝伪影问题。</p><div class="rw-links"><a class="todo" href="#" title="占位，待补全">链接待补全</a></div></div>
+        <div class="rw-card hl"><div class="rw-top"><span class="rw-name">TexVerse</span><span class="rw-year">2025.08</span></div><div class="rw-venue">★ 本文训练数据源</div><p class="rw-desc">高分辨率纹理 3D 物体数据集，用于增强生成模型的 PBR 材质多样性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2508.10868" target="_blank">arXiv</a></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2. METHOD ================= -->
+<section id="method" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 2 · Method</div>
+      <h2>方法详解：O-Voxel → SC-VAE → 生成模型</h2>
+      <p>三级结构：O-Voxel 负责"无损表示"，SC-VAE 负责"紧凑压缩"，三阶段 DiT 负责"高质量生成"。</p>
+    </div>
+
+    <h3 class="block-title">① O-Voxel：原生 3D 全向体素表示</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">几何：Flexible Dual Grid（柔性对偶网格）</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">受 Dual Contouring 启发但<b>完全不使用场表示</b>：直接以网格表面与体素边的交点激活对偶面，每个活动体素存三元组——<b>对偶顶点 v</b>（改进 QEF 闭式求解：平面距离 + 边界边距离 + 正则项）、<b>边交点标志 δ</b>（决定四边形连接）、<b>切分权重 γ</b>（自适应三角化）。</p>
+        <div class="mini-stat">
+          <div><b>数秒</b><span>Mesh→O-Voxel（单 CPU）</span></div>
+          <div><b>数十 ms</b><span>O-Voxel→Mesh</span></div>
+          <div><b>任意拓扑</b><span>开放/非流形/封闭内腔</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">材质：体积化 PBR 属性（6 通道）</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">每个活动体素存 <b>f_mat = (c, m, r, α)</b>：基础色（3 通道）+ 金属度 + 粗糙度 + <b>不透明度 α</b>——α 是<b>首创能力</b>，可处理玻璃等半透明材质。纹理→体素：投影 UV 采样 + mipmap + 距离加权平均；体素→纹理：三线性插值（支持顶点色与贴图两种模式），重建后即可直接渲染。</p>
+        <div class="mini-stat">
+          <div><b>6 ch</b><span>PBR 通道数</span></div>
+          <div><b>α</b><span>首创半透明建模</span></div>
+          <div><b>0</b><span>后处理步骤</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">② Sparse Compression VAE：16× 紧凑潜空间</h3>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:12px"><b>纯稀疏卷积网络</b>（~800M 参数：编码器 354M + 解码器 474M），U 形设计，分辨率无关可泛化。三大关键模块：</p>
+      <div class="pipe">
+        <div class="stage"><span class="no">模块 1</span><h4>稀疏残差自编码</h4><p>借鉴 DC-AE：下采样把 8 个子体素特征堆叠到通道维（空间→通道），上采样对称拆回——高压缩比下优化依然稳定（消融：16× 时 MD 退化仅 +69% → 改进后几乎无损）</p></div>
+        <div class="stage"><span class="no">模块 2</span><h4>早剪枝上采样器</h4><p>上采样前预测子体素激活 mask（8 位二值），跳过无效节点，大幅降低显存与耗时</p></div>
+        <div class="stage"><span class="no">模块 3</span><h4>优化残差块</h4><p>ConvNeXt 风格：单层稀疏卷积 + 宽 point-wise MLP（类 FFN）——稀疏数据上比双卷积参数效率更高，零耗时代价提升细节</p></div>
+      </div>
+      <div class="mini-stat">
+        <div><b>16×</b><span>空间下采样率（此前最高 8×）</span></div>
+        <div><b>2.2K</b><span>512³ 资产 token 数</span></div>
+        <div><b>9.6K</b><span>1024³ 资产 token 数</span></div>
+      </div>
+      <p class="chart-note" style="margin-top:12px"><b>两阶段训练</b>：Stage 1 低分辨率（256³）直接特征回归（对偶顶点 MSE + 边标志 BCE + 材质 L1 + 剪枝 BCE + KL）；Stage 2 高分辨率（512³）加渲染感知损失（mask/depth/normal 的 L1+SSIM+LPIPS），随机浅近平面相机"切片"表面以捕捉内外结构。<b>形状/材质解耦</b>：两个 SC-VAE 分别建模，材质 VAE 在形状结构上条件化 → 支持独立的"给定形状生成纹理"。</p>
+    </div>
+
+    <h3 class="block-title c-purple">③ 生成框架：三阶段 Flow-Matching DiT（~4B 参数）</h3>
+    <div class="card">
+      <div class="pipe purple">
+        <div class="stage"><span class="no">Stage 1</span><h4>稀疏结构生成</h4><p>预测稀疏体素占用布局，先训 512² 条件图学习全局占用先验</p></div>
+        <div class="stage"><span class="no">Stage 2</span><h4>几何生成</h4><p>活动体素内生成几何 latent（DINOv3-L 图像条件，cross-attention）</p></div>
+        <div class="stage"><span class="no">Stage 3</span><h4>材质生成</h4><p>生成与几何结构对齐的 PBR 材质 latent（图像 + 几何 latent 通道拼接条件）</p></div>
+      </div>
+      <p class="chart-note" style="margin-top:12px">每个 DiT 约 <b>1.3B 参数</b>（宽 1536 / 30 层 / 12 头 / MLP 8192），因高压缩而<b>去掉 token packing 与 skip connection</b>，用 vanilla DiT 即可；AdaLN-single + RoPE + QK-Norm 保证稳定性与跨分辨率泛化；rectified flow / CFM 目标，logitNorm(1,1) 时间步采样；渐进式训练 512³→1024³（latent 32³→64³）。</p>
+      <div class="mini-stat">
+        <div><b>~3s</b><span>512³ 全纹理生成</span></div>
+        <div><b>~17s</b><span>1024³ 全纹理生成</span></div>
+        <div><b>~60s</b><span>1536³（35s 形状 + 25s 纹理）</span></div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">④ 数据与工程细节</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>数据集</th><th>角色</th><th class="num">形状可用</th><th class="num">材质可用</th><th>开源情况</th><th>链接</th></tr></thead>
+        <tbody>
+          <tr><td><b>TexVerse</b></td><td>生成模型训练（增补 PBR 多样性）</td><td class="num">503,387</td><td class="num">382,996</td><td><span class="badge part">论文已发布</span></td><td><a href="https://arxiv.org/abs/2508.10868" target="_blank">arXiv</a></td></tr>
+          <tr><td><b>Objaverse-XL</b> (Sketchfab)</td><td>SC-VAE + 生成训练</td><td class="num">168,307</td><td class="num">141,623</td><td><span class="badge open">开源</span></td><td><a href="https://objaverse.allenai.org" target="_blank">官网</a></td></tr>
+          <tr><td><b>Objaverse-XL</b> (GitHub)</td><td>SC-VAE + 生成训练</td><td class="num">293,887</td><td class="num">202,188</td><td><span class="badge open">开源</span></td><td><a href="https://objaverse.allenai.org" target="_blank">官网</a></td></tr>
+          <tr><td><b>ABO</b></td><td>SC-VAE + 生成训练</td><td class="num">4,485</td><td class="num">4,485</td><td><span class="badge open">开源</span></td><td><a href="https://amazon-science.github.io/abo-dataset/" target="_blank">官网</a></td></tr>
+          <tr><td><b>HSSD</b></td><td>SC-VAE + 生成训练</td><td class="num">6,670</td><td class="num">6,670</td><td><span class="badge open">开源</span></td><td><a href="https://arxiv.org/abs/2306.11290" target="_blank">arXiv</a></td></tr>
+          <tr style="background:#f6f9ff"><td><b>SC-VAE 训练集合计</b></td><td>—</td><td class="num"><b>473,349</b></td><td class="num"><b>354,966</b></td><td colspan="2"></td></tr>
+          <tr style="background:#f6f9ff"><td><b>生成模型训练集合计</b></td><td>审美分 ≥4.5 过滤</td><td class="num"><b>976,736</b></td><td class="num"><b>737,962</b></td><td colspan="2"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">训练配置</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">SC-VAE：16×H100，batch 128；生成模型：32×H100，batch 256，AdamW（lr 1e-4，wd 0.01），CFG dropout 0.1。图像条件渲染：每资产 Blender 16 视角，<b>FoV 10°~70° 随机</b>（抗相机内参歧义）+ <b>光照随机</b>（解耦固有 PBR 与环境光）。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">FlexGEMM 自研稀疏卷积后端</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">Triton 实现的 Masked Implicit GEMM：im2col+GEMM 融合减少显存 IO、Gray code 重排提升 SIMD 效率、Split-K 增加并行度——跨 NVIDIA/AMD 平台，<b>比 Spconv / Torchsparse / fvdb / WarpConvNet 快至 2×</b>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 3. RESULTS ================= -->
+<section id="results">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 3 · Experiments</div>
+      <h2>实验结果：重建、生成、消融</h2>
+      <p>测试集：Toys4K-PBR（473 实例）+ Sketchfab Featured（90 个专业级复杂资产）；生成评测用 100 张 NanoBanana 生成图（训练-测试严格隔离）。</p>
+    </div>
+
+    <h3 class="block-title">3.1 形状重建（Toys4K，MD/CD ×10⁶）</h3>
+    <div class="kpi-row">
+      <div class="kpi"><b>0.971</b><span>MD F1（1024³；TRELLIS 仅 0.074，SparseFlex 0.845）</span></div>
+      <div class="kpi"><b>43.11 dB</b><span>法向 PSNR（1024³；SparseFlex 37.34）</span></div>
+      <div class="kpi"><b>0.301 s</b><span>解码耗时（1024³；SparseFlex 3.21s）</span></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">Token 数 vs 重建质量（Toys4K, 对数轴）</h4><div class="chart-box"><canvas id="tokenChart"></canvas></div><p class="chart-note">横轴为 latent token 数（对数）。Ours 用 1/23 的 token 达到 SparseFlex 1024 之上的 F1。</p></div>
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">法向 PSNR ↑（dB，越高越好）</h4><div class="chart-box"><canvas id="psnrChart"></canvas></div></div>
+    </div>
+    <h3 class="block-title" style="margin-top:26px">Table 1 · 完整数值（论文原表，Toys4K / Sketchfab Featured）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">#Token</th><th class="num">f_down</th><th class="num">解码(s)↓</th><th class="num">Toys4K MD↓</th><th class="num">MD-F1↑</th><th class="num">PSNR↑</th><th class="num">LPIPS↓</th><th class="num">Sketchfab MD↓</th><th class="num">MD-F1↑</th><th class="num">PSNR↑</th></tr></thead>
+        <tbody>
+          <tr><td>Dora 4.1K</td><td class="num">4.1K</td><td class="num">–</td><td class="num">43.0</td><td class="num">360.8</td><td class="num">0.019</td><td class="num">27.32</td><td class="num">0.115</td><td class="num">1139</td><td class="num">0.020</td><td class="num">22.09</td></tr>
+          <tr><td>TRELLIS</td><td class="num">9.6K</td><td class="num">4×</td><td class="num">0.108</td><td class="num">85.07</td><td class="num">0.074</td><td class="num">30.29</td><td class="num">0.067</td><td class="num">49.20</td><td class="num">0.031</td><td class="num">24.31</td></tr>
+          <tr><td>Direct3D-S2 1024</td><td class="num">17K</td><td class="num">8×</td><td class="num">13.0</td><td class="num">73.17</td><td class="num">0.001</td><td class="num">27.38</td><td class="num">0.134</td><td class="num">70.13</td><td class="num">0.001</td><td class="num">23.82</td></tr>
+          <tr><td>SparseFlex 512</td><td class="num">56K</td><td class="num">4×</td><td class="num">1.22</td><td class="num">1.303</td><td class="num">0.735</td><td class="num">36.56</td><td class="num">0.027</td><td class="num">3.221</td><td class="num">0.487</td><td class="num">29.46</td></tr>
+          <tr><td>SparseFlex 1024</td><td class="num">225K</td><td class="num">4×</td><td class="num">3.21</td><td class="num">0.3132</td><td class="num">0.845</td><td class="num">37.34</td><td class="num">0.042</td><td class="num">0.7593</td><td class="num">0.684</td><td class="num">32.12</td></tr>
+          <tr><td><b>Ours 512</b></td><td class="num best">2.2K</td><td class="num best">16×</td><td class="num best">0.077</td><td class="num">0.0323</td><td class="num">0.888</td><td class="num">39.54</td><td class="num">0.013</td><td class="num">0.1572</td><td class="num">0.613</td><td class="num">31.00</td></tr>
+          <tr><td><b>Ours 1024</b></td><td class="num">9.6K</td><td class="num best">16×</td><td class="num">0.301</td><td class="num best">0.0042</td><td class="num best">0.971</td><td class="num best">43.11</td><td class="num best">0.005</td><td class="num best">0.0170</td><td class="num best">0.868</td><td class="num best">35.26</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">🧱 <b>材质重建</b>（无同条件基线，单独报告）：PBR 属性图 <b>PSNR 38.89 dB / LPIPS 0.033</b>，着色图 <b>38.69 dB / 0.026</b>——材质忠实复现且与几何严格对齐。</div>
+
+    <h3 class="block-title c-indigo" style="margin-top:40px">3.2 图生 3D（100 张 AI 图像提示）</h3>
+    <div class="kpi-row">
+      <div class="kpi"><b>0.894</b><span>CLIP 对齐分（最高）</span></div>
+      <div class="kpi"><b>66.5%</b><span>整体质量用户偏好率（第二名 13.3%）</span></div>
+      <div class="kpi"><b>69.0%</b><span>形状质量用户偏好率（第二名 12.2%）</span></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">对齐指标对比（CLIP / ULIP-2 / Uni3D ↑）</h4><div class="chart-box"><canvas id="alignChart"></canvas></div></div>
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">用户研究偏好率（%，~40 名参与者）</h4><div class="chart-box"><canvas id="prefChart"></canvas></div></div>
+    </div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>方法</th><th class="num">CLIP↑</th><th class="num">CLIP-N↑</th><th class="num">ULIP-2↑</th><th class="num">Uni3D↑</th><th class="num">偏好率(整体)↑</th><th class="num">偏好率(形状)↑</th></tr></thead>
+        <tbody>
+          <tr><td>TRELLIS</td><td class="num">0.876</td><td class="num">0.748</td><td class="num">0.470</td><td class="num">0.414</td><td class="num">6.40%</td><td class="num">2.82%</td></tr>
+          <tr><td>Hi3DGen</td><td class="num">–</td><td class="num">0.753</td><td class="num">0.395</td><td class="num">0.373</td><td class="num">–</td><td class="num">6.57%</td></tr>
+          <tr><td>Direct3D-S2</td><td class="num">–</td><td class="num">0.746</td><td class="num">0.420</td><td class="num">0.392</td><td class="num">–</td><td class="num">12.2%</td></tr>
+          <tr><td>Step1X-3D</td><td class="num">0.875</td><td class="num">0.738</td><td class="num">0.464</td><td class="num">0.411</td><td class="num">11.8%</td><td class="num">0.47%</td></tr>
+          <tr><td>Hunyuan3D 2.1</td><td class="num">0.869</td><td class="num">0.753</td><td class="num">0.474</td><td class="num">0.427</td><td class="num">13.3%</td><td class="num">7.51%</td></tr>
+          <tr><td><b>Ours</b></td><td class="num best">0.894</td><td class="num best">0.758</td><td class="num best">0.477</td><td class="num best">0.436</td><td class="num best">66.5%</td><td class="num best">69.0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note" style="margin-top:8px">用户研究细节（Table 7）：Overall 有效票 202 张（Ours 135 票）、Shape 有效票 213 张（Ours 147 票）；界面提供交互式查看，分别评估整体渲染质量与法向图形状质量。</p>
+
+    <h3 class="block-title c-teal" style="margin-top:34px">3.3 形状条件纹理生成 & 3.4 消融</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">形状条件纹理生成（第三阶段独立使用）</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">对比 <b>Hunyuan3D-Paint</b>（多视图融合：跨视图不一致 → ghosting/模糊）与 <b>TEXGen</b>（UV 法：chart 歧义 + 接缝伪影）。本文在<b>原生 3D 空间推理外观</b>：纹理更锐利、形状-材质严格对齐，还能为<b>内部表面</b>生成纹理（遮挡/非流形资产的关键能力）。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:6px">SC-VAE 消融：去掉残差自编码的代价（MD ↓）</h4>
+        <div class="chart-box sm"><canvas id="ablChart"></canvas></div>
+        <p class="chart-note">f32（32× 压缩）下退化最剧烈：MD 从 1.405 → 7.394（+526%），PSNR 降 1.6dB —— 稀疏残差自编码是高压缩比的关键。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange" style="margin-top:34px">3.5 推理效率 & 测试时缩放</h3>
+    <div class="grid2">
+      <div class="card"><h4 style="font-size:15px;margin-bottom:6px">全纹理资产生成耗时（H100）</h4><div class="chart-box sm"><canvas id="runtimeChart"></canvas></div><p class="chart-note">1536³ 分辨率 = 形状 ~35s + 纹理 ~25s，显著快于现有大型 3D 生成模型。</p></div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:8px">测试时缩放（Cascaded Inference）</h4>
+        <p style="font-size:13.5px;color:var(--ink2)"><b>分辨率外推</b>：1024³ O-Voxel 下采样到 96³ 稀疏结构 → 重跑几何生成 → 得到 <b>1536³</b> 超训练分辨率结果。<b>质量提升</b>：512³ 下采样 64³ 再生成 1024³ 可修正局部错误、获得更干净的结构布局 —— 以计算换质量的可控权衡。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-green" style="margin-top:40px">附：TRELLIS 1 → TRELLIS 2 关键进化</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>维度</th><th>TRELLIS 1（SLAT）</th><th>TRELLIS 2（O-Voxel）</th></tr></thead>
+        <tbody>
+          <tr><td>表示来源</td><td>多视图 2D 特征 + 渲染监督</td><td class="best">原生 3D 数据直接学习</td></tr>
+          <tr><td>拓扑能力</td><td>受等值面场限制</td><td class="best">任意拓扑（开放/非流形/封闭内腔）</td></tr>
+          <tr><td>材质</td><td>仅颜色（需多视图烘焙合并）</td><td class="best">完整 PBR 6 通道（首创透明度 α），零后处理</td></tr>
+          <tr><td>空间压缩</td><td>4×</td><td class="best">16×（1024³ 仅 9.6K tokens）</td></tr>
+          <tr><td>VAE 架构</td><td>Transformer</td><td class="best">纯稀疏卷积（分辨率无关）</td></tr>
+          <tr><td>生成器</td><td>带 token packing / skip 的 DiT</td><td class="best">Vanilla DiT（更简单更高效）</td></tr>
+          <tr><td>重建 MD F1（Toys4K 1024³）</td><td>0.074</td><td class="best">0.971</td></tr>
+          <tr><td>图生 3D 用户偏好</td><td>6.4%</td><td class="best">66.5%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">⚖️ <b>评注：</b>TRELLIS 2 把"结构化潜空间"路线的保真优势与"非结构化"路线的压缩优势合二为一，是当前 3D 表示学习的标杆工作。开放问题：① 仍是三阶段级联（结构→几何→材质），距"单阶段端到端"有距离；② 训练集 ~97 万资产仍远小于 2D 规模；③ 材质 VAE 依赖标准 metallic-roughness 工作流过滤，对非标准材质的泛化待验证。</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">数据来源：TRELLIS 2 (arXiv:2512.14692v1, 2025-12-16) 正文 Table 1-3 & 附录 · 页面由 3D-Research 生成 · <a href="../index.html">返回首页</a></div>
+</footer>
+
+<script>
+/* tabs */
+document.querySelectorAll('.dir-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.dir-tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.dir-panel').forEach(p=>p.classList.remove('show'));
+    btn.classList.add('active');
+    document.getElementById('dir-'+btn.dataset.dir).classList.add('show');
+  });
+});
+
+const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
+Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
+const C={blue:'#2563eb',indigo:'#6366f1',orange:'#ea8a3c',teal:'#0d9488',gray:'#b6c2d2',green:'#16a34a',purple:'#8b5cf6'};
+
+/* token vs F1 (log x) */
+const reconMethods=['Ours 512','Ours 1024','Dora 4.1K','TRELLIS','D3D-S2 1024','SparseFlex 512','SparseFlex 1024'];
+const reconTokens=[2200,9600,4100,9600,17000,56000,225000];
+const reconF1=[0.888,0.971,0.019,0.074,0.001,0.735,0.845];
+new Chart(document.getElementById('tokenChart'),{type:'bar',
+  data:{labels:reconMethods,datasets:[
+    {label:'#Token（对数轴）',data:reconTokens,backgroundColor:C.gray,borderRadius:4,yAxisID:'y'},
+    {label:'MD-F1 ↑',data:reconF1,backgroundColor:C.blue,borderRadius:4,yAxisID:'y1',type:'line',pointRadius:5,pointBackgroundColor:C.blue,borderWidth:2.5}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{type:'logarithmic',position:'left',title:{display:true,text:'#Token (log)'}},
+            y1:{position:'right',min:0,max:1,title:{display:true,text:'MD-F1'},grid:{drawOnChartArea:false}},
+            x:{ticks:{font:{size:10},maxRotation:40,minRotation:40}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:8}}}}});
+
+/* PSNR */
+const psnrMethods=['Ours 1024','Ours 512','SparseFlex 1024','SparseFlex 512','TRELLIS','D3D-S2 1024','Dora 4.1K'];
+const psnrVals=[43.11,39.54,37.34,36.56,30.29,27.38,27.32];
+new Chart(document.getElementById('psnrChart'),{type:'bar',
+  data:{labels:psnrMethods,datasets:[{data:psnrVals,
+    backgroundColor:psnrMethods.map(m=>m.startsWith('Ours')?C.blue:C.gray),borderRadius:5}]},
+  options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{min:20,title:{display:true,text:'法向 PSNR (dB) ↑'}},y:{ticks:{font:{size:11.5}}}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.x} dB`}}}}});
+
+/* alignment */
+new Chart(document.getElementById('alignChart'),{type:'bar',
+  data:{labels:['TRELLIS','Step1X-3D','Hunyuan3D 2.1','Ours'],
+    datasets:[
+      {label:'CLIP',data:[0.876,0.875,0.869,0.894],backgroundColor:C.blue,borderRadius:4},
+      {label:'ULIP-2',data:[0.470,0.464,0.474,0.477],backgroundColor:C.indigo,borderRadius:4},
+      {label:'Uni3D',data:[0.414,0.411,0.427,0.436],backgroundColor:C.teal,borderRadius:4}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{min:0.35,title:{display:true,text:'得分 ↑'}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:8}}}}});
+
+/* preference */
+new Chart(document.getElementById('prefChart'),{type:'bar',
+  data:{labels:['TRELLIS','Hi3DGen','D3D-S2','Step1X-3D','Hunyuan3D 2.1','Ours'],
+    datasets:[
+      {label:'整体质量偏好率',data:[6.4,null,null,11.8,13.3,66.5],backgroundColor:C.blue,borderRadius:4},
+      {label:'形状质量偏好率',data:[2.82,6.57,12.2,0.47,7.51,69.0],backgroundColor:C.orange,borderRadius:4}]},
+  options:{maintainAspectRatio:false,
+    scales:{y:{beginAtZero:true,max:80,title:{display:true,text:'偏好率（%）'}},x:{ticks:{font:{size:10.5},maxRotation:30,minRotation:30}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:8}}}}});
+
+/* ablation */
+new Chart(document.getElementById('ablChart'),{type:'bar',
+  data:{labels:['SC-VAE f16（16×）','f16 w/o ResAE','SC-VAE f32（32×）','f32 w/o ResAE'],
+    datasets:[{data:[1.032,1.747,1.405,7.394],
+      backgroundColor:[C.blue,'#f97066',C.teal,'#dc4c4c'],borderRadius:5}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,title:{display:true,text:'MD ↓（×10⁶）'}},x:{ticks:{font:{size:10.5}}}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` MD = ${c.parsed.y}`}}}}});
+
+/* runtime */
+new Chart(document.getElementById('runtimeChart'),{type:'bar',
+  data:{labels:['512³','1024³','1536³'],
+    datasets:[{data:[3,17,60],backgroundColor:[C.green,C.blue,C.purple],borderRadius:8}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,title:{display:true,text:'耗时（秒，H100）'}}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ~${c.parsed.y}s`}}}}});
+</script>
+</body>
+</html>
