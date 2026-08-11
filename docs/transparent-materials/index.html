@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 透明材质表示形式全景调研 · 3D-Research</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:32px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:880px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .chart-box{position:relative;height:380px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .tag-strong{background:#ffe4e0;color:#c2410c}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .trends li{margin:0 0 10px 20px;font-size:14px;color:var(--ink2)}
+  .trends b{color:var(--ink)}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  @media (max-width:960px){.grid2,.grid3,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 调研报告</div>
+    <div class="links"><a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#essence">① 问题本质</a>
+      <a href="#methods">② 六类方法</a>
+      <a href="#matrix">③ 对比矩阵</a>
+      <a href="#guide">④ 选型建议</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">📋 调研报告 · 2026-08-11 · 实时 / 离线 / 体积 / 神经渲染</span>
+    <h1>3D <em>透明材质</em>表示形式全景调研</h1>
+    <p class="sub">从"排序依赖的 Alpha 混合"到"物理正确的光追透射"，再到"NeRF / 3DGS 神经表示"——本报告按 <b>几何表示 / 着色模型 / 合成方式</b> 三大维度，系统梳理透明材质的全谱系表示方法（A~F 六类）与应用选型建议。</p>
+    <div class="meta">
+      <span class="pill">覆盖 6 大类表示（A 光栅化 / B OIT / C PBR / D 光追 / E 体积 / F 神经）</span>
+      <span class="pill">14 种具体方案横向对比</span>
+      <span class="pill">按 6 类应用场景给出选型组合</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>3 大维度</b><span>几何表示 · 着色模型 · 合成方式</span></div>
+      <div class="stat"><b>14 种</b><span>表示形式全谱系对比</span></div>
+      <div class="stat"><b>6 类</b><span>A~F 分类框架（像素级 → 物理级 → 神经级）</span></div>
+      <div class="stat"><b>5 大趋势</b><span>OIT 硬件化 · 光追成熟 · 神经倒逼 · 标准收敛 · 混合范式</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 1. ESSENCE ================= -->
+<section id="essence">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 1 · 问题的本质</div>
+      <h2>透明为什么难？两个层面</h2>
+      <p><b>光学层面</b>：光穿过介质同时发生折射/反射/透射/吸收/散射，严格模拟需解体积渲染方程，成本极高。<b>渲染层面</b>：Alpha 混合不可交换——结果依赖片元提交顺序，排序在交叉/自相交/高深度复杂度场景中要么不可行、要么开销爆炸。</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>维度</th><th>要回答的问题</th><th>代表性选择</th></tr></thead>
+        <tbody>
+          <tr><td><b>几何表示</b></td><td>透明体用"面"还是"体"描述？</td><td>网格表面 ／ 体素/VDB ／ 隐式场（NeRF）／ 高斯基元</td></tr>
+          <tr><td><b>着色模型</b></td><td>光在表面/体内如何散射？</td><td>Alpha 混合 ／ PBR BSDF（透射/次表面）／ 体积散射</td></tr>
+          <tr><td><b>合成方式</b></td><td>多个透明片元如何合成到像素？</td><td>排序混合 ／ OIT ／ 光追累积 ／ 体渲染积分</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2. METHODS ================= -->
+<section id="methods" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 2 · 方法谱系</div>
+      <h2>六类表示方法详解</h2>
+      <p>从"像素级便宜近似"（A 类）到"物理级精确"（C/D 类），再到"体/神经级"（E/F 类）——每类回答的问题不同，代价也不同。</p>
+    </div>
+
+    <h3 class="block-title">A 类 · 传统光栅化：像素级透明</h3>
+    <div class="grid2">
+      <div class="method-card"><h4><span class="cls">A1</span>Alpha Blending 透明混合</h4><div class="tagline">最基础、最通用</div><p>关闭深度写入、开启深度测试，按从远到近顺序 srcAlpha 混合。</p><div class="pros">✔ 简单、硬件级支持、可调范围大（玻璃/水/烟/粒子默认方案）</div><div class="cons">✘ 强依赖排序；不写深度导致遮挡错误；高深度复杂度下闪烁</div></div>
+      <div class="method-card"><h4><span class="cls">A2</span>Alpha Test / Masked + Dithered</h4><div class="tagline">透明度测试 / 裁剪（glTF 官方语义）</div><p>低于阈值的片元直接 clip；Dithered 用屏幕空间抖动图案代替混合、写深度免排序。</p><div class="pros">✔ 极廉价、正常写深度、阴影正确、无排序（树叶/栅栏/镂空）</div><div class="cons">✘ 硬锯齿、无渐变；Dithered 低分辨率有噪点需 TAA</div></div>
+      <div class="method-card"><h4><span class="cls">A3</span>Additive 加法混合</h4><div class="tagline">粒子专用</div><p>src + dst，数学上可交换 → 天然顺序无关。</p><div class="pros">✔ 无需排序，适合火焰/光晕/尘埃等发光粒子</div><div class="cons">✘ 只表达"叠加光"，无法表达遮挡吸收型透明（玻璃不行），易过曝</div></div>
+      <div class="method-card"><h4><span class="cls">A4</span>工程优化配套</h4><div class="tagline">排序加速</div><p>BSP/k-d 树加速排序；批次合批减 Draw Call；透明/不透明分队列渲染（先不透明后透明）。</p><div class="pros">✔ 低成本提升管线效率</div><div class="cons">✘ 无法根治排序依赖的结构性缺陷</div></div>
+    </div>
+    <div class="summary-box">📌 <b>A 类小结</b>：胜在简单便宜，败在"排序依赖"这一结构性缺陷，只适合低深度复杂度的场景。</div>
+
+    <h3 class="block-title c-indigo">B 类 · 顺序无关透明（OIT）：解决排序问题的技术谱系</h3>
+    <p style="font-size:14px;color:var(--ink2);margin-bottom:12px">OIT 不依赖输入顺序，在像素级做精确或近似的深度排序/累积。核心挑战：<b>逐像素存储无界、带宽与内存高、锐利过渡易失真</b>。</p>
+    <h3 class="block-title c-indigo" style="font-size:15px;margin:18px 0 10px">B1 · 精确类（Exact）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th>原理</th><th>优点</th><th>缺点</th></tr></thead>
+        <tbody>
+          <tr><td><b>深度剥离</b> Depth Peeling</td><td>每 pass 剥离一层最近深度，多 pass 逐层提取再混合</td><td><span class="badge-tag tag-good">精确，可作 ground truth</span></td><td>层数越多越慢；层数受限（复杂场景穿帮）</td></tr>
+          <tr><td><b>双向深度剥离</b></td><td>从近远两端同时剥离</td><td><span class="badge-tag tag-good">pass 数减半</span></td><td>同层内多物体仍可能深度顺序错误</td></tr>
+          <tr><td><b>A-Buffer / PPL</b></td><td>片元写入按像素组织的链表，最后排序混合</td><td><span class="badge-tag tag-good">精确</span></td><td>内存不可控（无界），分配器开销大</td></tr>
+          <tr><td><b>软件光栅化精确 OIT</b>（LucidRaster）</td><td>软件光栅化做像素级精确排序</td><td><span class="badge-tag tag-good">~3× 硬件混合开销内做到精确</span></td><td>实现复杂、研究前沿</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 class="block-title c-indigo" style="font-size:15px;margin:18px 0 10px">B2 · 近似类（Approximate）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th>原理</th><th>优点</th><th>缺点</th></tr></thead>
+        <tbody>
+          <tr><td><b>WBOIT</b> 加权混合</td><td>单 pass 累积"加权颜色+权重"，后处理一帧混合</td><td><span class="badge-tag tag-good">单 pass、开销低、内存小，游戏实用首选</span></td><td>密集交叠时色彩串扰失真；权重函数需人工调参</td></tr>
+          <tr><td><b>矩基 OIT</b> Moment-based</td><td>记录深度/不透明度分布矩，矩反演重建累积透射率</td><td><span class="badge-tag tag-good">比 WBOIT 更准，支持较锐利过渡</span></td><td>锐利突变仍模糊/伪影，计算较重</td></tr>
+          <tr><td><b>随机透明度</b></td><td>每像素多层采样、随机化 alpha</td><td><span class="badge-tag tag-good">可恢复较高精度细节</span></td><td>噪声大，需大量采样与 TAA</td></tr>
+          <tr><td><b>K-Buffer / MLABDB</b></td><td>片元按深度桶分层累积，固定层数</td><td><span class="badge-tag tag-good">固定预算内保留强贡献</span></td><td>层数外的信息丢失</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="method-card"><h4><span class="cls">B3</span>神经 OIT（新方向）</h4><div class="tagline">前沿研究</div><p>用神经网络预测混合权重/透射率，在亿级透明基元（流场、脑神经纤维束、3DGS）可视化中与光栅化结合。</p><div class="pros">✔ 精度与开销的新平衡</div><div class="cons">✘ 尚未工程化普及</div></div>
+      <div class="method-card"><h4><span class="cls">B4</span>硬件加速现状</h4><div class="tagline">平台底座</div><p>Apple Metal Imageblocks 片上多层存储（官方 Demo 单 pass 多层剥离）；DX12/Vulkan 的 ROV 与 fragment shader interlock 是 A-Buffer/K-Buffer 的标准底座。</p><div class="pros">✔ 底层原语已就绪</div><div class="cons">✘ 桌面 GPU 尚无"一键 OIT"硬件，仍需引擎实现</div></div>
+    </div>
+    <div class="summary-box">📌 <b>B 类小结</b>：从"精确但贵"到"便宜但近似"构成连续谱。工程上 <b>WBOIT 性价比最高</b>；医疗/科学可视化倾向深度剥离；精度要求极高时改走光追（D 类）。</div>
+
+    <h3 class="block-title c-teal">C 类 · 基于物理的表面材质模型（PBR / BSDF）</h3>
+    <p style="font-size:14px;color:var(--ink2);margin-bottom:12px">不纠结"排序"，从物理上把"半透明"定义为光的透射行为——区分"几何缺失型透明（Alpha）"与"实体透光型透明（Transmission）"。</p>
+    <div class="grid3">
+      <div class="method-card"><h4><span class="cls">C1</span>Disney / Principled BSDF</h4><div class="tagline">业界"全能"模型</div><p>Blender Principled BSDF / PxrDisneyBsdf / UE / Unity：连续参数混合漫反射、金属、镜面、透射、SSS、清漆、Sheen；区分普通表面与薄表面（假折射）。</p><div class="pros">✔ 一套参数覆盖多数材质</div></div>
+      <div class="method-card hl"><h4><span class="cls">C2</span>glTF PBR 扩展体系</h4><div class="tagline">跨引擎互操作事实标准</div><p>transmission（薄壁透射）+ volume（体积属性/Beer-Lambert）+ ior（折射率）+ specular（彩色镜面）+ diffuse_transmission。</p><div class="pros">✔ 语义物理正确、资产一次制作全平台一致</div><div class="cons">✘ 实时引擎实现复杂，多层透射可见性受限</div></div>
+      <div class="method-card"><h4><span class="cls">C3</span>次表面散射 SSS</h4><div class="tagline">半透明介质的"质感动词"</div><p>光进入表面内部散射后再出射（玉石/皮肤/蜡/牛奶）。谱系：偶极子扩散 → Disney 两指数 → 随机游走（影视级）→ 屏幕空间 SSS（游戏廉价近似）。</p><div class="pros">✔ 低成本体积感透光、不依赖排序</div><div class="cons">✘ 本质近似；强光易过曝发灰</div></div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="method-card"><h4><span class="cls">C4</span>薄膜干涉与镀膜</h4><div class="tagline">Thin-film</div><p>多层薄膜（油膜、肥皂泡、涂层）产生波长相关干涉色；PBR 层面用薄膜干涉模型或光追实现，实时常以"彩虹色"贴图伪造（glTF 已预告对应扩展）。</p></div>
+      <div class="method-card"><h4><span class="cls">C 关键</span>glTF 扩展语义速查</h4><div class="tagline">KHR_materials_*</div><p>transmission 保留全强度镜面高光（区别于 alpha 混合）；volume 支持任意厚度与吸收衰减；transmission+volume 组合才启用真折射。</p><div class="pros">✔ Three.js / Babylon / Filament / Blender 广泛支持</div></div>
+    </div>
+    <div class="summary-box">📌 <b>C 类小结</b>：这层定义"材质是什么"，回答物理正确性问题；但渲染落地仍依赖 A/B/D 类机制（实时引擎 transmission 通常靠屏幕空间折射近似，离线/光追才真正折射）。</div>
+
+    <h3 class="block-title c-orange">D 类 · 光线追踪 / 路径追踪范式</h3>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2)"><b>原理</b>：沿光线递归求解折射（Snell 定律、菲涅尔、全反射），透明即"光线进入介质继续传播"——天然正确且<b>顺序无关</b>；配合介质跟踪可实现多层玻璃、双面折射。</p>
+      <div class="mini-pros" style="margin-top:8px">
+        <div class="pros">✔ 物理精确（折射/内部反射/色散/体积吸收）；美术与资产层面无需排序</div>
+        <div class="cons">✘ 性能成本高；UE5 光追半透明才支持真实 IOR 与折射反弹（需双面材质 + Max Refraction Rays 配置）；光栅化半透明只能用屏幕空间假折射</div>
+      </div>
+      <div class="summary-box" style="margin-top:10px">📌 <b>混合实践</b>：游戏常用"光栅化主体 + 光追透明/反射子集"混合管线；光追半透明与 Lumen GI 等特性兼容仍有工程坑。</div>
+    </div>
+
+    <h3 class="block-title c-purple">E 类 · 体积表示：参与介质</h3>
+    <p style="font-size:14px;color:var(--ink2);margin-bottom:12px">针对雾、烟、云、火、大气、医学体数据——<b>透明存在于"体内"而非"面上"</b>。</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>表示</th><th>说明</th><th>优点</th><th>缺点</th></tr></thead>
+        <tbody>
+          <tr><td><b>稠密体素 / 3D 纹理</b></td><td>规则网格存密度/颜色</td><td><span class="badge-tag tag-good">采样快、可预计算光照缓存</span></td><td>内存爆炸（VDB 469MB → 3D 纹理 3.1GB 实测），分辨率受限</td></tr>
+          <tr><td><b>OpenVDB</b></td><td>只存"有东西"的体素，多级树结构</td><td><span class="badge-tag tag-good">内存降至 1/10~1/100，影视标准</span></td><td>CPU 侧为主，GPU 需转换</td></tr>
+          <tr><td><b>NanoVDB</b></td><td>VDB 的 GPU 版稀疏网格</td><td><span class="badge-tag tag-good">内存远小于稠密纹理，GPU 直接采样</span></td><td>比 3D 纹理慢 20~30%，文档稀缺</td></tr>
+          <tr><td><b>光线步进 / Delta Tracking</b></td><td>沿射线按步长采样，逐步累积透射率</td><td><span class="badge-tag tag-good">自然柔和渐变、任意形状</span></td><td>噪声与步长选择是永恒矛盾</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note" style="margin-top:8px">着色：Beer–Lambert 吸收 + 单次/多次散射 + 相位函数（Henyey–Greenstein 前向散射）；实时体积云多用半解析/分形噪声近似。适用：Houdini/Embergen 导出 VDB、科学可视化、游戏体积云/雾。</p>
+
+    <h3 class="block-title c-red">F 类 · 神经 / 学习表示（2020s 前沿）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th>透明表示方式</th><th>优点</th><th>缺点</th></tr></thead>
+        <tbody>
+          <tr><td><b>NeRF</b></td><td>隐式 MLP：位置+方向 → 密度 σ + 颜色，体渲染积分 C = Σ Tᵢαᵢcᵢ</td><td><span class="badge-tag tag-good">连续体、照片级新视角；半透明与反射天然一体</span></td><td>训练/渲染慢，无法编辑</td></tr>
+          <tr><td><b>3DGS</b></td><td>显式各向异性高斯：位置/协方差/不透明度 α/球谐颜色，按深度排序 α-混合</td><td><span class="badge-tag tag-good">实时（&gt;30FPS@1080p）、训练分钟级、质量高</span></td><td>百万级高斯存储高；半透明建模弱；<b>透明排序又回来了</b></td></tr>
+          <tr><td><b>Instant-NGP / Mip-NeRF</b></td><td>哈希网格/多分辨率编码加速</td><td><span class="badge-tag tag-good">训练快（秒~分钟级）</span></td><td>仍属隐式、编辑困难</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="summary-box" style="margin-top:12px">📌 <b>F 类小结</b>：3DGS 把"Alpha 混合 + 排序"问题带回现代实时渲染（每像素数千片元），催生了 3DGS-OIT 等专门工作；NeRF 把透明做成连续密度场，与体渲染天然契合。</div>
+  </div>
+</section>
+
+<!-- ================= 3. MATRIX ================= -->
+<section id="matrix">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 3 · 对比</div>
+      <h2>全谱系对比矩阵</h2>
+      <p>物理正确性 × 渲染性能 × 内存 × 实现复杂度 × 排序依赖，14 种表示形式一表打尽（1~5 分，5 最优/最高）。</p>
+    </div>
+    <div class="card">
+      <div class="chart-box"><canvas id="scatterChart"></canvas></div>
+      <p class="chart-note">散点图：横轴=物理正确性 ↑，纵轴=渲染性能 ↑。理想方案在右上角——目前没有；左上是 3DGS/Alpha 系（快但不物理），右下是光追/NeRF（物理但慢），B 类 OIT 与 C 类 PBR 落在中间带。</p>
+    </div>
+    <div class="table-scroll" style="margin-top:16px">
+      <table>
+        <thead><tr><th>表示形式</th><th class="num">物理正确性</th><th class="num">渲染性能</th><th class="num">内存/存储</th><th class="num">实现复杂度</th><th>排序依赖</th><th>典型场景</th></tr></thead>
+        <tbody>
+          <tr><td>Alpha Blending</td><td class="num">低</td><td class="num">高</td><td class="num">低</td><td class="num">极低</td><td><span class="badge-tag tag-bad">强</span></td><td>少量玻璃/烟/UI，Web/移动</td></tr>
+          <tr><td>Alpha Test / Masked</td><td class="num">低</td><td class="num">很高</td><td class="num">低</td><td class="num">极低</td><td><span class="badge-tag tag-good">无</span></td><td>树叶、栅栏、镂空</td></tr>
+          <tr><td>Dithered 透明</td><td class="num">低</td><td class="num">高</td><td class="num">低</td><td class="num">低</td><td><span class="badge-tag tag-good">无</span></td><td>LOD 过渡、廉价渐变透明</td></tr>
+          <tr><td>Additive 混合</td><td class="num">低</td><td class="num">高</td><td class="num">低</td><td class="num">低</td><td><span class="badge-tag tag-good">无</span></td><td>粒子、火焰、光晕</td></tr>
+          <tr><td>深度剥离 OIT</td><td class="num"><b>高（精确）</b></td><td class="num">低（多 pass）</td><td class="num">中</td><td class="num">中</td><td><span class="badge-tag tag-good">无</span></td><td>医学/科学可视化、ground truth</td></tr>
+          <tr><td>A-Buffer / PPL</td><td class="num">高（精确）</td><td class="num">中</td><td class="num"><b>高（无界）</b></td><td class="num">高</td><td><span class="badge-tag tag-good">无</span></td><td>高精度 OIT（离线/高端 GPU）</td></tr>
+          <tr><td>WBOIT</td><td class="num">中（近似）</td><td class="num"><b>高（单 pass）</b></td><td class="num">低</td><td class="num">中</td><td><span class="badge-tag tag-good">无</span></td><td>游戏实时 OIT 首选</td></tr>
+          <tr><td>矩基 OIT</td><td class="num">中高</td><td class="num">中</td><td class="num">中</td><td class="num">中高</td><td><span class="badge-tag tag-good">无</span></td><td>需要更准过渡的实时场景</td></tr>
+          <tr><td>神经 OIT</td><td class="num">中高（学习）</td><td class="num">中</td><td class="num">中</td><td class="num"><b>很高</b></td><td><span class="badge-tag tag-good">无</span></td><td>科研、亿级基元可视化</td></tr>
+          <tr><td>PBR Transmission + Volume</td><td class="num"><b>高（物理语义）</b></td><td class="num">中（光栅）/低（光追）</td><td class="num">低</td><td class="num">中</td><td><span class="badge-tag tag-mid">有（光栅化时）</span></td><td>电商、建筑、产品可视化（glTF）</td></tr>
+          <tr><td>SSS</td><td class="num">中高</td><td class="num">中</td><td class="num">低</td><td class="num">中</td><td><span class="badge-tag tag-good">无（体积性）</span></td><td>皮肤、玉石、蜡、牛奶</td></tr>
+          <tr><td>光追/路径追踪透明</td><td class="num"><b>最高</b></td><td class="num">低</td><td class="num">中</td><td class="num">渲染器承担</td><td><span class="badge-tag tag-good">无</span></td><td>影视、离线渲染、高端实时（RTX）</td></tr>
+          <tr><td>体素 / VDB</td><td class="num">高（体）</td><td class="num">低~中</td><td class="num">中~高</td><td class="num">高</td><td><span class="badge-tag tag-good">无（按射线累积）</span></td><td>云、烟、火、医学体数据</td></tr>
+          <tr><td>NeRF</td><td class="num">高（连续体）</td><td class="num">很低（推理）</td><td class="num">中（网络）</td><td class="num">高</td><td><span class="badge-tag tag-good">无</span></td><td>新视角合成、神经重建</td></tr>
+          <tr><td>3DGS</td><td class="num">中高</td><td class="num"><b>很高（实时）</b></td><td class="num">高（百万高斯）</td><td class="num">中</td><td><span class="badge-tag tag-bad">有（splat 排序）</span></td><td>实时神经重建、MR/VR</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note" style="margin-top:8px">评分口径：物理正确性 = 与真实光的吻合度；性能 = 同硬件下每帧开销；复杂度 = 实现与调参难度。</p>
+  </div>
+</section>
+
+<!-- ================= 4. GUIDE ================= -->
+<section id="guide" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 4 · 决策</div>
+      <h2>按应用场景的选型建议</h2>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>场景</th><th>推荐组合</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td><b>移动 / Web 游戏</b></td><td>Alpha Test + 少量排序 Blending + Additive 粒子</td><td>预算最敏感，优先廉价方案</td></tr>
+          <tr><td><b>PC / 主机实时（复杂透明）</b></td><td>光栅化主体 + WBOIT + 光追透明子集</td><td>平衡质量与帧率，避免排序伪影</td></tr>
+          <tr><td><b>电商 / 产品 / 建筑可视化</b></td><td>glTF transmission + volume + ior + 光追</td><td>跨平台一致、物理正确、客户在意"真实感"</td></tr>
+          <tr><td><b>科学 / 医学可视化</b></td><td>深度剥离（双向往返）+ 体渲染</td><td>精度优先，数据不容近似错误</td></tr>
+          <tr><td><b>影视 / 离线渲染</b></td><td>路径追踪 + Disney BSDF + VDB 体积</td><td>质量天花板，不惧渲染时长</td></tr>
+          <tr><td><b>神经重建 / 实时 3D 内容</b></td><td>3DGS（配 OIT 排序优化）/ NeRF</td><td>从照片/视频重建含半透明的真实场景</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="block-title c-green">趋势与展望</h3>
+    <div class="card">
+      <ol class="trends">
+        <li><b>实时 OIT 硬件化</b>：Metal Imageblocks、ROV/Interlock 已落地，未来桌面/移动 GPU 可能提供片上 OIT 原语，把深度剥离类方法压到单 pass。</li>
+        <li><b>实时光追半透明成熟</b>：UE5/DXR 光追半透明已支持真实 IOR 与折射反弹，正逐步取代屏幕空间假折射。</li>
+        <li><b>神经表示倒逼 OIT</b>：3DGS 把"百万基元 α-混合"带回实时，3DGS-OIT、神经排序等成为热点。</li>
+        <li><b>标准收敛</b>：glTF PBR 扩展（transmission/volume/ior/specular/diffuse transmission + 未来的薄膜、各向异性）正在统一各引擎的透明语义，降低资产跨平台成本。</li>
+        <li><b>混合范式</b>："光栅化打底 + 光追精修 + 神经补细节"的混合渲染成为工程主流，单一表示形式越来越少见。</li>
+      </ol>
+    </div>
+
+    <h3 class="block-title c-purple">参考资料</h3>
+    <div class="card">
+      <ul style="font-size:13px;color:var(--ink2);list-style:none">
+        <li>· Khronos glTF PBR 扩展官方资料（KHR_materials_transmission / volume / ior / specular）</li>
+        <li>· emergentmind.com《Order-Independent Transparency (OIT)》综述（深度剥离/A-Buffer/WBOIT/矩基/神经 OIT 分类）</li>
+        <li>· NVIDIA《Order Independent Transparency》（深度剥离原始文档）</li>
+        <li>· Apple Metal OIT with Imageblocks 官方 Demo</li>
+        <li>· Burley《Extending the Disney BRDF to a BSDF with Integrated Subsurface Scattering》(SIGGRAPH 2015)</li>
+        <li>· Kerbl et al.《3D Gaussian Splatting for Real-Time Radiance Field Rendering》(SIGGRAPH 2023)</li>
+        <li>· OpenVDB / NanoVDB 官方文档</li>
+        <li>· UE5 官方文档《Hardware Ray Tracing Tips and Tricks》（半透明 IOR 与光追折射配置）</li>
+      </ul>
+    </div>
+
+    <div class="callout">💡 <b>与本站 3D 生成主题的衔接</b>：这份调研对理解生成模型的"材质表示"能力很有价值——TRELLIS.2 的 O-Voxel 用 6 通道 PBR（含不透明度 α）原生表示透明材质，正是 C 类（PBR 物理语义）+ E 类（体素体表示）思想在 3D 生成潜空间中的落地；而 3DGS 类生成方法（S-Avatar、StreamSplat 等）则在实时渲染侧重新面对 B 类排序问题。</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">来源：《3D 透明材质表示形式全景调研报告》（2026-08-11）· 页面由 3D-Research 整理 · <a href="../index.html">返回首页</a></div>
+</footer>
+
+<script>
+const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
+Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
+
+/* scatter: x=物理正确性, y=渲染性能 */
+const pts=[
+  {n:'Alpha Blending',x:2.0,y:4.5,c:'#2563eb'},
+  {n:'Alpha Test',x:2.0,y:5.0,c:'#2563eb'},
+  {n:'Dithered',x:2.0,y:4.5,c:'#2563eb'},
+  {n:'Additive',x:2.0,y:4.5,c:'#2563eb'},
+  {n:'深度剥离',x:5.0,y:2.0,c:'#6366f1'},
+  {n:'A-Buffer',x:5.0,y:3.0,c:'#6366f1'},
+  {n:'WBOIT',x:3.0,y:4.5,c:'#6366f1'},
+  {n:'矩基OIT',x:3.5,y:3.0,c:'#6366f1'},
+  {n:'神经OIT',x:3.5,y:3.0,c:'#6366f1'},
+  {n:'PBR透射',x:4.0,y:3.0,c:'#0d9488'},
+  {n:'SSS',x:3.5,y:3.0,c:'#0d9488'},
+  {n:'光追',x:5.0,y:1.5,c:'#ea8a3c'},
+  {n:'VDB体积',x:4.0,y:2.0,c:'#8b5cf6'},
+  {n:'NeRF',x:4.0,y:1.0,c:'#dc4c4c'},
+  {n:'3DGS',x:3.5,y:5.0,c:'#dc4c4c'}
+];
+new Chart(document.getElementById('scatterChart'),{type:'scatter',
+  data:{datasets:pts.map(p=>({data:[{x:p.x,y:p.y}],backgroundColor:p.c,pointRadius:7,label:p.n}))},
+  options:{maintainAspectRatio:false,
+    scales:{x:{min:1,max:5.5,title:{display:true,text:'物理正确性 →'},ticks:{stepSize:1}},
+            y:{min:0.5,max:5.5,title:{display:true,text:'渲染性能 →'},ticks:{stepSize:1}}},
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{title:items=>items[0].dataset.label}}}}});
+</script>
+</body>
+</html>
