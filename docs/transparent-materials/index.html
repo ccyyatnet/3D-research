@@ -75,6 +75,13 @@
   .callout b{color:var(--ink)}
   .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
   .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .sub-h .t.orange{background:#fde8d4;color:#b45309}
+  pre.flow{background:#f8faff;border:1px solid #dfe8fa;border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.7;color:var(--ink2);overflow-x:auto;font-family:Consolas,"Courier New",monospace;margin-top:8px}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
   .trends li{margin:0 0 10px 20px;font-size:14px;color:var(--ink2)}
   .trends b{color:var(--ink)}
   footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
@@ -187,14 +194,223 @@
 
     <h3 class="block-title c-teal">C 类 · 基于物理的表面材质模型（PBR / BSDF）</h3>
     <p style="font-size:14px;color:var(--ink2);margin-bottom:12px">不纠结"排序"，从物理上把"半透明"定义为光的透射行为——区分"几何缺失型透明（Alpha）"与"实体透光型透明（Transmission）"。</p>
-    <div class="grid3">
-      <div class="method-card"><h4><span class="cls">C1</span>Disney / Principled BSDF</h4><div class="tagline">业界"全能"模型</div><p>Blender Principled BSDF / PxrDisneyBsdf / UE / Unity：连续参数混合漫反射、金属、镜面、透射、SSS、清漆、Sheen；区分普通表面与薄表面（假折射）。</p><div class="pros">✔ 一套参数覆盖多数材质</div></div>
-      <div class="method-card hl"><h4><span class="cls">C2</span>glTF PBR 扩展体系</h4><div class="tagline">跨引擎互操作事实标准</div><p>transmission（薄壁透射）+ volume（体积属性/Beer-Lambert）+ ior（折射率）+ specular（彩色镜面）+ diffuse_transmission。</p><div class="pros">✔ 语义物理正确、资产一次制作全平台一致</div><div class="cons">✘ 实时引擎实现复杂，多层透射可见性受限</div></div>
-      <div class="method-card"><h4><span class="cls">C3</span>次表面散射 SSS</h4><div class="tagline">半透明介质的"质感动词"</div><p>光进入表面内部散射后再出射（玉石/皮肤/蜡/牛奶）。谱系：偶极子扩散 → Disney 两指数 → 随机游走（影视级）→ 屏幕空间 SSS（游戏廉价近似）。</p><div class="pros">✔ 低成本体积感透光、不依赖排序</div><div class="cons">✘ 本质近似；强光易过曝发灰</div></div>
+
+    <h4 class="sub-h"><span class="t">C1</span>Disney / Principled BSDF —— 全能 BSDF 中的透明建模</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px"><b>演进脉络</b>：2012 年 Burley 提出 Principled BRDF（SIGGRAPH）→ 2015 年扩展为 <b>BSDF</b>，首次把透射与次表面散射整合进同一套参数 → 衍生实现：Blender Principled BSDF、PxrDisneyBsdf（RenderMan）、UE Glass/Translucency、Unity HDRP Lit、Cinema 4D/Octane。</p>
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:6px"><b>能量路径模型</b>（透明如何产生）：入射光先按 Fresnel 定律拆分：</p>
+<pre class="flow">入射光
+ ├─ 反射路径：漫反射波瓣 + 镜面波瓣（GGX 微表面）+ 清漆 / Sheen
+ └─ 透射路径（specTrans 控制比例）
+      ├─ 薄表面：单着色点近似入射/出射散射（无内部介质，假折射）
+      └─ 厚表面/体积：进入内部介质 → 吸收（Beer 定律）+ 散射（SSS/体积散射）→ 出射</pre>
+      <p style="font-size:13.5px;color:var(--ink2);margin:12px 0 6px"><b>透射相关参数语义</b>（Disney/Pxr 版本）：</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>参数</th><th>语义</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td><code>specTrans</code>（镜面透射）</td><td>入射光中走镜面透射的比例</td><td>0=全反射；1=50% 透射；2=100% 透射（0~2 区间）</td></tr>
+            <tr><td><code>diffTrans</code>（漫透射）</td><td>走漫透射的比例</td><td>与 specTrans 混合构成总透射</td></tr>
+            <tr><td><code>Thin Surface</code></td><td>是否视为无限薄</td><td>薄表面时 IOR=1，不做内部折射/介质追踪</td></tr>
+            <tr><td><code>Transmission Color</code> + <code>Transmittance Distance</code></td><td>体积吸收颜色与衰减距离</td><td>Beer–Lambert 指数消光，模拟彩色玻璃/琥珀</td></tr>
+            <tr><td><code>Scattering Distances</code>（RGB）</td><td>次表面散射的红绿蓝平均散射距离</td><td>决定"半透明质感的物理尺度"</td></tr>
+            <tr><td><code>flatness</code></td><td>薄表面漫透射的平坦度</td><td>薄表面共 13 个参数，普通表面 12 个</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:13.5px;color:var(--ink2);margin:10px 0 0"><b>混合逻辑</b>：先按 <code>specTrans</code> 混合 BRDF/BSDF，再按 <code>metallic</code> 混合金属/非金属，保证能量守恒与连续过渡。Blender 对应输入：Transmission / Transmission Roughness / IOR / Alpha（几何裁剪）/ Subsurface 三件套。</p>
+      <div class="grid2" style="margin-top:10px">
+        <div class="pros">✔ 单一模型覆盖玻璃/水/皮肤/玉石/蜡，参数连续可动画；离线渲染可物理精确；资产在主流 DCC 间语义一致</div>
+        <div class="cons">✘ 参数耦合复杂、美术难直觉把控；实时引擎通常只取子集（UE 光栅化半透明不支持真实 IOR）；薄表面假折射无法表达厚体积内部光路</div>
+      </div>
     </div>
-    <div class="grid2" style="margin-top:16px">
-      <div class="method-card"><h4><span class="cls">C4</span>薄膜干涉与镀膜</h4><div class="tagline">Thin-film</div><p>多层薄膜（油膜、肥皂泡、涂层）产生波长相关干涉色；PBR 层面用薄膜干涉模型或光追实现，实时常以"彩虹色"贴图伪造（glTF 已预告对应扩展）。</p></div>
-      <div class="method-card"><h4><span class="cls">C 关键</span>glTF 扩展语义速查</h4><div class="tagline">KHR_materials_*</div><p>transmission 保留全强度镜面高光（区别于 alpha 混合）；volume 支持任意厚度与吸收衰减；transmission+volume 组合才启用真折射。</p><div class="pros">✔ Three.js / Babylon / Filament / Blender 广泛支持</div></div>
+
+    <h4 class="sub-h"><span class="t">C2</span>glTF 官方透明 PBR 扩展体系（跨引擎标准）</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px"><b>设计哲学</b>：不把 C1 做成一个超大模型，而是拆成可独立协商、按需组合的扩展（KHR_ = Khronos Ratified）——每个扩展只加一层语义，渲染器可只实现它支持的部分（渐进增强）。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>扩展</th><th>关键属性</th><th>物理语义</th><th>典型用途</th></tr></thead>
+          <tbody>
+            <tr><td><code>KHR_materials_transmission</code></td><td>transmissionFactor / texture（<b>R 通道</b>）</td><td><b>薄壁透射</b>：光直穿无限薄表面，BTDF 为微表面镜面折射（受 roughness 控制可磨砂）；区别于 alpha——alpha 淡化整个 BRDF，transmission 仅替换透射分量、<b>保留全强度镜面反射</b></td><td>玻璃、透明塑料、水膜、染色布</td></tr>
+            <tr><td><code>KHR_materials_volume</code></td><td>thicknessFactor/texture（<b>G 通道</b>）、attenuationDistance、attenuationColor</td><td>表面升级为<b>均匀吸收介质的边界</b>；光在体内按 Beer 定律衰减 T(x)=attenuationColor^(x/attenuationDistance)；需流形网格；无光追引擎用 thickness 贴图做屏幕空间近似</td><td>厚玻璃、宝石、琥珀、饮料（"有体积感"的透明）</td></tr>
+            <tr><td><code>KHR_materials_ior</code></td><td>ior（默认 1.5）</td><td>按 Snell 定律控制折射弯曲量与 Fresnel F0；典型值 air=1.0 / water=1.33 / glass=1.5 / diamond=2.42；<b>必须与 transmission/volume 组合才生效</b></td><td>需真实折射的透明材质</td></tr>
+            <tr><td><code>KHR_materials_specular</code></td><td>specularFactor/texture（<b>A 通道</b>）、specularColorFactor</td><td>独立于 base color 微调介质的 F0 强度与<b>彩色</b>镜面（F90 不随 specular 缩放以避免全反射发黑）</td><td>彩色镜面高光、材质精确匹配</td></tr>
+            <tr><td><code>KHR_materials_diffuse_transmission</code></td><td>diffuseTransmissionFactor/ColorFactor/Texture</td><td><b>朗伯漫透射</b>（无折射、无 roughness 控制）；能量守恒：给漫透射的能量<b>从漫反射中扣减</b>；与 transmission 并存时被镜面透射覆盖</td><td>树叶、纸、灯罩、果肉、薄陶瓷、蜡</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:13.5px;color:var(--ink2);margin:10px 0 0"><b>配套扩展</b>：<code>KHR_materials_dispersion</code>（色散，值=20/Abbe 数，需 transmission+volume）、<code>KHR_materials_iridescence</code>（薄膜干涉，100~1200nm 膜厚）、<code>KHR_materials_sss</code>（随 diffuse_transmission 演进）。</p>
+      <p style="font-size:13.5px;color:var(--ink2);margin:10px 0 6px"><b>组合规则速查</b>（"什么时候加什么"）：</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>想表现的材质</th><th>扩展组合</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>薄壁玻璃 / 水膜</td><td><code>transmission</code> +（可选 <code>ior</code>）</td><td>无限薄、无体积衰减</td></tr>
+            <tr><td>厚玻璃 / 宝石 / 琥珀</td><td><code>transmission + volume + ior</code>（+<code>dispersion</code>）</td><td>体积吸收 + 真折射 + 可选色散</td></tr>
+            <tr><td>磨砂玻璃</td><td><code>transmission</code> + 提高 base roughness</td><td>roughness 模糊透射波瓣</td></tr>
+            <tr><td>彩色玻璃</td><td><code>volume.attenuationColor</code></td><td>光在体内被吸收染色</td></tr>
+            <tr><td>树叶 / 纸 / 灯罩 / 果肉</td><td><code>diffuse_transmission</code>（+可选 volume 薄型）</td><td>朗伯透射，不折射</td></tr>
+            <tr><td>皮肤 / 蜡（强散射介质）</td><td><code>diffuse_transmission</code>（+<code>KHR_materials_sss</code>）</td><td>渲染器可据此切 diffusion approximation（比 random walk 快得多）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin:8px 0 12px">关键判据：<b>强散射介质（σs 大）用 diffuse_transmission，弱散射透明介质用 transmission</b>；物体大小与散射距离的相对关系决定"密度感"。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>格式/标准</th><th>透明语义</th><th>与 glTF 扩展相比</th></tr></thead>
+          <tbody>
+            <tr><td>USD <code>UsdPreviewSurface</code></td><td>仅 opacity 标量 + 简单 ior</td><td>无法表达折射/体积衰减，透明是"淡化"而非"透射"</td></tr>
+            <tr><td>FBX / OBJ MTL</td><td>仅 Alpha 混合/透明测试</td><td>无物理透射语义，跨引擎表现差异大</td></tr>
+            <tr><td>NVIDIA <b>MDL</b></td><td>完整物理材质语言（含体积、次表面、薄膜）</td><td>语义最全但生态封闭、实现重，普及度低</td></tr>
+            <tr><td>glTF PBR 扩展</td><td>可组合、渐进增强、逐扩展协商</td><td><span class="badge-tag tag-good">跨引擎互操作事实标准</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="pros">✔ 物理语义正确、资产一次制作全平台一致；渐进增强（不支持 volume 的引擎仍能渲染 transmission）；Three.js / Babylon.js / Filament / Blender 等广泛支持</div>
+        <div class="cons">✘ 实时引擎实现复杂：多层透射物间可见性受限；真折射需 volume 且无光追引擎只能屏幕空间近似；diffuse_transmission 目前仍为 release candidate</div>
+      </div>
+    </div>
+
+    <h4 class="sub-h"><span class="t orange">C2.6</span>示例 Case：GLB 材质七属性共同作用（baseColor / normal / roughness / metallic / occlusion / transmission / thickness）</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px">一个典型的半透明 GLB 资产，上述 7 个属性实际打包在 <b>4 张图像</b>里（Blender/Substance 导出惯例），采样后进入同一份 <code>MaterialInfo</code>，着色时分三条路径计算再合成。</p>
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:6px"><b>a) 通道打包映射</b>（已按 glTF 2.0 规范 + KHR 扩展核实）：</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>图像（GLB 内 texture）</th><th>通道</th><th>属性</th><th>色彩空间</th><th>所属</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="2"><code>baseColorTexture</code></td><td>RGB</td><td>baseColor（albedo / 金属反射色）</td><td><b>sRGB</b></td><td>核心</td></tr>
+            <tr><td>A</td><td>alpha（几何覆盖，可选）</td><td>—</td><td>核心</td></tr>
+            <tr><td rowspan="2"><code>metallicRoughnessTexture</code></td><td><b>G</b></td><td>roughness</td><td>线性</td><td>核心</td></tr>
+            <tr><td><b>B</b></td><td>metallic</td><td>线性</td><td>核心</td></tr>
+            <tr><td><code>occlusionTexture</code>（可与 MR 合图）</td><td><b>R</b></td><td>occlusion</td><td>线性</td><td>核心</td></tr>
+            <tr><td><code>normalTexture</code></td><td>RGB</td><td>切线空间法线 XYZ</td><td>线性</td><td>核心</td></tr>
+            <tr><td><code>transmissionTexture</code></td><td><b>R</b></td><td>transmission</td><td>线性</td><td>KHR_materials_transmission</td></tr>
+            <tr><td><code>thicknessTexture</code></td><td><b>G</b></td><td>thickness</td><td>线性</td><td>KHR_materials_volume</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin:8px 0 12px">规则：贴图采样值一律<b>先乘对应 factor</b>（如 roughness = roughnessFactor × tex.G）；无贴图时退化为纯 factor 值。</p>
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:6px"><b>b) 着色管线全流程</b>（Khronos Sample Renderer <code>pbr.frag</code> 流程）：</p>
+      <div class="svg-card">
+        <svg viewBox="0 0 680 400" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>GLB 材质 basecolor/normal/roughness/metallic/occlusion/transmission/thickness 共同作用流程</title>
+<desc>贴图按通道采样后分三条路径计算：表面BRDF、间接光乘AO、透射加体积吸收，最后混合输出</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<text x="40" y="26" font-size="15" font-weight="500" fill="#2C2C2A">GLB 材质七属性共同作用 · 着色管线</text>
+
+<g>
+<rect x="40" y="44" width="140" height="74" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="110" y="62" font-size="13" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">Base Color</text>
+<text x="110" y="82" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">RGB=颜色 sRGB</text>
+<text x="110" y="100" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">A=alpha（几何）</text>
+</g>
+
+<g>
+<rect x="195" y="44" width="150" height="74" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+<text x="270" y="62" font-size="13" font-weight="500" fill="#27500A" text-anchor="middle" dominant-baseline="central">MR + AO 贴图</text>
+<text x="270" y="82" font-size="12" fill="#3B6D11" text-anchor="middle" dominant-baseline="central">G=roughness B=metallic</text>
+<text x="270" y="100" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">R=occlusion（线性）</text>
+</g>
+
+<g>
+<rect x="360" y="44" width="130" height="74" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text x="425" y="62" font-size="13" font-weight="500" fill="#3C3489" text-anchor="middle" dominant-baseline="central">Normal</text>
+<text x="425" y="82" font-size="12" fill="#534AB7" text-anchor="middle" dominant-baseline="central">RGB=切线空间</text>
+<text x="425" y="100" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">XYZ 法线扰动</text>
+</g>
+
+<g>
+<rect x="505" y="44" width="135" height="74" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="572" y="62" font-size="13" font-weight="500" fill="#633806" text-anchor="middle" dominant-baseline="central">Transmission+Vol</text>
+<text x="572" y="82" font-size="12" fill="#854F0B" text-anchor="middle" dominant-baseline="central">R=transmission</text>
+<text x="572" y="100" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">G=thickness（线性）</text>
+</g>
+
+<line x1="110" y1="118" x2="110" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="270" y1="118" x2="205" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="335" y1="118" x2="425" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="425" y1="118" x2="425" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="572" y1="118" x2="572" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+<rect x="40" y="146" width="600" height="40" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+<text x="340" y="166" font-size="12" fill="#444441" text-anchor="middle" dominant-baseline="central">采样 → MaterialInfo：albedo、metallic、roughness²、F0、法线 N、transmission、thickness/attenuation</text>
+</g>
+
+<line x1="110" y1="186" x2="110" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="205" y1="186" x2="150" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="475" y1="186" x2="540" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="572" y1="186" x2="572" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+<rect x="40" y="210" width="190" height="92" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="135" y="230" font-size="13" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">① 表面 BRDF（直接光）</text>
+<text x="135" y="250" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">diffuse = (1-m)(1-t)·albedo/π</text>
+<text x="135" y="268" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">specular = GGX·Smith·Schlick F</text>
+<text x="135" y="286" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">normal 扰动 N 参与全部项</text>
+</g>
+
+<g>
+<rect x="245" y="210" width="190" height="92" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+<text x="340" y="230" font-size="13" font-weight="500" fill="#27500A" text-anchor="middle" dominant-baseline="central">② 间接光 IBL</text>
+<text x="340" y="250" font-size="12" fill="#3B6D11" text-anchor="middle" dominant-baseline="central">环境漫反射 + 预滤波 GGX</text>
+<text x="340" y="268" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">× AO(R) 只压暗间接光</text>
+<text x="340" y="286" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">AO 不碰直接光</text>
+</g>
+
+<g>
+<rect x="450" y="210" width="190" height="92" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="545" y="230" font-size="13" font-weight="500" fill="#633806" text-anchor="middle" dominant-baseline="central">③ 透射 + 体积吸收</text>
+<text x="545" y="250" font-size="12" fill="#854F0B" text-anchor="middle" dominant-baseline="central">透射光 = 背景色 × T(x)</text>
+<text x="545" y="268" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">T(x)=color^(thick/dist)</text>
+<text x="545" y="286" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">Beer 定律 · 厚度定深浅</text>
+</g>
+
+<line x1="135" y1="302" x2="135" y2="322" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="340" y1="302" x2="300" y2="322" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="545" y1="302" x2="545" y2="322" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+<rect x="40" y="326" width="600" height="50" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+<text x="340" y="344" font-size="13" font-weight="500" fill="#712B13" text-anchor="middle" dominant-baseline="central">最终颜色 = mix(①, ③, transmission) + ②×AO + emissive</text>
+<text x="340" y="362" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">transmission 越高越"玻璃"，Fresnel 镜面反射始终保留；thickness 无 volume 时无效</text>
+</g>
+</svg>
+        <p class="svg-cap">图：GLB 材质七属性共同作用流程 —— 贴图按通道采样 → MaterialInfo → 三条路径（BRDF / IBL×AO / 透射+体积）→ 最终混合</p>
+      </div>
+      <p style="font-size:13.5px;color:var(--ink2);margin:12px 0 6px"><b>c) 关键机制要点</b>：</p>
+      <ul class="trends" style="font-size:13.5px">
+        <li><b>metallic</b> 决定 baseColor 的"解释方式"：非金属 = albedo；金属 = 镜面反射色（无漫反射项）；</li>
+        <li><b>transmission 与 alpha 的本质区别</b>：alpha 淡化整个 BRDF；transmission 只替换透射分量，Fresnel 镜面反射始终保留；</li>
+        <li><b>thickness 必须配合 KHR_materials_volume 才生效</b>（volume 又依赖 transmission——光要能进入体积）；无光追引擎用 thickness 贴图做屏幕空间折射近似；</li>
+        <li><b>AO 只影响间接光路径</b>，直接光高光不受遮挡影响；</li>
+        <li>roughness 经 <code>alphaRoughness = perceptual²</code> 进入 GGX，控制高光大小与透射模糊程度（磨砂玻璃）。</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--ink2);margin:12px 0 6px"><b>d) 常见坑</b>（实测踩坑点）：</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>坑</th><th>现象</th><th>原因</th></tr></thead>
+          <tbody>
+            <tr><td>通道放错</td><td>材质发黑 / 高光全无</td><td>metallic 在 <b>B</b>、roughness 在 <b>G</b>、AO 在 <b>R</b>；P3D 系（R=metallic / G=occlusion）打包需转换</td></tr>
+            <tr><td>色彩空间错误</td><td>亮度/颜色失真</td><td>仅 baseColor 为 sRGB，其余全部 Non-Color（线性）</td></tr>
+            <tr><td>有 thickness 贴图但未挂 volume</td><td>厚度被忽略，仍薄壁</td><td>thickness 属于 KHR_materials_volume，volume 依赖 transmission</td></tr>
+            <tr><td>多层透射物</td><td>背后透射物不可见</td><td>实时引擎通用局限（官方文档标注）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h4 class="sub-h"><span class="t">C3</span>次表面散射 SSS + <span class="t">C4</span>薄膜干涉与镀膜</h4>
+    <div class="grid2" style="margin-top:12px">
+      <div class="method-card"><h4><span class="cls">C3</span>次表面散射 SSS</h4><div class="tagline">半透明介质的"质感动词"</div><p>光进入表面内部散射后再出射，像素尺度小于散射距离即"半透明"（玉石/皮肤/蜡/牛奶）。谱系：偶极子扩散近似 → Disney 两指数项 → <b>随机游走</b>（影视级精确）→ 屏幕空间 SSS（游戏廉价近似）。</p><div class="pros">✔ 以低成本获得体积感的"透光"效果，不依赖排序</div><div class="cons">✘ 本质是近似；强光直射易过曝发灰；屏幕空间方案无法处理背面信息缺失</div></div>
+      <div class="method-card"><h4><span class="cls">C4</span>薄膜干涉与镀膜</h4><div class="tagline">Thin-film</div><p>多层薄膜（油膜、肥皂泡、涂层）产生波长相关的干涉色。PBR 层面多用薄膜干涉模型（如 Schlick+相位累积）或依赖光追实现；实时中常以"彩虹色"贴图/参数伪造（glTF 官方已预告对应扩展）。</p></div>
     </div>
     <div class="summary-box">📌 <b>C 类小结</b>：这层定义"材质是什么"，回答物理正确性问题；但渲染落地仍依赖 A/B/D 类机制（实时引擎 transmission 通常靠屏幕空间折射近似，离线/光追才真正折射）。</div>
 
