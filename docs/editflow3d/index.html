@@ -112,6 +112,17 @@
   .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
   .callout b{color:var(--ink)}
   .callout.warn{background:linear-gradient(90deg,#fff6ed,#fff);border-color:#f3dfc8}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .sub-h .t.o{background:#fde8d4;color:#b45309}
+  .sub-h .t.g{background:#e4f7ec;color:#15803d}
+  .sub-h .t.p{background:#ede9fe;color:#6d28d9}
+  .tag-b{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .pros{font-size:12.5px;color:#15803d}
+  .cons{font-size:12.5px;color:#c2410c}
   footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
   @media (max-width:960px){
     .rw-grid{grid-template-columns:repeat(2,1fr)}
@@ -132,6 +143,7 @@
       <a href="#related">① 相关工作</a>
       <a href="#method">② 方法详解</a>
       <a href="#results">③ 实验结果</a>
+      <a href="#discussion">④ 讨论</a>
     </div>
   </div>
 </nav>
@@ -357,6 +369,114 @@
       </div>
     </div>
     <div class="callout">⚖️ <b>评注：</b>优点是全流程自动化 + 软约束机制 + 实验扎实（双骨干/双基准/5 类消融/40 人用户研究/λ 灵敏度）。可商榷处：① EditFlow-Bench 的人工二元验收虽避免手修，仍隐含选择效应；② 编辑质量受骨干与 2D 引导图质量双重制约；③ "&lt;1 分钟"未计入控制构建前置耗时。</div>
+  </div>
+</section>
+
+<!-- ================= 4. DISCUSSION ================= -->
+<section id="discussion" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 4 · Discussion</div>
+      <h2>讨论：区域确定、应用场景、变体与材质编辑边界</h2>
+      <p>基于方案本身的延伸思考：编辑区域是如何被确定的、文本/图像驱动下有哪些应用场景与变体、以及材质编辑对基础模型能力的真实依赖。</p>
+    </div>
+
+    <h3 class="block-title">4.1 编辑区域如何确定：三层级联机制</h3>
+    <p style="font-size:14px;color:var(--ink2);margin-bottom:10px">"改哪里"由三个粒度的级联决定，每层回答不同的问题：</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>层级</th><th>机制</th><th>回答的问题</th><th>输出</th></tr></thead>
+        <tbody>
+          <tr><td><b>L1 语义选择</b></td><td>Qwen3-VL-8B 解析指令（名词短语→物理部件，如"左边的柱子"）+ 判定 5 类操作；P3-SAM 原生 3D 分割出带持久 ID 的语义部件，多视角渲染后 VLM 选出目标部件 ID 集合</td><td>改哪个语义部件</td><td>初始 mask M⁰</td></tr>
+          <tr><td><b>L2 边界精修</b></td><td>PartField/S2AM3D 多粒度分割补充 → 纯度筛选(≥0.6) → 贪心最大 F1 → 等权三模型共识(≥2/3 支持=可靠前景) → 法向感知网格图优化(ICM) → 连通性过滤 + 碎片剔除 + 小孔填充</td><td>边界停在几何部件交界处的哪条线</td><td>精修表面 mask M_ref</td></tr>
+          <tr><td><b>L3 操作感知体积化</b></td><td>按操作扩张：删除+1 圈面环 / 替换+几何修改+4 圈邻域 / 外观修改窄边界 / 新增=锚点周围未占用稀疏坐标</td><td>允许生成器在多大体积内动手</td><td>最终 M_edit / M_keep</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card"><h4 style="font-size:14.5px;margin-bottom:8px">三个设计哲学</h4>
+        <ul style="font-size:13.5px;color:var(--ink2);padding-left:18px">
+          <li><b>多模型共识防"一言堂"</b>：任一分割模型的错误不能单独覆盖语义目标——P3-SAM 给语义身份，辅助模型只纠边界，"不确定区"被显式暴露给图优化处理</li>
+          <li><b>法向感知让边界停在物理关节处</b>：图优化在平滑表面强制标签一致、法向突跳处允许翻转</li>
+          <li><b>mask ≠ 编辑区，操作类型决定裕量</b>：替换/几何修改给 4 圈邻域（可改轮廓与附着），删除只给 1 圈——区域大小本身是操作语义的函数</li>
+        </ul>
+      </div>
+      <div class="card"><h4 style="font-size:14.5px;margin-bottom:8px">关键认知与已知局限</h4>
+        <p style="font-size:13.5px;color:var(--ink2)"><b>区域有"空间权威"与"视觉权威"两层</b>：3D mask 是空间权威，锚点视角 + 引导图是视觉权威——视角选错会连带引导图错，即使 mask 再准，DFG 的差分速度也源自该视角的 2D 编辑结果。</p>
+        <p style="font-size:13.5px;color:var(--ink2);margin-top:6px"><b>局限</b>：细薄/重度遮挡部件上分割误差会传播；mask 内部可能夹带非目标区；EditFlow-Bench 的 mask 虽自动构建但仍有人工二元验收，隐含选择效应。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">4.2 应用场景（文本驱动）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>场景</th><th>说明</th><th>可行性</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><b>编辑数据工厂</b>（替代/补充 Nano3D-v2）</td><td>批量生成 (source, edited, instruction) 配对喂给训练式编辑模型（Buffalo 路线）；mask 全自动且更准，无需训练专用 localization 模块</td><td><span class="tag-b tag-good">★★★★★</span></td></tr>
+          <tr><td>2</td><td><b>AIGC 资产生成后修整</b></td><td>生成资产部件出错 → 指令局部修复而非整体重生成，省 80%+ 成本</td><td><span class="tag-b tag-good">★★★★★</span></td></tr>
+          <tr><td>3</td><td><b>游戏/电商资产生产迭代</b></td><td>设计师自然语言改资产（换武器/改材质/加部件），glTF PBR 语义天然兼容</td><td><span class="tag-b tag-good">★★★★☆</span></td></tr>
+          <tr><td>4</td><td><b>仿真/具身数据增强</b></td><td>同一资产批量出变体 → 增强机器人感知训练的域随机化</td><td><span class="tag-b tag-good">★★★★☆</span></td></tr>
+          <tr><td>5</td><td><b>数字人换装/定制</b></td><td>换服装部件、发型、配饰，免重新建模</td><td><span class="tag-b tag-mid">★★★☆☆</span></td></tr>
+          <tr><td>6</td><td><b>多轮增量编辑</b></td><td>编辑结果作为下一轮 source 继续改（需验证多轮一致性，论文未测）</td><td><span class="tag-b tag-mid">★★★☆☆</span></td></tr>
+          <tr><td>7</td><td><b>场景级编辑</b></td><td>多物体场景 + 多目标 mask + 遮挡处理（当前面向单资产，扩展成本高）</td><td><span class="tag-b tag-bad">★★☆☆☆</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">🔑 <b>核心判断</b>：EditFlow3D 最值钱的不是单一算法，而是它重新定义了"高质量编辑数据的获取成本"——这让<b>"免训练编辑 → 蒸馏前馈模型"的闭环</b>（变体 D）第一次可行：EditFlow3D 自举生成配对数据 → 蒸馏成毫秒级 feed-forward 编辑模型 → 失败样本回灌再编辑 → 迭代。</div>
+
+    <h3 class="block-title c-purple">4.3 图生 3D 变体（弱化文本控制）</h3>
+    <p style="font-size:14px;color:var(--ink2);margin-bottom:10px">文本退化后，难点从"语义理解"转移到"<b>视觉对应 + 参考外观注入</b>"——链路依旧成立，但每个环节长出新的变体。</p>
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">图像驱动的应用场景</h4>
+        <ul style="font-size:13.5px;color:var(--ink2);padding-left:18px">
+          <li><b>部件换件（Exemplar Swap）</b>：参考图（轮毂/枪托/翅膀）→ 资产对应部件替换——3D 版"部件 faceswap"</li>
+          <li><b>材质/纹理迁移</b>：参考图定外观（木纹/皮革/大理石），只动 PBR 属性不动几何</li>
+          <li><b>照片驱动修复</b>：拍真实物体照片 → 资产改到照片状态（文物修复/电商）</li>
+          <li><b>数字人换装</b>：上传服装图 → 换装（电商试衣，商业价值最直接）</li>
+          <li><b>风格迁移到资产</b>：油画/赛博朋克风格图 → 全资产外观（mask 全开）</li>
+          <li><b>场景物体替换</b>：照片驱动的 3DGS 场景编辑</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">技术变体（围绕"对应 + 注入"）</h4>
+        <ul style="font-size:13.5px;color:var(--ink2);padding-left:18px">
+          <li><b>视觉对应替代文本 grounding</b>：DINO/PartField dense correspondence，参考部件 ↔ 资产部件自动对应</li>
+          <li><b>参考图直投 c_edit</b>：跳过 FLUX 2D 编辑环节，参考部件图像直接编码为 DFG 目标条件——省掉 2D 编辑误差，最自然的图像版简化</li>
+          <li><b>视角自动对齐</b>：参考图视角未知时先估相对位姿</li>
+          <li><b>差异驱动定位</b>：参考图与源渲染的差异图直接驱动 mask 构建</li>
+          <li><b>外观-几何解耦双 mask</b>：表面属性 mask 与体积几何 mask 分离，图像条件可只驱动其一</li>
+          <li><b>图像驱动蒸馏</b>：自举生成"部件 swap"配对 → 训练一次前馈 image-driven editor</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">4.4 材质编辑是否需要基础模型支持目标材质生成？</h3>
+    <div class="callout warn">⚖️ <b>结论先行：需要，而且是硬性前提——但"需要"可拆成三个不同强度的层面。</b>编辑的执行者是基础生成模型的 denoiser：DFG 用 v_θ(z_tgt, c_edit) − v_θ(z_src, c_src) 的差驱动编辑，<b>目标材质必须能被该 denoiser 生成出来</b>，否则引导图再漂亮，3D latent 也"长不出来"。</div>
+    <div class="table-scroll" style="margin-top:16px">
+      <table>
+        <thead><tr><th>层面</th><th>要求</th><th>反例说明</th></tr></thead>
+        <tbody>
+          <tr><td><b>① 表示覆盖</b></td><td>基础模型 latent 必须<b>承载</b>目标材质的属性通道（天花板）</td><td>TRELLIS.2 O-Voxel 仅 6 通道 PBR（basecolor/metallic/roughness/alpha），<b>没有 transmission/thickness/ior 通道</b> → 薄壁透射/体积吸收在 latent 里没有坐标，无法原生表达</td></tr>
+          <tr><td><b>② 生成先验</b></td><td>denoiser 必须在目标材质域的训练分布内见过足够样本（现实线）</td><td>材质 SC-VAE 只过滤标准 metallic-roughness 工作流（~35 万资产）训练 → 薄膜干涉/色散/各向异性等 OOD 材质大概率退化为近似</td></tr>
+          <tr><td><b>③ 2D→3D 提升保真</b></td><td>两级能力栈：FLUX 前端（2D 先"生成"目标材质）+ 3D 后端（材质身份无损提升进 latent）（实际分）</td><td>2D 编辑错一步 3D 跟着错；几何-材质联合生成比纯材质更脆</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card"><h4 style="font-size:14.5px;margin-bottom:8px">三个推论</h4>
+        <ul style="font-size:13.5px;color:var(--ink2);padding-left:18px">
+          <li><b>外观编辑比几何+材质联合编辑宽容得多</b>：TRELLIS.2 材质 SC-VAE 是解耦的（材质分支以形状子分结构为条件）——只改材质时 TPG 锁死几何轨迹，对先验要求最低</li>
+          <li><b>材质编辑质量 = 表示属性覆盖 ∩ 生成先验</b>：想编辑 transmission 类材质，光换引导图没用，得先让表示带上这些属性（如给 O-Voxel 加通道）</li>
+          <li><b>"需要支持"≠"必须端到端生成"</b>：图生 3D 版可"参考图直投 c_edit"借用材质身份——但这是借用而非表示内化，依赖模型对条件的忠实响应</li>
+        </ul>
+      </div>
+      <div class="card"><h4 style="font-size:14.5px;margin-bottom:8px">与透明材质调研的衔接</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">O-Voxel 的 6 通道 PBR 覆盖 basecolor/metallic/roughness/alpha，但<b>未覆盖 glTF 扩展体系中的 transmission/thickness/ior 语义</b>——因此 EditFlow3D 在 TRELLIS.2 上能稳做外观编辑，恰恰因为 PBR 先验足够强且材质分支解耦；一旦编辑超出表示范围的材质（透射/体积吸收），瓶颈不在编辑算法，而在<b>表示层</b>。<a href="../transparent-materials/index.html">详见本站透明材质调研报告</a>。</p>
+      </div>
+    </div>
+
+    <div class="callout">💡 <b>一句话总结</b>：EditFlow3D 把"免训练高质量编辑数据"的成本拉到了可用线以下，使"免费后蒸馏"闭环首次可行；而材质编辑的真实边界由表示层（属性通道）划死——想突破，先扩展表示，再谈编辑。</div>
   </div>
 </section>
 
