@@ -100,13 +100,13 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="tag">前沿追踪 · 检索日期 2026-08-06 · ArXiv cs.CV / cs.GR / cs.AI</span>
+    <span class="tag">前沿追踪 · 检索日期 2026-08-12 · ArXiv cs.CV / cs.GR / cs.AI</span>
     <h1>2026 年 6 月以来 <em>3D 生成</em>论文速览</h1>
-    <p class="sub">覆盖文生 3D（Text-to-3D）、图生 3D（Image-to-3D）、Feed-forward 3D 重建、3D 场景/世界生成、部件与纹理生成等方向，共收录 <b>25 篇</b>。</p>
+    <p class="sub">覆盖文生 3D（Text-to-3D）、图生 3D（Image-to-3D）、Feed-forward 3D 重建、3D 场景/世界生成、部件与纹理生成等方向，共收录 <b>28 篇</b>。</p>
     <div class="stats">
-      <div class="stat"><b>25 篇</b><span>收录论文（6 月 3 篇 / 7 月 11 篇 / 8 月 11 篇）</span></div>
+      <div class="stat"><b>28 篇</b><span>收录论文（6 月 3 篇 / 7 月 11 篇 / 8 月 14 篇）</span></div>
       <div class="stat"><b>5 个方向</b><span>统一多模态 / 文图生 3D / FF 重建 / 场景生成 / 部件纹理</span></div>
-      <div class="stat"><b>11 篇</b><span>Feed-forward 3DGS 重建（今夏最热方向）</span></div>
+      <div class="stat"><b>12 篇</b><span>Feed-forward 3DGS 重建（今夏最热方向）</span></div>
       <div class="stat"><b>1 篇已精读</b><span>Hunyuan3D-Buffalo 1.0（含完整深度解读页）</span></div>
     </div>
   </div>
@@ -122,7 +122,7 @@
       <div class="card">
         <h3 style="font-size:16px;margin-bottom:6px">发表时间分布（按月）</h3>
         <div class="chart-box"><canvas id="monthBar"></canvas></div>
-        <p class="chart-note">8 月仅统计至 8 月 6 日，密度已超 7 月全月的 2 倍 —— 3D 生成正处于加速期。</p>
+        <p class="chart-note">8 月统计至 8 月 12 日已 14 篇，密度约为 7 月同期的 2 倍 —— 3D 生成正处于加速期。</p>
       </div>
     </div>
   </div>
@@ -132,11 +132,11 @@
   <div class="wrap">
     <h2 style="font-size:22px;margin-bottom:14px;letter-spacing:-.3px">论文列表</h2>
     <div class="dir-tabs">
-      <button class="dir-tab active" data-cat="all">全部<span class="cnt">25</span></button>
+      <button class="dir-tab active" data-cat="all">全部<span class="cnt">28</span></button>
       <button class="dir-tab" data-cat="unified">统一多模态<span class="cnt">1</span></button>
       <button class="dir-tab" data-cat="t2i">文/图生 3D<span class="cnt">7</span></button>
-      <button class="dir-tab" data-cat="ff">Feed-forward 重建<span class="cnt">11</span></button>
-      <button class="dir-tab" data-cat="scene">场景/世界生成<span class="cnt">4</span></button>
+      <button class="dir-tab" data-cat="ff">Feed-forward 重建<span class="cnt">12</span></button>
+      <button class="dir-tab" data-cat="scene">场景/世界生成<span class="cnt">6</span></button>
       <button class="dir-tab" data-cat="part">部件/纹理/编辑<span class="cnt">2</span></button>
     </div>
     <p class="rev-hint">⭐ 每张卡片下方可评分（支持半星）与简短评论，内容自动保存在本机浏览器（localStorage），刷新/重开自动加载。</p>
@@ -166,12 +166,15 @@
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">VLRC</span><span class="rw-year">07-02</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">视觉-语言重投影一致性作为可扩展信号，改进前馈 3D 预训练。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.02707" target="_blank">arXiv:2607.02707</a></div></div>
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">FastPano3D</span><span class="rw-year">06-29</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">单张全景图前馈室内 3D 重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.30352" target="_blank">arXiv:2606.30352</a></div></div>
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">Scene &amp; Human in One World</span><span class="rw-year">06-26</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">场景与人物单次前馈联合重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.27720" target="_blank">arXiv:2606.27720</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">FlexSplat</span><span class="rw-year">08-08</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">免标定前馈 3DGS：几何 Transformer 联合预测相机参数+深度，无需位姿与真值深度；GSO 上 LPIPS 最优。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.07937" target="_blank">arXiv:2608.07937</a></div></div>
 
       <!-- 场景/世界生成 -->
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Beyond Global Latents (Sparse Grid VAE)</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">腾讯混元：分块稀疏网格 VAE，突破全局 latent 瓶颈的可扩展 3D 建模。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02016" target="_blank">arXiv:2608.02016</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Graph-Validated VLM Scene Gen</span><span class="rw-year">08-04</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">全局图验证优化的 VLM 驱动 3D 室内场景生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.03064" target="_blank">arXiv:2608.03064</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">EmbodiedGen V2</span><span class="rw-year">07-08</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">智能体式、仿真就绪的 3D 世界引擎（具身 AI）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.07459" target="_blank">arXiv:2607.07459</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Glob3R</span><span class="rw-year">07-10</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">3D 基础模型驱动的全局 Structure-from-Motion。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.09225" target="_blank">arXiv:2607.09225</a></div></div>
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">WorldClaw</span><span class="rw-year">08-05</span></div><span class="rw-cat cat-scene">场景/世界生成</span><p class="rw-desc">腾讯混元：全 Agentic 粗到细开放世界生成——规划代理拆解 prompt、语义布局+高度场建地形、细节区单独重建可编辑纹理网格；Claude Opus 4.8 编排，输出游戏引擎就绪实例网格。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.05248" target="_blank">arXiv:2608.05248</a><a class="gh" href="https://github.com/Tencent-Hunyuan/Hunyuan3D-WorldClaw" target="_blank">GitHub（开源）</a></div></div>
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">HoloWorld</span><span class="rw-year">08-06</span></div><span class="rw-cat cat-scene">场景/世界生成</span><p class="rw-desc">统一室内-室外城市世界生成：跨尺度持续更新世界上下文，室内与对应建筑外部显式对应；AQS 超 SOTA 7.68%。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.05879" target="_blank">arXiv:2608.05879</a></div></div>
 
       <!-- 部件/纹理/编辑 -->
       <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">PartMat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-part">部件/纹理</span><p class="rw-desc">单一全局 latent 的材质感知 3D 部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01825" target="_blank">arXiv:2608.01825</a></div></div>
@@ -185,17 +188,17 @@
   <div class="wrap">
     <h2 style="font-size:22px;margin-bottom:6px;letter-spacing:-.3px">趋势观察</h2>
     <div class="trend">
-      <div class="card">🚀 <b>Feed-forward 3DGS 重建是绝对主力</b>（11/25 篇）：各团队在流式推理（StreamSplat）、无位姿输入（NoDrift3R）、恶劣条件（DerainSplat）、表示解耦（QuerySplat）上持续内卷。</div>
+      <div class="card">🚀 <b>Feed-forward 3DGS 重建是绝对主力</b>（12/28 篇）：各团队在流式推理（StreamSplat）、无位姿输入（NoDrift3R）、恶劣条件（DerainSplat）、免标定（FlexSplat）、表示解耦（QuerySplat）上持续内卷。</div>
       <div class="card">🎨 <b>文/图生 3D 转向可控性与垂直场景</b>：风格化（DreamStyle3D）、服装（Fashion-3DLR）、汽车（3DCarGen）、动态人体（4DHumanDiff），从"生成万物"走向"按需生成"。</div>
-      <div class="card">🌍 <b>3D 世界引擎/基础模型兴起</b>：EmbodiedGen V2、Glob3R 对标 2D 基础模型路线，面向具身智能与全局重建。</div>
+      <div class="card">🌍 <b>3D 世界引擎/基础模型兴起</b>：EmbodiedGen V2、Glob3R 对标 2D 基础模型路线；<b>Agentic 世界生成成为新热点</b>（WorldClaw 全代理编排、HoloWorld 室内外统一城市），从"生成资产"走向"生成世界"。</div>
       <div class="card">🧠 <b>VLM 深度赋能 3D 生成</b>：VLRC 用 VLM 信号预训练、图验证 VLM 场景生成、Buffalo 统一理解-生成-编辑，"理解驱动生成"成为新范式。</div>
     </div>
-    <div class="callout" style="margin-top:16px">📌 <b>检索说明：</b>数据来源 ArXiv API（cs.CV / cs.GR / cs.AI，提交日期 ≥ 2026-06-01，按提交日期倒序检索约 99 条命中后人工筛选 25 条）。8 月数据截至 2026-08-06，合集将持续更新。</div>
+    <div class="callout" style="margin-top:16px">📌 <b>检索说明：</b>数据来源 ArXiv（cs.CV / cs.GR / cs.AI，提交日期 ≥ 2026-06-01，人工筛选）；8 月 6 日新增 3 篇（WorldClaw / HoloWorld / FlexSplat，API 限流期间以 WebSearch 补充检索）。8 月数据截至 2026-08-12，合集将持续更新。</div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">3D-Research · 前沿追踪合集 · 生成于 2026-08-06 · <a href="../index.html">返回首页</a></div>
+  <div class="wrap">3D-Research · 前沿追踪合集 · 更新于 2026-08-12 · <a href="../index.html">返回首页</a></div>
 </footer>
 
 <script>
@@ -272,12 +275,12 @@ document.querySelectorAll('.dir-tab').forEach(btn=>{
 const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
 Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
 new Chart(document.getElementById('catDonut'),{type:'doughnut',
-  data:{labels:['Feed-forward 重建 11','文/图生 3D 7','场景/世界生成 4','部件/纹理/编辑 2','统一多模态 1'],
-    datasets:[{data:[11,7,4,2,1],backgroundColor:['#0d9488','#2563eb','#ea8a3c','#f97066','#8b5cf6'],borderColor:'#fff',borderWidth:3}]},
+  data:{labels:['Feed-forward 重建 12','文/图生 3D 7','场景/世界生成 6','部件/纹理/编辑 2','统一多模态 1'],
+    datasets:[{data:[12,7,6,2,1],backgroundColor:['#0d9488','#2563eb','#ea8a3c','#f97066','#8b5cf6'],borderColor:'#fff',borderWidth:3}]},
   options:{maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:14,padding:10}}}}});
 new Chart(document.getElementById('monthBar'),{type:'bar',
   data:{labels:['2026-06','2026-07','2026-08（截至 8/6）'],
-    datasets:[{data:[3,11,11],backgroundColor:['#b6c2d2','#6366f1','#2563eb'],borderRadius:8}]},
+    datasets:[{data:[3,11,14],backgroundColor:['#b6c2d2','#6366f1','#2563eb'],borderRadius:8}]},
   options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
     scales:{y:{beginAtZero:true,title:{display:true,text:'论文数（篇）'},ticks:{stepSize:2}}}}});
 </script>

@@ -27,7 +27,7 @@
 | # | 内容 | 类型 | 方向 | 日期 | 页面 | 备注 |
 |---|------|------|------|------|------|------|
 | 1 | [Hunyuan3D-Buffalo 1.0: A Unified Multimodal Model for Scalable 3D Generation, Understanding, and Editing](https://arxiv.org/abs/2608.02711) | 📖 深度解读 | 统一 3D 多模态（理解/生成/编辑/部件） | 2026.08 | [在线解读](https://ccyyatnet.github.io/3D-research/buffalo/) | 87M 语料；Nano3D-v2 数据引擎；编辑 CD ↓86.7% |
-| 2 | 2026 年 6 月以来 3D 生成论文速览 | 🛰️ 追踪合集 | 文/图生 3D、FF-3DGS 重建、场景生成、部件纹理 | 2026.08 | [在线速览](https://ccyyatnet.github.io/3D-research/3d-generation-2026/) | 收录 25 篇；5 个方向；含趋势观察 |
+| 2 | 2026 年 6 月以来 3D 生成论文速览 | 🛰️ 追踪合集 | 文/图生 3D、FF-3DGS 重建、场景生成、部件纹理 | 2026.08 | [在线速览](https://ccyyatnet.github.io/3D-research/3d-generation-2026/) | 收录 28 篇；5 个方向；含趋势观察 |
 | 3 | [TRELLIS 2: Native and Compact Structured Latents for 3D Generation](https://arxiv.org/abs/2512.14692) | 📖 深度解读 | 3D 表示 / 图生 3D / PBR 纹理生成 | 2025.12 | [在线解读](https://ccyyatnet.github.io/3D-research/trellis2/) | O-Voxel 任意拓扑+PBR；SC-VAE 16× 压缩；用户偏好 66.5%；全开源 |
 | 4 | [EditFlow3D: Automated Local Editing of 3D Assets with Trajectory Preservation](https://arxiv.org/abs/2608.03179) | 📖 深度解读 | 3D 局部编辑（免训练） | 2026.08 | [在线解读](https://ccyyatnet.github.io/3D-research/editflow3d/) | DFG+TPG 软约束；EditFlow-Bench；PSNR 36.53 |
 | 5 | 3D 透明材质表示形式全景调研 | 📋 调研报告 | 渲染 / 透明材质表示 | 2026.08 | [在线调研](https://ccyyatnet.github.io/3D-research/transparent-materials/) | A~F 六类 14 种方案；对比矩阵 + 选型建议 |
