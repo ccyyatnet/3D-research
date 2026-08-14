@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glTF 透明 PBR 扩展体系详解 · 3D-Research</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:32px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:880px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .chart-box{position:relative;height:380px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .tag-strong{background:#ffe4e0;color:#c2410c}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .sub-h .t.orange{background:#fde8d4;color:#b45309}
+  pre.flow{background:#f8faff;border:1px solid #dfe8fa;border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.7;color:var(--ink2);overflow-x:auto;font-family:Consolas,"Courier New",monospace;margin-top:8px}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .trends li{margin:0 0 10px 20px;font-size:14px;color:var(--ink2)}
+  .trends b{color:var(--ink)}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  @media (max-width:960px){.grid2,.grid3,.stats{grid-template-columns:1fr}}
+</style></head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · C2 详解</div>
+    <div class="links"><a href="../../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="../index.html" style="font-weight:700;color:#7c3aed">← 透明材质调研</a>
+      <a href="#ext">扩展详解</a>
+      <a href="#case">GLB 七属性</a>
+      <a href="#practice">渲染实践</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">透明材质调研 · C2 详情页</span>
+    <h1>glTF 透明 <em>PBR 扩展体系</em>详解</h1>
+    <p class="sub">C2 详细内容独立成页：五个核心扩展的完整规范语义、组合规则速查、与其他格式对比，以及 GLB 材质七属性着色管线与跨引擎渲染实践。</p>
+    <div class="stats">
+      <div class="stat"><b>5 扩展</b><span>KHR_materials_* 核心族</span></div>
+      <div class="stat"><b>7 属性</b><span>GLB 材质着色管线</span></div>
+      <div class="stat"><b>3 模式</b><span>alphaMode 与透射语义</span></div>
+      <div class="stat"><b>4 引擎</b><span>Blender / three.js / Babylon 落地</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="ext">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Part 1 · 扩展规范</div><h2>五个核心扩展与组合规则</h2></div>
+<h4 class="sub-h"><span class="t">C2</span>glTF 官方透明 PBR 扩展体系（跨引擎标准）</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px"><b>设计哲学</b>：不把 C1 做成一个超大模型，而是拆成可独立协商、按需组合的扩展（KHR_ = Khronos Ratified）——每个扩展只加一层语义，渲染器可只实现它支持的部分（渐进增强）。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>扩展</th><th>关键属性</th><th>物理语义</th><th>典型用途</th></tr></thead>
+          <tbody>
+            <tr><td><code>KHR_materials_transmission</code></td><td>transmissionFactor / texture（<b>R 通道</b>）</td><td><b>薄壁透射</b>：光直穿无限薄表面，BTDF 为微表面镜面折射（受 roughness 控制可磨砂）；区别于 alpha——alpha 淡化整个 BRDF，transmission 仅替换透射分量、<b>保留全强度镜面反射</b></td><td>玻璃、透明塑料、水膜、染色布</td></tr>
+            <tr><td><code>KHR_materials_volume</code></td><td>thicknessFactor/texture（<b>G 通道</b>）、attenuationDistance、attenuationColor</td><td>表面升级为<b>均匀吸收介质的边界</b>；光在体内按 Beer 定律衰减 T(x)=attenuationColor^(x/attenuationDistance)；需流形网格；无光追引擎用 thickness 贴图做屏幕空间近似</td><td>厚玻璃、宝石、琥珀、饮料（"有体积感"的透明）</td></tr>
+            <tr><td><code>KHR_materials_ior</code></td><td>ior（默认 1.5）</td><td>按 Snell 定律控制折射弯曲量与 Fresnel F0；典型值 air=1.0 / water=1.33 / glass=1.5 / diamond=2.42；<b>必须与 transmission/volume 组合才生效</b></td><td>需真实折射的透明材质</td></tr>
+            <tr><td><code>KHR_materials_specular</code></td><td>specularFactor/texture（<b>A 通道</b>）、specularColorFactor</td><td>独立于 base color 微调介质的 F0 强度与<b>彩色</b>镜面（F90 不随 specular 缩放以避免全反射发黑）</td><td>彩色镜面高光、材质精确匹配</td></tr>
+            <tr><td><code>KHR_materials_diffuse_transmission</code></td><td>diffuseTransmissionFactor/ColorFactor/Texture</td><td><b>朗伯漫透射</b>（无折射、无 roughness 控制）；能量守恒：给漫透射的能量<b>从漫反射中扣减</b>；与 transmission 并存时被镜面透射覆盖</td><td>树叶、纸、灯罩、果肉、薄陶瓷、蜡</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:13.5px;color:var(--ink2);margin:10px 0 0"><b>配套扩展</b>：<code>KHR_materials_dispersion</code>（色散，值=20/Abbe 数，需 transmission+volume）、<code>KHR_materials_iridescence</code>（薄膜干涉，100~1200nm 膜厚）、<code>KHR_materials_sss</code>（随 diffuse_transmission 演进）。</p>
+      <p style="font-size:13.5px;color:var(--ink2);margin:10px 0 6px"><b>组合规则速查</b>（"什么时候加什么"）：</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>想表现的材质</th><th>扩展组合</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>薄壁玻璃 / 水膜</td><td><code>transmission</code> +（可选 <code>ior</code>）</td><td>无限薄、无体积衰减</td></tr>
+            <tr><td>厚玻璃 / 宝石 / 琥珀</td><td><code>transmission + volume + ior</code>（+<code>dispersion</code>）</td><td>体积吸收 + 真折射 + 可选色散</td></tr>
+            <tr><td>磨砂玻璃</td><td><code>transmission</code> + 提高 base roughness</td><td>roughness 模糊透射波瓣</td></tr>
+            <tr><td>彩色玻璃</td><td><code>volume.attenuationColor</code></td><td>光在体内被吸收染色</td></tr>
+            <tr><td>树叶 / 纸 / 灯罩 / 果肉</td><td><code>diffuse_transmission</code>（+可选 volume 薄型）</td><td>朗伯透射，不折射</td></tr>
+            <tr><td>皮肤 / 蜡（强散射介质）</td><td><code>diffuse_transmission</code>（+<code>KHR_materials_sss</code>）</td><td>渲染器可据此切 diffusion approximation（比 random walk 快得多）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin:8px 0 12px">关键判据：<b>强散射介质（σs 大）用 diffuse_transmission，弱散射透明介质用 transmission</b>；物体大小与散射距离的相对关系决定"密度感"。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>格式/标准</th><th>透明语义</th><th>与 glTF 扩展相比</th></tr></thead>
+          <tbody>
+            <tr><td>USD <code>UsdPreviewSurface</code></td><td>仅 opacity 标量 + 简单 ior</td><td>无法表达折射/体积衰减，透明是"淡化"而非"透射"</td></tr>
+            <tr><td>FBX / OBJ MTL</td><td>仅 Alpha 混合/透明测试</td><td>无物理透射语义，跨引擎表现差异大</td></tr>
+            <tr><td>NVIDIA <b>MDL</b></td><td>完整物理材质语言（含体积、次表面、薄膜）</td><td>语义最全但生态封闭、实现重，普及度低</td></tr>
+            <tr><td>glTF PBR 扩展</td><td>可组合、渐进增强、逐扩展协商</td><td><span class="badge-tag tag-good">跨引擎互操作事实标准</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="pros">✔ 物理语义正确、资产一次制作全平台一致；渐进增强（不支持 volume 的引擎仍能渲染 transmission）；Three.js / Babylon.js / Filament / Blender 等广泛支持</div>
+        <div class="cons">✘ 实时引擎实现复杂：多层透射物间可见性受限；真折射需 volume 且无光追引擎只能屏幕空间近似；diffuse_transmission 目前仍为 release candidate</div>
+      </div>
+    </div>
+
+    
+  </div>
+</section>
+
+<section id="case" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Part 2 · 实例</div><h2>GLB 材质七属性共同作用</h2></div>
+<h4 class="sub-h"><span class="t orange">C2.6</span>示例 Case：GLB 材质七属性共同作用（baseColor / normal / roughness / metallic / occlusion / transmission / thickness）</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px">一个典型的半透明 GLB 资产，上述 7 个属性实际打包在 <b>4 张图像</b>里（Blender/Substance 导出惯例），采样后进入同一份 <code>MaterialInfo</code>，着色时分三条路径计算再合成。</p>
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:6px"><b>a) 通道打包映射</b>（已按 glTF 2.0 规范 + KHR 扩展核实）：</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>图像（GLB 内 texture）</th><th>通道</th><th>属性</th><th>色彩空间</th><th>所属</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="2"><code>baseColorTexture</code></td><td>RGB</td><td>baseColor（albedo / 金属反射色）</td><td><b>sRGB</b></td><td>核心</td></tr>
+            <tr><td>A</td><td>alpha（几何覆盖，可选）</td><td>—</td><td>核心</td></tr>
+            <tr><td rowspan="2"><code>metallicRoughnessTexture</code></td><td><b>G</b></td><td>roughness</td><td>线性</td><td>核心</td></tr>
+            <tr><td><b>B</b></td><td>metallic</td><td>线性</td><td>核心</td></tr>
+            <tr><td><code>occlusionTexture</code>（可与 MR 合图）</td><td><b>R</b></td><td>occlusion</td><td>线性</td><td>核心</td></tr>
+            <tr><td><code>normalTexture</code></td><td>RGB</td><td>切线空间法线 XYZ</td><td>线性</td><td>核心</td></tr>
+            <tr><td><code>transmissionTexture</code></td><td><b>R</b></td><td>transmission</td><td>线性</td><td>KHR_materials_transmission</td></tr>
+            <tr><td><code>thicknessTexture</code></td><td><b>G</b></td><td>thickness</td><td>线性</td><td>KHR_materials_volume</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin:8px 0 12px">规则：贴图采样值一律<b>先乘对应 factor</b>（如 roughness = roughnessFactor × tex.G）；无贴图时退化为纯 factor 值。</p>
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:6px"><b>b) 着色管线全流程</b>（Khronos Sample Renderer <code>pbr.frag</code> 流程）：</p>
+      <div class="svg-card">
+        <svg viewBox="0 0 680 400" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>GLB 材质 basecolor/normal/roughness/metallic/occlusion/transmission/thickness 共同作用流程</title>
+<desc>贴图按通道采样后分三条路径计算：表面BRDF、间接光乘AO、透射加体积吸收，最后混合输出</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<text x="40" y="26" font-size="15" font-weight="500" fill="#2C2C2A">GLB 材质七属性共同作用 · 着色管线</text>
+
+<g>
+<rect x="40" y="44" width="140" height="74" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="110" y="62" font-size="13" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">Base Color</text>
+<text x="110" y="82" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">RGB=颜色 sRGB</text>
+<text x="110" y="100" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">A=alpha（几何）</text>
+</g>
+
+<g>
+<rect x="195" y="44" width="150" height="74" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+<text x="270" y="62" font-size="13" font-weight="500" fill="#27500A" text-anchor="middle" dominant-baseline="central">MR + AO 贴图</text>
+<text x="270" y="82" font-size="12" fill="#3B6D11" text-anchor="middle" dominant-baseline="central">G=roughness B=metallic</text>
+<text x="270" y="100" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">R=occlusion（线性）</text>
+</g>
+
+<g>
+<rect x="360" y="44" width="130" height="74" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text x="425" y="62" font-size="13" font-weight="500" fill="#3C3489" text-anchor="middle" dominant-baseline="central">Normal</text>
+<text x="425" y="82" font-size="12" fill="#534AB7" text-anchor="middle" dominant-baseline="central">RGB=切线空间</text>
+<text x="425" y="100" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">XYZ 法线扰动</text>
+</g>
+
+<g>
+<rect x="505" y="44" width="135" height="74" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="572" y="62" font-size="13" font-weight="500" fill="#633806" text-anchor="middle" dominant-baseline="central">Transmission+Vol</text>
+<text x="572" y="82" font-size="12" fill="#854F0B" text-anchor="middle" dominant-baseline="central">R=transmission</text>
+<text x="572" y="100" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">G=thickness（线性）</text>
+</g>
+
+<line x1="110" y1="118" x2="110" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="270" y1="118" x2="205" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="335" y1="118" x2="425" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="425" y1="118" x2="425" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="572" y1="118" x2="572" y2="142" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+<rect x="40" y="146" width="600" height="40" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+<text x="340" y="166" font-size="12" fill="#444441" text-anchor="middle" dominant-baseline="central">采样 → MaterialInfo：albedo、metallic、roughness²、F0、法线 N、transmission、thickness/attenuation</text>
+</g>
+
+<line x1="110" y1="186" x2="110" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="205" y1="186" x2="150" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="475" y1="186" x2="540" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="572" y1="186" x2="572" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+<rect x="40" y="210" width="190" height="92" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="135" y="230" font-size="13" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">① 表面 BRDF（直接光）</text>
+<text x="135" y="250" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">diffuse = (1-m)(1-t)·albedo/π</text>
+<text x="135" y="268" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">specular = GGX·Smith·Schlick F</text>
+<text x="135" y="286" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">normal 扰动 N 参与全部项</text>
+</g>
+
+<g>
+<rect x="245" y="210" width="190" height="92" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+<text x="340" y="230" font-size="13" font-weight="500" fill="#27500A" text-anchor="middle" dominant-baseline="central">② 间接光 IBL</text>
+<text x="340" y="250" font-size="12" fill="#3B6D11" text-anchor="middle" dominant-baseline="central">环境漫反射 + 预滤波 GGX</text>
+<text x="340" y="268" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">× AO(R) 只压暗间接光</text>
+<text x="340" y="286" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">AO 不碰直接光</text>
+</g>
+
+<g>
+<rect x="450" y="210" width="190" height="92" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text x="545" y="230" font-size="13" font-weight="500" fill="#633806" text-anchor="middle" dominant-baseline="central">③ 透射 + 体积吸收</text>
+<text x="545" y="250" font-size="12" fill="#854F0B" text-anchor="middle" dominant-baseline="central">透射光 = 背景色 × T(x)</text>
+<text x="545" y="268" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">T(x)=color^(thick/dist)</text>
+<text x="545" y="286" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">Beer 定律 · 厚度定深浅</text>
+</g>
+
+<line x1="135" y1="302" x2="135" y2="322" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="340" y1="302" x2="300" y2="322" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="545" y1="302" x2="545" y2="322" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+<rect x="40" y="326" width="600" height="50" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+<text x="340" y="344" font-size="13" font-weight="500" fill="#712B13" text-anchor="middle" dominant-baseline="central">最终颜色 = mix(①, ③, transmission) + ②×AO + emissive</text>
+<text x="340" y="362" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">transmission 越高越"玻璃"，Fresnel 镜面反射始终保留；thickness 无 volume 时无效</text>
+</g>
+</svg>
+        <p class="svg-cap">图：GLB 材质七属性共同作用流程 —— 贴图按通道采样 → MaterialInfo → 三条路径（BRDF / IBL×AO / 透射+体积）→ 最终混合</p>
+      </div>
+      <p style="font-size:13.5px;color:var(--ink2);margin:12px 0 6px"><b>c) 关键机制要点</b>：</p>
+      <ul class="trends" style="font-size:13.5px">
+        <li><b>metallic</b> 决定 baseColor 的"解释方式"：非金属 = albedo；金属 = 镜面反射色（无漫反射项）；</li>
+        <li><b>transmission 与 alpha 的本质区别</b>：alpha 淡化整个 BRDF；transmission 只替换透射分量，Fresnel 镜面反射始终保留；</li>
+        <li><b>thickness 必须配合 KHR_materials_volume 才生效</b>（volume 又依赖 transmission——光要能进入体积）；无光追引擎用 thickness 贴图做屏幕空间折射近似；</li>
+        <li><b>AO 只影响间接光路径</b>，直接光高光不受遮挡影响；</li>
+        <li>roughness 经 <code>alphaRoughness = perceptual²</code> 进入 GGX，控制高光大小与透射模糊程度（磨砂玻璃）。</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--ink2);margin:12px 0 6px"><b>d) 常见坑</b>（实测踩坑点）：</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>坑</th><th>现象</th><th>原因</th></tr></thead>
+          <tbody>
+            <tr><td>通道放错</td><td>材质发黑 / 高光全无</td><td>metallic 在 <b>B</b>、roughness 在 <b>G</b>、AO 在 <b>R</b>；P3D 系（R=metallic / G=occlusion）打包需转换</td></tr>
+            <tr><td>色彩空间错误</td><td>亮度/颜色失真</td><td>仅 baseColor 为 sRGB，其余全部 Non-Color（线性）</td></tr>
+            <tr><td>有 thickness 贴图但未挂 volume</td><td>厚度被忽略，仍薄壁</td><td>thickness 属于 KHR_materials_volume，volume 依赖 transmission</td></tr>
+            <tr><td>多层透射物</td><td>背后透射物不可见</td><td>实时引擎通用局限（官方文档标注）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    
+  </div>
+</section>
+
+<section id="practice">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Part 3 · 落地</div><h2>渲染实践：透明 vs 透射</h2></div>
+<h4 class="sub-h"><span class="t">C2.7</span>渲染实践：透明 vs 透射、alphaMode 与引擎落地</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px">渲染器落地时最容易混淆的是"两套看穿机制"：<b>Alpha 决定表面是否存在（像素消失）</b>，<b>Transmission 决定光线是否穿透（表面存在但透光）</b>——二者互不影响、可单独使用。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>机制</th><th>控制内容</th><th>视觉效果</th></tr></thead>
+          <tbody>
+            <tr><td><b>Alpha 透明</b>（alphaMode）</td><td>表面是否"存在"</td><td>像素消失，看到背景</td></tr>
+            <tr><td><b>Transmission 透射</b>（KHR_materials_transmission）</td><td>光线是否穿透表面</td><td>表面存在但透光，看到后面的物体（玻璃效果）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">① alphaMode 三种模式</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>alphaMode</th><th>行为</th><th>半透明</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><code>OPAQUE</code></td><td>Alpha 通道完全被忽略</td><td>❌</td><td>默认值</td></tr>
+            <tr><td><code>MASK</code></td><td>二值化：alpha &lt; cutoff → 全透明，≥ cutoff → 全不透明</td><td>❌</td><td>配合 <code>alphaCutoff</code>（默认 0.5，对应 uint8 纹理值 128）</td></tr>
+            <tr><td><code>BLEND</code></td><td>连续混合，alpha 0~1 渐变</td><td>✅</td><td>支持真正的半透明，但引入排序问题</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin:6px 0 12px">Alpha 数据来源：<code>baseColorTexture</code> 的 A 通道 或 <code>baseColorFactor</code> 第 4 分量。<code>alphaCutoff</code> 仅在 MASK 模式下生效。</p>
+
+      <h5 style="font-size:14px;margin:0 0 6px;color:var(--ink)">② Transmission 与 alphaMode 的关系（Khronos 官方语义）</h5>
+      <div class="callout" style="margin-top:6px">📖 <b>官方 blend-mode 指引</b>：glTF alphaMode 用于 <b>alpha-as-coverage（表面是否存在）</b>，<b>不是</b>物理透射。使用 transmission 时 blend mode 应保持 <code>OPAQUE</code>——"表面存在但透光"与"像素消失"是两回事。规范<b>不建议 BLEND + Transmission 混用</b>（渲染器行为不一致）；实际使用二选一：需要"消失"效果 → 用 Alpha；需要"玻璃/透光"效果 → 用 Transmission。alpha-as-coverage 理论上可与 transmission 共存（filament / three.js 均支持）。</div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">③ 引擎/工具落地实践</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>环境</th><th>实践要点</th></tr></thead>
+          <tbody>
+            <tr><td><b>Blender EEVEE</b>（4.2+ Render Method）</td><td><b>Dithered</b>（延迟渲染，噪点模拟透明）= OPAQUE/MASK，兼容光线追踪与渲染通道；<b>Blended</b>（前向渲染真混合）= BLEND，<b>不兼容 EEVEE 光线追踪</b>且有排序问题</td></tr>
+            <tr><td><b>Blender 常见坑</b></td><td>BLEND 在 Blender 中显示异常（排序/穿透）→ 方案 A 手动改 Render Method 为 Dithered；方案 B 把 alphaMode 改为 MASK（导入后自动用 Dithered）。MASK 无中间渐变；Transmission 需 Dithered 模式才能正确显示（映射到 Principled BSDF Transmission 输入）</td></tr>
+            <tr><td><b>Blender 3.6+ GLB 导出</b></td><td>透明默认<b>关闭</b>：需显式启用 Export Transparent（写 Alpha 通道）+ Alpha Mode = BLEND（MASK 硬边裁剪破坏玻璃柔和衰减）+ Embed Textures（防外部 PNG 丢失）。Cycles <b>无法烘焙 Transmission 通道</b>（非辐射量）；EEVEE 无折射采样，玻璃感依赖屏幕空间反射 SSR</td></tr>
+            <tr><td><b>three.js</b></td><td>BLEND 材质会禁用深度缓冲、无序渲染 → 树/栅栏等镂空优先 MASK（便宜且正确）；真渐变半透明才用 BLEND。运行时玻璃：<code>MeshPhysicalMaterial</code> 设 <code>transmission=1.0, ior=1.5+</code> + <code>physicallyCorrectLights</code>；加载后可用 <code>traverse</code> 覆盖错误的 transparent 设置</td></tr>
+            <tr><td><b>Babylon.js</b></td><td>同源问题：<code>transparencyMode=1</code>（ALPHATEST）可快速修复树冠等；但 glTF 是传输格式，<b>应保证"无需本地修复"即可在任何查看器正确渲染</b>——直接改 glTF 的 alphaMode 字段才是根治</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">④ 实际案例对比（内部测试）</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>文件</th><th>alphaMode</th><th>baseColor 通道</th><th>Transmission</th><th>效果</th></tr></thead>
+          <tbody>
+            <tr><td><code>sample.glb</code>（TRELLIS.2 生成）</td><td>OPAQUE</td><td>RGBA（A 被忽略）</td><td>❌</td><td>全不透明</td></tr>
+            <tr><td><code>sample_alpha.glb</code></td><td>MASK</td><td>RGBA（A 生效，二值化）</td><td>❌</td><td>边缘裁切</td></tr>
+            <tr><td><code>xuemingfu/1688_01.glb</code></td><td>未设置（默认 OPAQUE）</td><td>RGB</td><td>❌</td><td>全不透明</td></tr>
+            <tr><td><code>retofan/yuncao_01.glb</code></td><td>OPAQUE</td><td>RGB</td><td>✅ factor=1.0, ior=1.5</td><td>玻璃透射</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">⑤ 纹理通道约定速查（glTF PBR）</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>纹理</th><th>R</th><th>G</th><th>B</th><th>A</th></tr></thead>
+          <tbody>
+            <tr><td><code>baseColorTexture</code></td><td>颜色 R</td><td>颜色 G</td><td>颜色 B</td><td>Alpha（透明度）</td></tr>
+            <tr><td><code>metallicRoughnessTexture</code></td><td>Occlusion*</td><td>Roughness</td><td>Metallic</td><td>—</td></tr>
+            <tr><td><code>normalTexture</code></td><td>X</td><td>Y</td><td>Z</td><td>—</td></tr>
+            <tr><td><code>transmissionTexture</code></td><td>透射率</td><td>（未使用）</td><td>（未使用）</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin-top:6px">* Occlusion 通常单独为 <code>occlusionTexture</code>，但常打包在 metallicRoughness 的 R 通道中（与 C2.6 通道映射表一致）。</p>
+    </div>
+
+    
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">数据来源：《3D 透明材质表示形式全景调研》C2 章节详析 · <a href="../index.html">返回透明材质调研</a> · <a href="../../index.html">返回首页</a></div>
+</footer>
+
+</body>
+</html>
