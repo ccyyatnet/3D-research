@@ -407,6 +407,77 @@
       </div>
     </div>
 
+    <h4 class="sub-h"><span class="t">C2.7</span>渲染实践：透明 vs 透射、alphaMode 与引擎落地</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px">渲染器落地时最容易混淆的是"两套看穿机制"：<b>Alpha 决定表面是否存在（像素消失）</b>，<b>Transmission 决定光线是否穿透（表面存在但透光）</b>——二者互不影响、可单独使用。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>机制</th><th>控制内容</th><th>视觉效果</th></tr></thead>
+          <tbody>
+            <tr><td><b>Alpha 透明</b>（alphaMode）</td><td>表面是否"存在"</td><td>像素消失，看到背景</td></tr>
+            <tr><td><b>Transmission 透射</b>（KHR_materials_transmission）</td><td>光线是否穿透表面</td><td>表面存在但透光，看到后面的物体（玻璃效果）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">① alphaMode 三种模式</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>alphaMode</th><th>行为</th><th>半透明</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><code>OPAQUE</code></td><td>Alpha 通道完全被忽略</td><td>❌</td><td>默认值</td></tr>
+            <tr><td><code>MASK</code></td><td>二值化：alpha &lt; cutoff → 全透明，≥ cutoff → 全不透明</td><td>❌</td><td>配合 <code>alphaCutoff</code>（默认 0.5，对应 uint8 纹理值 128）</td></tr>
+            <tr><td><code>BLEND</code></td><td>连续混合，alpha 0~1 渐变</td><td>✅</td><td>支持真正的半透明，但引入排序问题</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin:6px 0 12px">Alpha 数据来源：<code>baseColorTexture</code> 的 A 通道 或 <code>baseColorFactor</code> 第 4 分量。<code>alphaCutoff</code> 仅在 MASK 模式下生效。</p>
+
+      <h5 style="font-size:14px;margin:0 0 6px;color:var(--ink)">② Transmission 与 alphaMode 的关系（Khronos 官方语义）</h5>
+      <div class="callout" style="margin-top:6px">📖 <b>官方 blend-mode 指引</b>：glTF alphaMode 用于 <b>alpha-as-coverage（表面是否存在）</b>，<b>不是</b>物理透射。使用 transmission 时 blend mode 应保持 <code>OPAQUE</code>——"表面存在但透光"与"像素消失"是两回事。规范<b>不建议 BLEND + Transmission 混用</b>（渲染器行为不一致）；实际使用二选一：需要"消失"效果 → 用 Alpha；需要"玻璃/透光"效果 → 用 Transmission。alpha-as-coverage 理论上可与 transmission 共存（filament / three.js 均支持）。</div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">③ 引擎/工具落地实践</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>环境</th><th>实践要点</th></tr></thead>
+          <tbody>
+            <tr><td><b>Blender EEVEE</b>（4.2+ Render Method）</td><td><b>Dithered</b>（延迟渲染，噪点模拟透明）= OPAQUE/MASK，兼容光线追踪与渲染通道；<b>Blended</b>（前向渲染真混合）= BLEND，<b>不兼容 EEVEE 光线追踪</b>且有排序问题</td></tr>
+            <tr><td><b>Blender 常见坑</b></td><td>BLEND 在 Blender 中显示异常（排序/穿透）→ 方案 A 手动改 Render Method 为 Dithered；方案 B 把 alphaMode 改为 MASK（导入后自动用 Dithered）。MASK 无中间渐变；Transmission 需 Dithered 模式才能正确显示（映射到 Principled BSDF Transmission 输入）</td></tr>
+            <tr><td><b>Blender 3.6+ GLB 导出</b></td><td>透明默认<b>关闭</b>：需显式启用 Export Transparent（写 Alpha 通道）+ Alpha Mode = BLEND（MASK 硬边裁剪破坏玻璃柔和衰减）+ Embed Textures（防外部 PNG 丢失）。Cycles <b>无法烘焙 Transmission 通道</b>（非辐射量）；EEVEE 无折射采样，玻璃感依赖屏幕空间反射 SSR</td></tr>
+            <tr><td><b>three.js</b></td><td>BLEND 材质会禁用深度缓冲、无序渲染 → 树/栅栏等镂空优先 MASK（便宜且正确）；真渐变半透明才用 BLEND。运行时玻璃：<code>MeshPhysicalMaterial</code> 设 <code>transmission=1.0, ior=1.5+</code> + <code>physicallyCorrectLights</code>；加载后可用 <code>traverse</code> 覆盖错误的 transparent 设置</td></tr>
+            <tr><td><b>Babylon.js</b></td><td>同源问题：<code>transparencyMode=1</code>（ALPHATEST）可快速修复树冠等；但 glTF 是传输格式，<b>应保证"无需本地修复"即可在任何查看器正确渲染</b>——直接改 glTF 的 alphaMode 字段才是根治</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">④ 实际案例对比（内部测试）</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>文件</th><th>alphaMode</th><th>baseColor 通道</th><th>Transmission</th><th>效果</th></tr></thead>
+          <tbody>
+            <tr><td><code>sample.glb</code>（TRELLIS.2 生成）</td><td>OPAQUE</td><td>RGBA（A 被忽略）</td><td>❌</td><td>全不透明</td></tr>
+            <tr><td><code>sample_alpha.glb</code></td><td>MASK</td><td>RGBA（A 生效，二值化）</td><td>❌</td><td>边缘裁切</td></tr>
+            <tr><td><code>xuemingfu/1688_01.glb</code></td><td>未设置（默认 OPAQUE）</td><td>RGB</td><td>❌</td><td>全不透明</td></tr>
+            <tr><td><code>retofan/yuncao_01.glb</code></td><td>OPAQUE</td><td>RGB</td><td>✅ factor=1.0, ior=1.5</td><td>玻璃透射</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">⑤ 纹理通道约定速查（glTF PBR）</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>纹理</th><th>R</th><th>G</th><th>B</th><th>A</th></tr></thead>
+          <tbody>
+            <tr><td><code>baseColorTexture</code></td><td>颜色 R</td><td>颜色 G</td><td>颜色 B</td><td>Alpha（透明度）</td></tr>
+            <tr><td><code>metallicRoughnessTexture</code></td><td>Occlusion*</td><td>Roughness</td><td>Metallic</td><td>—</td></tr>
+            <tr><td><code>normalTexture</code></td><td>X</td><td>Y</td><td>Z</td><td>—</td></tr>
+            <tr><td><code>transmissionTexture</code></td><td>透射率</td><td>（未使用）</td><td>（未使用）</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin-top:6px">* Occlusion 通常单独为 <code>occlusionTexture</code>，但常打包在 metallicRoughness 的 R 通道中（与 C2.6 通道映射表一致）。</p>
+    </div>
+
     <h4 class="sub-h"><span class="t">C3</span>次表面散射 SSS + <span class="t">C4</span>薄膜干涉与镀膜</h4>
     <div class="grid2" style="margin-top:12px">
       <div class="method-card"><h4><span class="cls">C3</span>次表面散射 SSS</h4><div class="tagline">半透明介质的"质感动词"</div><p>光进入表面内部散射后再出射，像素尺度小于散射距离即"半透明"（玉石/皮肤/蜡/牛奶）。谱系：偶极子扩散近似 → Disney 两指数项 → <b>随机游走</b>（影视级精确）→ 屏幕空间 SSS（游戏廉价近似）。</p><div class="pros">✔ 以低成本获得体积感的"透光"效果，不依赖排序</div><div class="cons">✘ 本质是近似；强光直射易过曝发灰；屏幕空间方案无法处理背面信息缺失</div></div>
