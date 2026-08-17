@@ -196,6 +196,30 @@
     <h3 class="block-title c-teal">C 类 · 基于物理的表面材质模型（PBR / BSDF）</h3>
     <p style="font-size:14px;color:var(--ink2);margin-bottom:12px">不纠结"排序"，从物理上把"半透明"定义为光的透射行为——区分"几何缺失型透明（Alpha）"与"实体透光型透明（Transmission）"。</p>
 
+    <h4 class="sub-h"><span class="t">C0</span>经典着色模型：Lambert 与 Phong —— PBR 之前的"不透明时代"</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px"><b>定位</b>：PBR 之前，实时与离线 CG 都建立在两个经验模型上——<b>Lambert</b>（只有漫反射的哑光模型）与 <b>Phong</b>（加了镜面高光的泛光模型）。它们都没有"透射/折射"概念，透明只能靠 alpha 混合（几何缺失型）假装。理解它们是与 C1~C4 的 PBR 时代对照的起点。</p>
+      <div class="grid3">
+        <div class="method-card"><h4 style="margin-bottom:4px"><span class="cls">L</span>Lambert 漫反射</h4><div class="tagline">Lambert 1760 · Phong 1975 引入 CG</div><p style="font-size:13px;color:var(--ink2);margin:6px 0"><code>L = k<sub>d</sub>·I·max(N·L, 0)</code></p><p style="font-size:13px;color:var(--ink2);margin-bottom:6px">理想哑光面：出射亮度<b>与观察方向无关</b>（各向同性），只由法线与光方向的夹角（朗伯余弦定律）决定；无高光、无环境项，能量简单守恒。</p><div class="pros">✔ 纸 / 粉笔 / 石膏 / 月球表面</div><div class="cons">✘ 一切材质看起来都是哑光，无高光无层次</div></div>
+        <div class="method-card"><h4 style="margin-bottom:4px"><span class="cls">P</span>Phong 镜面高光</h4><div class="tagline">Bui Tuong Phong · 1975</div><p style="font-size:13px;color:var(--ink2);margin:6px 0"><code>L = amb + k<sub>d</sub>(N·L) + k<sub>s</sub>(R·V)<sup>n</sup></code></p><p style="font-size:13px;color:var(--ink2);margin-bottom:6px">在 Lambert 上叠加<b>视角相关</b>镜面项：反射向量 R 越靠近视线 V 高光越亮，指数 n 控制锐度（n 大 = 小而亮 = 塑料感）。</p><div class="pros">✔ 塑料 / 釉面 / 光泽表面</div><div class="cons">✘ 经验模型：能量不守恒、无 Fresnel、掠射角高光失真</div></div>
+        <div class="method-card"><h4 style="margin-bottom:4px"><span class="cls">B</span>Blinn-Phong 变体</h4><div class="tagline">Jim Blinn · 1977</div><p style="font-size:13px;color:var(--ink2);margin:6px 0"><code>镜面项 → k<sub>s</sub>(N·H)<sup>n</sup>，H = normalize(L+V)</code></p><p style="font-size:13px;color:var(--ink2);margin-bottom:6px">用<b>半程向量 H</b> 替代反射向量 R：省去反射向量计算（更快），高光略宽更柔和；OpenGL 固定管线 / 游戏引擎传统高光的实际标准。</p><div class="pros">✔ 效果近似 Phong，速度更快</div><div class="cons">✘ 高光形状与 Phong 有细微差异</div></div>
+      </div>
+      <div class="table-scroll" style="margin-top:14px">
+        <table>
+          <thead><tr><th>维度</th><th>Lambert</th><th>Phong</th><th>Blinn-Phong</th></tr></thead>
+          <tbody>
+            <tr><td>漫反射项</td><td>✔（唯一项）</td><td>✔</td><td>✔</td></tr>
+            <tr><td>镜面高光</td><td>✘ 无</td><td>✔ (R·V)<sup>n</sup></td><td>✔ (N·H)<sup>n</sup></td></tr>
+            <tr><td>视角依赖</td><td>无（各向同性）</td><td>有</td><td>有</td></tr>
+            <tr><td>能量守恒</td><td>✔（仅漫反射）</td><td>✘ 可超入射能量</td><td>✘</td></tr>
+            <tr><td>Fresnel 效应</td><td>✘</td><td>✘</td><td>✘</td></tr>
+            <tr><td>透明 / 透射</td><td colspan="3" style="text-align:center">✘ 全无——只有 alpha 混合的"假透明"</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout" style="margin-top:14px">📌 <b>与 PBR 的衔接</b>：PBR 的漫反射仍是 Lambert 思想的改良（<code>baseColor/π × (1−F)(1−m)</code>，换成 Disney/Burley diffuse 修正掠射角）；镜面则用 <b>GGX 微表面分布 + Smith 遮蔽 + Schlick Fresnel</b> 替代 Phong 的经验项——Phong 的 <code>shininess n</code> 大致对应 PBR 的 <code>roughness</code>（n 大 = roughness 小）。<b>金属度是 PBR 新增维度</b>，Phong 时代没有；而"真透射"（transmission / volume / ior）更是 C2 的 glTF 扩展才引入的概念——这正是本报告 C 类的升级主线：<b>alpha 假透明 → transmission 真透射</b>。</div>
+    </div>
+
     <h4 class="sub-h"><span class="t">C1</span>Disney / Principled BSDF —— 全能 BSDF 中的透明建模</h4>
     <div class="card">
       <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px"><b>演进脉络</b>：2012 年 Burley 提出 Principled BRDF（SIGGRAPH）→ 2015 年扩展为 <b>BSDF</b>，首次把透射与次表面散射整合进同一套参数 → 衍生实现：Blender Principled BSDF、PxrDisneyBsdf（RenderMan）、UE Glass/Translucency、Unity HDRP Lit、Cinema 4D/Octane。</p>
