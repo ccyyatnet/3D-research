@@ -163,9 +163,41 @@
         <div class="pros">✔ 物理语义正确、资产一次制作全平台一致；渐进增强（不支持 volume 的引擎仍能渲染 transmission）；Three.js / Babylon.js / Filament / Blender 等广泛支持</div>
         <div class="cons">✘ 实时引擎实现复杂：多层透射物间可见性受限；真折射需 volume 且无光追引擎只能屏幕空间近似；diffuse_transmission 目前仍为 release candidate</div>
       </div>
+    <h4 class="sub-h"><span class="t">C2.1</span>深挖：KHR_materials_volume 体积扩展</h4>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px"><b>设计意图</b>：默认 glTF 材质描述的是包裹<b>无限薄表面</b>（thin wall）的散射属性；volume 扩展把表面升级为<b>"体与体之间的界面"</b>（interface between volumes）——网格定义均匀介质的边界，提供折射、吸收效果（<b>散射不在此扩展范围</b>，σs=0，仅吸收）。</p>
+      <div class="callout" style="margin-top:6px">⚠️ <b>硬性约束</b>：① 必须与允许光穿透表面的扩展组合（如 <code>KHR_materials_transmission</code>），否则 volume 不生效；② 体积材质要求网格<b>封闭/流形（manifold）</b>——薄壁可开网格，体积只能封闭网格；③ 不可与 <code>KHR_materials_pbrSpecularGlossiness</code>、<code>KHR_materials_unlit</code> 混用；④ <code>doubleSided</code> 属性对体积边界无效果。</div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">① 三个属性：厚度 / 衰减距离 / 衰减色</h5>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>属性</th><th>默认</th><th>单位/坐标</th><th>语义</th></tr></thead>
+          <tbody>
+            <tr><td><code>thicknessFactor</code></td><td>0</td><td><b>网格局部坐标</b>（节点变换会作用到厚度）</td><td>表面下的体积厚度；<b>0 = 薄壁，&gt;0 = 体积边界</b>；范围 [0, +inf)</td></tr>
+            <tr><td><code>thicknessTexture</code></td><td>—</td><td>G 通道 [0,1]，乘以 thicknessFactor</td><td>厚度烘焙图：方向与 AO 烘焙相反（沿法线<b>反向</b>投射射线）；暗=薄、亮=厚；<b>有损近似</b>——光追渲染器应忽略它、改用真实射线距离</td></tr>
+            <tr><td><code>attenuationDistance</code></td><td>+Infinity</td><td><b>世界空间</b></td><td>介质密度 = 光在介质中的平均自由程；越小越"浓"（光走更短距离就被吸收）</td></tr>
+            <tr><td><code>attenuationColor</code></td><td>[1,1,1]（白=无吸收）</td><td>线性 RGB</td><td>白光经过 attenuationDistance 后被吸收成的颜色（绿玻璃 = 吸收红蓝、透绿）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">② Beer–Lambert 吸收模型</h5>
+      <pre class="flow">透射率  T(x) = attenuationColor^(x / attenuationDistance)   （x = 光在介质中行进距离）
+等价（RedGPU 实现）：transmitted = base_color · exp(−attenuationColor · distance / attenuationDistance)
+物理背景：衰减系数 σt = σa + σs；本扩展只定义吸收（σs = 0），σt = σa</pre>
+      <p style="font-size:13.5px;color:var(--ink2);margin-top:8px"><b>baseColor vs attenuationColor 的本质区别</b>（Khronos 官方图示）：baseColor 改变光穿过<b>体积边界</b>时的颜色——物体处处同色，像蒙了一层彩色透明箔；attenuationColor 改变光在<b>体积内部</b>的吸收——颜色随光路长度变化，薄处亮、厚处暗（琥珀/宝石的深度感由此而来）。</p>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">③ 与折射（IOR）的关系</h5>
+      <p style="font-size:13.5px;color:var(--ink2)">光射入/射出体积边界时按 <code>KHR_materials_ior</code>（默认 1.5）发生折射（Snell 定律）；与 transmission 组合时用<b>微表面折射 BTDF</b>——roughness 同时影响反射与透射波瓣（磨砂玻璃）。介质内行进距离由入射角决定，这也是 thickness 贴图估计必然有损的原因。</p>
+
+      <h5 style="font-size:14px;margin:16px 0 6px;color:var(--ink)">④ 典型用途与引擎支持</h5>
+      <div class="grid2">
+        <div class="pros">✔ 彩色玻璃（绿/琥珀瓶）、液体（酒/带色水）、深度感宝石、厚半透明材质；引擎支持：Babylon.js / Google Filament / three.js / Substance 3D Stager / Gestaltor 等</div>
+        <div class="cons">✘ 需封闭流形网格；无光追引擎只能靠 thickness 贴图近似（有损）；多层透射物可见性受限；散射/次表面不在本扩展范围（需配合 SSS）</div>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin-top:8px">实践建议：thicknessFactor 常设为 mesh 包围盒最长边，贴图缩放对应各点实际厚度；烘焙厚度时射线朝法线反方向投射（类似 AO 逆向）；光追渲染时忽略厚度贴图直接积分真实距离，可保证跨渲染技术一致。</p>
     </div>
 
-    
   </div>
 </section>
 
