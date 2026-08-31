@@ -612,6 +612,14 @@
 </footer>
 
 <script>
+/* Chart.js CDN 不可达时优雅降级：图表区留空，页面其余交互（tab/折叠/评分）不受影响 */
+if (typeof Chart === 'undefined') {
+  window.Chart = function () {
+    return { destroy: function () {}, update: function () {}, resize: function () {} };
+  };
+  window.Chart.defaults = { color: '', font: {}, plugins: {} };
+}
+
 Chart.defaults.font.family="'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif";
 new Chart(document.getElementById('layerDonut'),{type:'doughnut',
   data:{labels:['L2 逆渲染 10','L1 采集 3','L3 生成式材质 3','L5 纹理烘焙 3','L4 结构分解 2','跨层 4'],
