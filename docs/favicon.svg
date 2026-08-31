@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="3D-research">
+  <title>3D-research</title>
+  <!-- 等距立方体：顶/左/右三面明暗区分，呼应站点 3D 生成主题 -->
+  <polygon points="32,6 58,21 32,36 6,21" fill="#7cb0f5"/>
+  <polygon points="6,21 32,36 32,58 6,43" fill="#3b6fd4"/>
+  <polygon points="58,21 32,36 32,58 58,43" fill="#1e429f"/>
+  <g fill="none" stroke="#0f2a63" stroke-width="1.6" stroke-linejoin="round" opacity=".55">
+    <polygon points="32,6 58,21 32,36 6,21"/>
+    <polygon points="6,21 32,36 32,58 6,43"/>
+    <polygon points="58,21 32,36 32,58 58,43"/>
+  </g>
+</svg>
