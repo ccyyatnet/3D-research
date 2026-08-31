@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBR 材质生成专题梳理 · 3D-Research</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:32px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:880px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:340px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .cls.p0{background:#ffe4e0;color:#c2410c}
+  .method-card .cls.p1{background:#fff4e0;color:#b45309}
+  .method-card .cls.p2{background:#e4f7ec;color:#15803d}
+  .method-card .cls.p3{background:#eef2fb;color:#4b5a6e}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .sub-h .t.orange{background:#fde8d4;color:#b45309}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .trends{margin-left:20px}
+  .trends li{margin:0 0 10px 0;font-size:14px;color:var(--ink2)}
+  .trends b{color:var(--ink)}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 专题梳理</div>
+    <div class="links"><a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#pipeline">② 管线分层</a>
+      <a href="#routes">③ 三条路线</a>
+      <a href="#gltf">④ glTF 覆盖</a>
+      <a href="#papers">⑤ 逐篇</a>
+      <a href="#gaps">⑥ 空白</a>
+      <a href="../transparent-materials/index.html" style="font-weight:700;color:#8b5cf6">透明材质调研 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">📋 专题梳理 · 2026-08-31 · 从 183 篇 3D 生成论文中抽取</span>
+    <h1>PBR <em>材质生成</em>专题梳理</h1>
+    <p class="sub">素材来自本站 <a href="../3d-generation-2026/index.html">2026 年 6–8 月 3D 生成论文合集</a>（183 篇）。按 <b>PBR 生产管线</b> 重新分层，逐层给出篇数、代表工作与技术取舍；并把所有工作对齐到 <b>glTF 2.0 材质通道</b> 做覆盖检查——空白项即机会点。</p>
+    <div class="meta">
+      <span class="pill">25 篇在范围内（+1 篇窗口外）</span>
+      <span class="pill">五层管线：采集 → 逆渲染 → 生成 → 结构分解 → 烘焙</span>
+      <span class="pill">glTF 9 个材质通道只覆盖 3 个</span>
+      <span class="pill">透明 / 折射参数化生成零覆盖</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>25 篇</b><span>材质相关（占合集 13.7%）</span></div>
+      <div class="stat"><b>1 篇</b><span>产出完整 metallic-roughness 三件套（Luce）</span></div>
+      <div class="stat"><b>6 / 9</b><span>glTF 材质通道空白</span></div>
+      <div class="stat"><b>10 / 25</b><span>挤在逆渲染层，生成式材质仅 3 篇</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1. CONCLUSION ============ -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 1 · 结论先行</div>
+      <h2>三条结论</h2>
+      <p>如果只有五分钟，看这三张卡。</p>
+    </div>
+    <div class="grid3">
+      <div class="concl">
+        <div class="n">结论 01</div>
+        <h4>只有 1 篇真正产出 glTF 完整 PBR 三件套</h4>
+        <p><b>Luce</b>（Apple，<code>2608.23943</code>）把几何与 PBR 统一进体素化多模态高斯云，显式参数化 <b>albedo / metallic-roughness / normal</b>，可导出带切空间法线的贴图网格。其余 24 篇要么停在 albedo-shading 分解，要么把 BRDF 存在隐式 MLP 或调色板里，导不出 glTF 材质。</p>
+      </div>
+      <div class="concl c-red">
+        <div class="n">结论 02</div>
+        <h4>透明 / 折射的参数化生成是彻底的空白</h4>
+        <p>glTF 的 <code>transmission</code> / <code>ior</code> / <code>volume</code> / <code>clearcoat</code> / <code>sheen</code> / <code>anisotropy</code> 六个通道在 183 篇里<b>零覆盖</b>。唯一相关的是一篇 CAD 透明<b>渲染</b>综述（<code>2608.28310</code>）——它讲怎么画，不讲怎么估参数。</p>
+      </div>
+      <div class="concl c-purple">
+        <div class="n">结论 03</div>
+        <h4>6–7 月是逆渲染月，8 月是生成月</h4>
+        <p>材质 / 光照分解的四篇主力（MaterialClusterGS、AEGIR、Editable PB Reflections、Intrinsic 3DGS）全部集中在 6 月。8 月出现两个新方向：<b>生成即带材质</b>（Luce）与 <b>材质感知结构分解</b>（PartMat、Gen2Physics）。</p>
+      </div>
+    </div>
+    <div class="callout">📌 <b>一句话总结：</b>学术界主流路径仍是「先重建几何与辐射场 → 再反推材质」，而不是「直接生成材质参数」。Luce 是这条主线上的第一个例外，也是唯一一个把 metallic-roughness 显式参数化的工作。</div>
+  </div>
+</section>
+
+<!-- ============ 2. PIPELINE ============ -->
+<section id="pipeline" style="background:#f0f4fb">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 2 · 管线分层</div>
+      <h2>PBR 贴图要过五道关，论文密度极不均匀</h2>
+      <p>从「透明物体怎么拍」到「贴图怎么落到资产上」，25 篇在这五层的分布是 3 / 10 / 3 / 2 / 3，外加 4 篇跨层工作。密度几乎全挤在逆渲染层。</p>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 466" width="100%" role="img">
+        <title>PBR 材质生成管线五层与 glTF 通道覆盖</title>
+        <desc>从采集先验、逆渲染、生成式材质、结构分解到纹理烘焙五层管线，各层收录论文数量与代表工作；底部显示 glTF PBR 九个材质通道中仅三个被覆盖。</desc>
+        <g>
+          <rect x="40" y="40" width="600" height="52" rx="10" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+          <text x="58" y="58" font-size="14" font-weight="500" fill="#0C447C" dominant-baseline="central">L1 采集与先验</text>
+          <text x="58" y="75" font-size="12" fill="#185FA5" dominant-baseline="central">3 篇 · 透明与高反光怎么拍</text>
+          <rect x="205" y="53" width="58" height="26" rx="6" fill="#B5D4F4" stroke="#185FA5" stroke-width="0.5"/>
+          <text x="234" y="66" font-size="12" fill="#042C53" text-anchor="middle" dominant-baseline="central">FRA-NBV</text>
+          <rect x="271" y="53" width="118" height="26" rx="6" fill="#B5D4F4" stroke="#185FA5" stroke-width="0.5"/>
+          <text x="330" y="66" font-size="12" fill="#042C53" text-anchor="middle" dominant-baseline="central">Polarized Opacity</text>
+          <rect x="397" y="53" width="124" height="26" rx="6" fill="#B5D4F4" stroke="#185FA5" stroke-width="0.5"/>
+          <text x="459" y="66" font-size="12" fill="#042C53" text-anchor="middle" dominant-baseline="central">Geometry Gaussians</text>
+        </g>
+        <g>
+          <rect x="40" y="102" width="600" height="52" rx="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+          <text x="58" y="120" font-size="14" font-weight="500" fill="#085041" dominant-baseline="central">L2 材质与光照分解（逆渲染）</text>
+          <text x="58" y="137" font-size="12" fill="#0F6E56" dominant-baseline="central">10 篇 · 四篇主力集中在 6 月</text>
+          <rect x="205" y="115" width="118" height="26" rx="6" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"/>
+          <text x="264" y="128" font-size="12" fill="#04342C" text-anchor="middle" dominant-baseline="central">MaterialClusterGS</text>
+          <rect x="331" y="115" width="46" height="26" rx="6" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"/>
+          <text x="354" y="128" font-size="12" fill="#04342C" text-anchor="middle" dominant-baseline="central">AEGIR</text>
+          <rect x="385" y="115" width="118" height="26" rx="6" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"/>
+          <text x="444" y="128" font-size="12" fill="#04342C" text-anchor="middle" dominant-baseline="central">Editable PB Refl.</text>
+          <rect x="511" y="115" width="100" height="26" rx="6" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"/>
+          <text x="561" y="128" font-size="12" fill="#04342C" text-anchor="middle" dominant-baseline="central">Intrinsic 3DGS</text>
+        </g>
+        <g>
+          <rect x="40" y="164" width="600" height="52" rx="10" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+          <text x="58" y="182" font-size="14" font-weight="500" fill="#3C3489" dominant-baseline="central">L3 生成式材质（latent 直出）</text>
+          <text x="58" y="199" font-size="12" fill="#534AB7" dominant-baseline="central">3 篇 · 唯一产出 MR 三件套的一层</text>
+          <rect x="205" y="177" width="64" height="26" rx="6" fill="#AFA9EC" stroke="#3C3489" stroke-width="0.5"/>
+          <text x="237" y="190" font-size="12" fill="#26215C" text-anchor="middle" dominant-baseline="central">Luce</text>
+          <rect x="277" y="177" width="88" height="26" rx="6" fill="#CECBF6" stroke="#534AB7" stroke-width="0.5"/>
+          <text x="321" y="190" font-size="12" fill="#26215C" text-anchor="middle" dominant-baseline="central">Home3D 1.0</text>
+          <rect x="373" y="177" width="58" height="26" rx="6" fill="#CECBF6" stroke="#534AB7" stroke-width="0.5"/>
+          <text x="402" y="190" font-size="12" fill="#26215C" text-anchor="middle" dominant-baseline="central">Ink3D</text>
+        </g>
+        <g>
+          <rect x="40" y="226" width="600" height="52" rx="10" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+          <text x="58" y="244" font-size="14" font-weight="500" fill="#633806" dominant-baseline="central">L4 材质感知的结构分解</text>
+          <text x="58" y="261" font-size="12" fill="#854F0B" dominant-baseline="central">2 篇 · 8 月新方向</text>
+          <rect x="205" y="239" width="58" height="26" rx="6" fill="#FAC775" stroke="#854F0B" stroke-width="0.5"/>
+          <text x="234" y="252" font-size="12" fill="#412402" text-anchor="middle" dominant-baseline="central">PartMat</text>
+          <rect x="271" y="239" width="88" height="26" rx="6" fill="#FAC775" stroke="#854F0B" stroke-width="0.5"/>
+          <text x="315" y="252" font-size="12" fill="#412402" text-anchor="middle" dominant-baseline="central">Gen2Physics</text>
+        </g>
+        <g>
+          <rect x="40" y="288" width="600" height="52" rx="10" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+          <text x="58" y="306" font-size="14" font-weight="500" fill="#444441" dominant-baseline="central">L5 纹理 / UV / 烘焙 → 可交付资产</text>
+          <text x="58" y="323" font-size="12" fill="#5F5E5A" dominant-baseline="central">3 篇 · PBR 贴图的载体层</text>
+          <rect x="205" y="301" width="58" height="26" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5"/>
+          <text x="234" y="314" font-size="12" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central">SeamGen</text>
+          <rect x="271" y="301" width="58" height="26" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5"/>
+          <text x="300" y="314" font-size="12" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central">Bake It</text>
+          <rect x="337" y="301" width="58" height="26" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5"/>
+          <text x="366" y="314" font-size="12" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central">Survey</text>
+        </g>
+        <g>
+          <rect x="40" y="354" width="600" height="92" rx="10" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+          <text x="58" y="372" font-size="14" font-weight="500" fill="#2C2C2A" dominant-baseline="central">glTF 2.0 材质通道覆盖：9 个通道只覆盖 3 个</text>
+          <text x="58" y="398" font-size="12" fill="#444441" dominant-baseline="central">已覆盖</text>
+          <rect x="110" y="386" width="130" height="24" rx="6" fill="#EAF3DE" stroke="#639922" stroke-width="0.5"/>
+          <text x="175" y="398" font-size="12" fill="#173404" text-anchor="middle" dominant-baseline="central">baseColor (partial)</text>
+          <rect x="248" y="386" width="160" height="24" rx="6" fill="#EAF3DE" stroke="#639922" stroke-width="0.5"/>
+          <text x="328" y="398" font-size="12" fill="#173404" text-anchor="middle" dominant-baseline="central">metallicRoughness (Luce)</text>
+          <rect x="416" y="386" width="130" height="24" rx="6" fill="#EAF3DE" stroke="#639922" stroke-width="0.5"/>
+          <text x="481" y="398" font-size="12" fill="#173404" text-anchor="middle" dominant-baseline="central">specular / roughness</text>
+          <text x="58" y="426" font-size="12" fill="#444441" dominant-baseline="central">空白</text>
+          <rect x="110" y="414" width="88" height="24" rx="6" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+          <text x="154" y="426" font-size="12" fill="#791F1F" text-anchor="middle" dominant-baseline="central">transmission</text>
+          <rect x="206" y="414" width="34" height="24" rx="6" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+          <text x="223" y="426" font-size="12" fill="#791F1F" text-anchor="middle" dominant-baseline="central">ior</text>
+          <rect x="248" y="414" width="52" height="24" rx="6" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+          <text x="274" y="426" font-size="12" fill="#791F1F" text-anchor="middle" dominant-baseline="central">volume</text>
+          <rect x="308" y="414" width="70" height="24" rx="6" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+          <text x="343" y="426" font-size="12" fill="#791F1F" text-anchor="middle" dominant-baseline="central">clearcoat</text>
+          <rect x="386" y="414" width="46" height="24" rx="6" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+          <text x="409" y="426" font-size="12" fill="#791F1F" text-anchor="middle" dominant-baseline="central">sheen</text>
+          <rect x="440" y="414" width="76" height="24" rx="6" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+          <text x="478" y="426" font-size="12" fill="#791F1F" text-anchor="middle" dominant-baseline="central">anisotropy</text>
+        </g>
+      </svg>
+      <div class="svg-cap">PBR 材质生产管线五层与 glTF 通道覆盖（Ink3D 同时属于 L3 与 L5，此处归入 L3）</div>
+    </div>
+
+    <div class="grid2" style="margin-top:22px">
+      <div class="card">
+        <div class="chart-box"><canvas id="layerDonut"></canvas></div>
+        <p class="chart-note">按管线分层去重后的分布：L2 逆渲染独占 40%，而 L3 生成式材质只有 12%。</p>
+      </div>
+      <div class="card">
+        <div class="chart-box"><canvas id="monthBar"></canvas></div>
+        <p class="chart-note">按 arXiv 提交月份：6 月 9 篇是绝对高峰（逆渲染主力），8 月 9 篇但主题转向「生成」与「采集」。</p>
+      </div>
+    </div>
+
+    <div class="table-scroll" style="margin-top:22px">
+      <table>
+        <thead><tr><th>层</th><th>环节</th><th>篇数</th><th>论文</th></tr></thead>
+        <tbody>
+          <tr><td><b>L1</b></td><td>采集与先验（透明/高反光物体怎么拍）</td><td>3</td><td>FRA-NBV、Polarized Opacity Prior、Geometry Gaussians</td></tr>
+          <tr><td><b>L2</b></td><td>材质 / 光照分解（逆渲染）</td><td>10</td><td>MaterialClusterGS、AEGIR、Editable PB Reflections、Intrinsic Decomp of 3DGS、SpotlessGS、InvSplat、Mesh2GS、QuerySplat、Manifold-GS、Lighting-Consistent Transfer</td></tr>
+          <tr><td><b>L3</b></td><td>生成式材质（latent 直出 PBR 参数 / 贴图）</td><td>3</td><td><b>Luce</b>、Home3D 1.0、Ink3D</td></tr>
+          <tr><td><b>L4</b></td><td>材质感知的结构分解</td><td>2</td><td>PartMat、Gen2Physics</td></tr>
+          <tr><td><b>L5</b></td><td>纹理 / UV / 烘焙 → 可交付资产</td><td>3</td><td>Neural 3D Mesh Texturing Survey、SeamGen、Bake It Till You Make It</td></tr>
+          <tr><td>跨层</td><td>野外光照鲁棒（横跨 L1–L2）</td><td>3</td><td>Wild3R、WildSplat、WilLaGS</td></tr>
+          <tr><td>跨层</td><td>透明渲染综述</td><td>1</td><td>Transparency Rendering in CAD</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="summary-box">🔍 <b>分布解读：</b>论文密度集中在 <b>L2 逆渲染</b>（10 篇，多数是 6 月），而 <b>L3 生成式材质只有 3 篇</b>。也就是说，学术界目前的做法还是「先重建几何与辐射场 → 再反推材质」，而不是「直接生成材质参数」。Luce 是这条主线上的第一个例外，也是唯一一个把 metallic-roughness 显式参数化的工作。</div>
+  </div>
+</section>
+
+<!-- ============ 3. ROUTES ============ -->
+<section id="routes">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 3 · 三条技术路线</div>
+      <h2>逐基元 BRDF / 本征分解 / 生成式 latent</h2>
+      <p>同一件事的三条路径，在可编辑性、可导出性、输入要求上差别很大。</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>维度</th><th>① 逐基元 BRDF 参数</th><th>② 本征分解（albedo–shading）</th><th>③ 生成式 latent 直出</th></tr></thead>
+        <tbody>
+          <tr><th>代表</th><td>MaterialClusterGS、InvSplat、SpotlessGS</td><td>Intrinsic Decomp of 3DGS、Mesh2GS、Luce</td><td><b>Luce</b>、Home3D 1.0、Ink3D</td></tr>
+          <tr><th>材质表示</th><td>每基元一个 BRDF（调色板原型 / MLP）</td><td>albedo + shading 两个分量</td><td>VAE 压进材质感知隐空间</td></tr>
+          <tr><th>光照模型</th><td>环境光 SH 或显式面光源</td><td>神经照明模块 / 分解出的 shading</td><td>训练数据隐含，可重光照</td></tr>
+          <tr><th>输入</th><td>多视图（位姿已知）</td><td>多视图 / 网格 + 多视图</td><td><b>单图</b></td></tr>
+          <tr><th>可重光照</th><td><span class="badge-tag tag-good">✅</span></td><td><span class="badge-tag tag-mid">⚠️ 部分（需重估 shading）</span></td><td><span class="badge-tag tag-good">✅</span></td></tr>
+          <tr><th>能否导出贴图 / 网格</th><td><span class="badge-tag tag-bad">❌ 大多停在 splat</span></td><td><span class="badge-tag tag-bad">❌</span></td><td><span class="badge-tag tag-good">✅ Luce 可选出带切空间法线的贴图网格</span></td></tr>
+          <tr><th>材质编辑粒度</th><td>逐基元 / 逐材质簇</td><td>逐像素贴图级</td><td>全局 latent 级</td></tr>
+          <tr><th>主要局限</th><td>材质分解不唯一，逐基元噪声大</td><td>非朗伯表面失效，粗糙度与金属度分不开</td><td>需要大规模带材质标注数据</td></tr>
+          <tr><th>与 glTF 的接口</th><td>BRDF 参数化的<b>可辨识性</b>问题</td><td>对应 Disney BSDF 的 diffuse / specular 拆分</td><td>最贴近 glTF 材质贴图产出</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">🎯 <b>判断：</b>路线 ① 适合做<b>编辑</b>（改一盏灯、改一处粗糙度）；路线 ③ 适合做<b>生产</b>（出资产）。路线 ② 是两者的中间态，也是目前论文最多但工程落地最尴尬的一档——分解出来的 albedo 没法直接当 baseColor 贴图用，因为它没剥掉金属度与粗糙度。</div>
+  </div>
+</section>
+
+<!-- ============ 4. GLTF ============ -->
+<section id="gltf" style="background:#f0f4fb">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 4 · 标准化对齐</div>
+      <h2>与 glTF PBR 参数化的覆盖检查</h2>
+      <p>把 25 篇逐条对照 glTF 2.0 的材质通道。这是本页最有价值的一张表——空白处就是机会点。</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>glTF 通道</th><th>覆盖情况</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>baseColor</code> / albedo</td><td><span class="badge-tag tag-mid">部分（约 8 篇）</span></td><td>本征分解类工作都能出 albedo，但多数混着光照残留</td></tr>
+          <tr><td><code>metallicRoughness</code></td><td><span class="badge-tag tag-good">1 篇（Luce）</span></td><td>只有 Luce 显式参数化 metallic-roughness</td></tr>
+          <tr><td><code>normal</code>（切空间）</td><td><span class="badge-tag tag-good">1 篇（Luce，可选导出）</span></td><td>其余都在 splat 域，没有法线贴图</td></tr>
+          <tr><td><code>occlusion</code> / <code>emissive</code></td><td><span class="badge-tag tag-bad">0 篇</span></td><td>—</td></tr>
+          <tr><td><code>KHR_materials_transmission</code></td><td><span class="badge-tag tag-bad">0 篇</span></td><td>透明材质最核心的通道，完全空白</td></tr>
+          <tr><td><code>KHR_materials_ior</code> / <code>_volume</code> / <code>_dispersion</code></td><td><span class="badge-tag tag-bad">0 篇</span></td><td>折射 / 衰减参数，完全空白</td></tr>
+          <tr><td><code>KHR_materials_clearcoat</code> / <code>_sheen</code></td><td><span class="badge-tag tag-bad">0 篇</span></td><td>涂层与织物，完全空白</td></tr>
+          <tr><td><code>KHR_materials_anisotropy</code></td><td><span class="badge-tag tag-bad">0 篇</span></td><td>各向异性（拉丝金属、头发），完全空白</td></tr>
+          <tr><td><code>KHR_materials_specular</code></td><td><span class="badge-tag tag-good">1 篇</span></td><td>Editable PB Reflections 的 roughness 可编辑</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">⚠️ <b>这张表就是机会点：</b>glTF 已标准化的 9 个材质通道里，合集覆盖了 3 个（baseColor 部分、metallicRoughness 1 篇、specular 1 篇），<b>透明相关的 3 个（transmission / ior / volume）零覆盖</b>。</div>
+  </div>
+</section>
+
+<!-- ============ 5. PAPERS ============ -->
+<section id="papers">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 5 · 逐篇详解</div>
+      <h2>25 篇按阅读优先级</h2>
+      <p>P0 必读（4 篇）→ P1 材质分解主干（6 篇）→ P2 采集与鲁棒（6 篇）→ P3 资产管线载体（9 篇）。</p>
+    </div>
+
+    <h3 class="block-title c-red">P0 · 必读，直接对齐透明材质调研</h3>
+    <div class="grid2">
+      <div class="method-card hl">
+        <h4><span class="cls p0">P0</span>Luce</h4>
+        <div class="tagline">Luce: Relightable Gaussians for 3D Asset Generation · Apple · 08-25 · <a href="https://arxiv.org/abs/2608.23943" target="_blank">arXiv:2608.23943</a></div>
+        <p>体素化多模态高斯云统一几何与 PBR（<b>albedo / metallic-roughness / normal</b>），VAE 压进材质感知隐空间，rectified-flow 从单图生成；可重光照，可选导出带切空间法线的贴图网格。</p>
+        <div class="pros">✔ 合集里唯一产出完整 metallic-roughness 工作流的生成模型；Toys4K FID 较最强基线 ↓28%</div>
+        <div class="cons">✘ 需要大规模带材质标注数据；全局 latent 级控制，无法逐部件调材质</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls p0">P0</span>Transparency Rendering in CAD</h4>
+        <div class="tagline">Transparency Rendering in CAD: Methodologies, Trade-offs, and Challenges · 08-28 · <a href="https://arxiv.org/abs/2608.28310" target="_blank">arXiv:2608.28310</a></div>
+        <p>系统梳理 CAD 透明渲染：近似 vs 精确技术的权衡、强调内部组件的技术、CSG 对象的渲染挑战、开放问题清单。</p>
+        <div class="pros">✔ 合集里唯一系统处理透明的综述；与 Disney BSDF / glTF PBR 调研是同一问题的两个入口</div>
+        <div class="cons">✘ 只讲「怎么渲染」，不讲「怎么从数据估计透明参数」</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p0">P0</span>MaterialClusterGS</h4>
+        <div class="tagline">Palette-Based Material Decomposition and Physically-Based Relighting with 2D Gaussian Splat · 06-08 · <a href="https://arxiv.org/abs/2606.09018" target="_blank">arXiv:2606.09018</a></div>
+        <p>共享 <b>BRDF 原型调色板</b> + 连续空间材质场，在 2DGS 上做基于物理的重光照与材质编辑。</p>
+        <div class="pros">✔ 直击「逐基元材质分解不一致」这个老问题；调色板是对 BRDF 空间的离散参数化，思路可迁移到 glTF 材质库</div>
+        <div class="cons">✘ 离散原型，无法表达连续变化的材质；不产出贴图</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p0">P0</span>AEGIR</h4>
+        <div class="tagline">Modeling Area Emitters for Indoor Inverse Rendering using Gaussian Splatting · 06-26 · <a href="https://arxiv.org/abs/2606.28635" target="_blank">arXiv:2606.28635</a></div>
+        <p>在可重光照高斯表示中<b>显式建模局部面光源</b>，可微延迟渲染管线 + 多重重要性采样与正则化。</p>
+        <div class="pros">✔ 解决室内逆渲染里照明与材质最容易耦合失灵的问题；MIS + 正则化手法可借鉴到透明物体的环境光估计</div>
+        <div class="cons">✘ 面向室内静态场景；不输出可用 HDR envmap</div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">P1 · 材质分解主干</h3>
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls p1">P1</span>Editable Physically-based Reflections</h4>
+        <div class="tagline">Editable Physically-based Reflections in Raytraced Gaussian Radiance Fields · 06-29 · <a href="https://arxiv.org/abs/2606.30861" target="_blank">arXiv:2606.30861</a></div>
+        <p>从 3DGS 抽出漫反射与镜面反射 buffer，结合路径追踪实现可编辑的物理基镜面反射。</p>
+        <div class="pros">✔ 支持多跳反射与粗糙度编辑——合集里第二篇（也是最后一篇）显式操作 roughness 的工作</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p1">P1</span>Intrinsic decomposition of 3DGS</h4>
+        <div class="tagline">Intrinsic decomposition and editing of 3D Gaussian splats · 06-30 · <a href="https://arxiv.org/abs/2606.31637" target="_blank">arXiv:2606.31637</a></div>
+        <p>把本征分解扩展到高斯辐射场：独立基元 + 数据驱动优化 + 单图纹理编辑，实现场景材质与光照的分离及编辑。</p>
+        <div class="pros">✔ 场景级材质 / 光照分离，编辑入口最实用的一篇</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p1">P1</span>InvSplat</h4>
+        <div class="tagline">InvSplat: Inverse Feed-Forward Scene Splatting · 07-02 · <a href="https://arxiv.org/abs/2607.02301" target="_blank">arXiv:2607.02301</a></div>
+        <p>前馈多视图重建直接预测<b>带材质属性的结构化 3D 高斯</b>，几何与反射率联合估计，端到端支持重光照与新视角合成。</p>
+        <div class="pros">✔ 前馈 + 材质属性；速率上最有工程价值，可做透明物体 inverse rendering</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p1">P1</span>SpotlessGS</h4>
+        <div class="tagline">Relightable 3D Gaussian Splatting under Dynamic Illumination for Robotic Perception · 08-11 · <a href="https://arxiv.org/abs/2608.14713" target="_blank">arXiv:2608.14713</a></div>
+        <p>联合优化光照参数，<b>SH 光照模型 + MLP-BRDF</b> 实现动态照明下可重光照的三维重建。</p>
+        <div class="pros">✔ 光照条件恶劣时的感知鲁棒性</div>
+        <div class="cons">✘ 隐式 BRDF 的典型代表：能做重光照，但 BRDF 存在 MLP 里导不出来</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p1">P1</span>Home3D 1.0</h4>
+        <div class="tagline">A High-Fidelity Image-to-3D Asset Generation System for Interior Design · 阿里 / 淘宝 · 06-26 · <a href="https://arxiv.org/abs/2606.27923" target="_blank">arXiv:2606.27923</a></div>
+        <p>面向室内设计与电商的模块化图生 3D 系统，包含几何重建、纹理预测、<b>材质生成</b>与部件分解四个模块。</p>
+        <div class="pros">✔ 工业界系统里材质是独立模块——说明生产管线确实需要它</div>
+        <div class="cons">✘ 材质生成模块细节未公开</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p1">P1</span>Neural 3D Mesh Texturing Survey</h4>
+        <div class="tagline">Advances in Neural 3D Mesh Texturing: A Survey · 05-28 · <a href="https://arxiv.org/abs/2606.00137" target="_blank">arXiv:2606.00137</a></div>
+        <p>系统综述神经 3D 网格纹理化的最新进展，覆盖纹理合成 / 迁移 / 补全三类方法，并给出统一分类体系。</p>
+        <div class="pros">✔ 进资产管线前值得先读的地图</div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">P2 · 采集与鲁棒（透明 / 高反光物体怎么拿数据）</h3>
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls p2">P2</span>FRA-NBV</h4>
+        <div class="tagline">A Fast and Reflectivity-Aware Next-Best-View Strategy · 08-03 · <a href="https://arxiv.org/abs/2608.01950" target="_blank">arXiv:2608.01950</a></div>
+        <p>先识别反射区域再调整传感器位姿，缓解反射表面造成的深度缺失，提升自主三维重建覆盖率。</p>
+        <div class="pros">✔ 与透明 / 高反光物体的采集策略直接相关；自建透明数据集时是现成方案</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p2">P2</span>Polarized Opacity Prior</h4>
+        <div class="tagline">Fast and Compact 3D Gaussian Splatting with Polarized Opacity Prior · 08-23 · <a href="https://arxiv.org/abs/2608.22344" target="_blank">arXiv:2608.22344</a></div>
+        <p>针对 3DGS 模型膨胀，引入偏振不透明度先验 + L2 重建损失，用更少的高斯基元达到同等质量。</p>
+        <div class="pros">✔ <b>偏振对透明 / 镜面退化表面敏感</b>——偏振是破解透明物体几何估计的经典物理线索</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p2">P2</span>Geometry Gaussians</h4>
+        <div class="tagline">Decoupling Appearance and Geometry in Gaussian Splatting · 06-03 · <a href="https://arxiv.org/abs/2606.05124" target="_blank">arXiv:2606.05124</a></div>
+        <p>为每个溅射增加独立的几何不透明度参数，并配合透明度优化流程解耦几何与外观。</p>
+        <div class="pros">✔ 论文明确指出<b>对透明物体尤其有效</b></div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p2">P2</span>Wild3R</h4>
+        <div class="tagline">Feed-Forward 3D Gaussian Splatting from Unconstrained Sparse Photo Collection · 06-10 · <a href="https://arxiv.org/abs/2606.11894" target="_blank">arXiv:2606.11894</a></div>
+        <p>配套含多样光照与瞬态物体的 WildCity 数据集，学习跨视角外观一致性并移除瞬态内容。</p>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p2">P2</span>WildSplat</h4>
+        <div class="tagline">Feedforward Gaussian Splatting from Unposed In-the-Wild Images · 07-06 · <a href="https://arxiv.org/abs/2607.05347" target="_blank">arXiv:2607.05347</a></div>
+        <p>双分支解耦架构，单步前向搞定野外光照变化场景的新视角合成与外观编辑，SOTA。</p>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p2">P2</span>WilLaGS</h4>
+        <div class="tagline">Latent-Conditional 3D Appearance Fields for Robust Gaussian Splatting In-the-Wild · 08-28 · <a href="https://arxiv.org/abs/2608.28240" target="_blank">arXiv:2608.28240</a></div>
+        <p>用 β-VAE + 三维神经外观场建模外观，配合自监督感知掩码抑制伪影，解决野外数据多视角不一致。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">P3 · 资产管线载体（PBR 贴图落在哪儿）</h3>
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>SeamGen</h4>
+        <div class="tagline">Artist-Aligned UV Seam Generation via Graph Flow Matching · 07-14 · <a href="https://arxiv.org/abs/2607.12379" target="_blank">arXiv:2607.12379</a></div>
+        <p>用图流匹配从现有接缝布局学习，Mesh Transformer 主干 + 流模型修复能力，生成更贴合艺术家偏好的 UV 布局。</p>
+        <div class="pros">✔ UV 布局决定贴图利用率；「艺术家对齐」是工业落地的 hidden requirement</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>Bake It Till You Make It</h4>
+        <div class="tagline">Ultrafast Spatial Texture-Atlas Splatting · 07-15 · <a href="https://arxiv.org/abs/2607.13808" target="_blank">arXiv:2607.13808</a></div>
+        <p>解耦辐射表示 + 稀疏性增强优化，利用几何稀疏性与 GPU 纹理映射做空间纹理图集喷涂。</p>
+        <div class="pros">✔ 比 3DGS 快 5 倍，消费级硬件实时 4K/60fps——把辐射场烘成纹理图集的直接方案</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>Ink3D</h4>
+        <div class="tagline">Sculpting 3D Assets with Extremely Complex Textures via Video Generative Models · 07-01 · <a href="https://arxiv.org/abs/2607.01222" target="_blank">arXiv:2607.01222</a></div>
+        <p>OrbitPainter 生成密集轨道扫描视频，TextureOptimizer 做神经烘焙产出一致纹理。</p>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>Gen2Physics</h4>
+        <div class="tagline">Grounding Generated 3D Meshes in Physics via Multi-View Material Decomposition · 08-24 · <a href="https://arxiv.org/abs/2608.23869" target="_blank">arXiv:2608.23869</a></div>
+        <p>微调 ViT 做稠密材质分割 + 鲁棒的 2D→3D 一致性投影，把生成网格自动分解为材质组成并赋予物理属性。</p>
+        <div class="cons">✘ 注意：这里的 material 是<b>物理材质</b>（摩擦 / 密度类），不是光学 BRDF，别混淆</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>PartMat</h4>
+        <div class="tagline">Material-Aware 3D Part Decomposition with a Single Global Latent · 08-03 · <a href="https://arxiv.org/abs/2608.01825" target="_blank">arXiv:2608.01825</a></div>
+        <p>单一全局 latent 的材质感知 3D 部件分解。</p>
+        <div class="pros">✔ 材质线索反过来帮助结构分解——与 Gen2Physics 是互逆的两条路</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>Lighting-Consistent Object Transfer</h4>
+        <div class="tagline">Lighting-Consistent Object Transfer Across Radiance Fields · 06-21 · <a href="https://arxiv.org/abs/2606.22481" target="_blank">arXiv:2606.22481</a></div>
+        <p>用扩散模型调和合成图像，混合合成 / 生成 / 真实数据训练，再后优化整合回 3DGS。</p>
+        <div class="pros">✔ 跨场景迁移时的光照一致性，资产复用必过的一关</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>Mesh2GS</h4>
+        <div class="tagline">White-Box 3DGS Construction via Plenoptic Sampling · 06-20 · <a href="https://arxiv.org/abs/2606.21898" target="_blank">arXiv:2606.21898</a></div>
+        <p>基于全光采样理论从网格几何直接生成 3D 高斯，实现奈奎斯特级全局光照渲染，并用 <b>albedo-shading 分解</b>与神经照明模块处理非朗伯效应。</p>
+        <div class="pros">✔ 白盒：从已有网格资产出发，工程上最好接入</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>Manifold-GS</h4>
+        <div class="tagline">Certified Hybrid Assets via Varifold-Conservative Gaussian Splatting · 07-31 · <a href="https://arxiv.org/abs/2608.00214" target="_blank">arXiv:2608.00214</a></div>
+        <p>把外观不透明度与几何质量解耦，导出可认证的开放表面面片（varifold 保守性）。</p>
+        <div class="pros">✔ 解耦是材质分解的前提条件，属于基础设施</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls p3">P3</span>QuerySplat</h4>
+        <div class="tagline">Decoupling Geometry and Appearance Representations in 3DGS Prediction · 08-02 · <a href="https://arxiv.org/abs/2608.01186" target="_blank">arXiv:2608.01186</a></div>
+        <p>几何 / 外观解耦表示的前馈 3DGS 预测。</p>
+      </div>
+    </div>
+
+    <div class="summary-box">📎 <b>窗口外但高度相关（未收录，ID 前缀为 2603）：</b><code>2603.21695 RefracGS: Novel View Synthesis Through Refractive Water Surfaces with 3D Gaussian Ray Tracing</code>（2026-03-23）——折射水面的 3DGS 光线追踪 NVS，是合集范围内唯一涉及折射的工作，但落在 6–8 月窗口之外。</div>
+  </div>
+</section>
+
+<!-- ============ 6. GAPS ============ -->
+<section id="gaps" style="background:#f0f4fb">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 6 · 空白与机会</div>
+      <h2>五个明确的空白位</h2>
+      <p>从 183 篇的覆盖反推：哪些事没人做。</p>
+    </div>
+    <ol class="trends">
+      <li><b>透明 / 折射的参数估计。</b>合集内 0 篇。窗口外有 RefracGS（<code>2603.21695</code>），但它做的是<b>新视角合成</b>而非参数估计。把「从多视图估计 transmission + IOR + attenuation」做出来，是明确的空白位。</li>
+      <li><b>metallic-roughness 的通用估计。</b>只有 Luce 在生成式框架里做。逆渲染路线（MaterialClusterGS / AEGIR / Intrinsic 3DGS）全都停在 albedo 或 BRDF 原型，没有人把它落到 MR 两通道上。这是一条「把已有逆渲染工作接上 glTF 参数化」的低垂果实。</li>
+      <li><b>材质生成的评测标准缺失。</b>合集里有 3D 生成的评测基准（P3D-Bench、3D-DefectBench、Judging to Improve、PIVOT），<b>没有一个是针对材质 / PBR 的</b>。材质分解的准确性目前靠重光照 PSNR 间接衡量，不区分「albedo 对但 roughness 错」和「两个都错」。</li>
+      <li><b>几何-材质的联合估计。</b>绝大多数方法假设几何已给定。PartMat 与 Gen2Physics 是例外（用材质线索反推结构），但都还是粗粒度部件级，没到连续参数场。</li>
+      <li><b>HDR 环境光的显式估计。</b>AEGIR 处理局部面光源、SpotlessGS 用 SH 环境光，但都没显式输出可用的 HDR envmap。而 envmap 是 glTF 资产可重光照的前提。</li>
+    </ol>
+
+    <h3 class="block-title c-purple">时间线信号</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>月份</th><th>篇数</th><th>主题</th></tr></thead>
+        <tbody>
+          <tr><td>2026-05</td><td>1</td><td>Neural 3D Mesh Texturing Survey（05-28）</td></tr>
+          <tr><td>2026-06</td><td>9</td><td><b>逆渲染月</b>：MaterialClusterGS / AEGIR / Editable PB Reflections / Intrinsic 3DGS 四篇主力集中在本月下半月（6/8–6/30），另有 Geometry Gaussians、Wild3R、Mesh2GS、Lighting-Consistent、Home3D 1.0</td></tr>
+          <tr><td>2026-07</td><td>6</td><td>前馈化（InvSplat）+ 纹理管线（Ink3D、SeamGen、Bake It）+ 野外鲁棒（WildSplat）+ 解耦基建（Manifold-GS，07-31）</td></tr>
+          <tr><td>2026-08</td><td>9</td><td><b>生成月</b>：Luce（生成即带 PBR）、PartMat / Gen2Physics（材质感知分解）、SpotlessGS（动态光照）、CAD 透明渲染综述 + 采集端 3 篇（FRA-NBV、Polarized、WilLaGS）+ QuerySplat</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">📈 <b>趋势：</b>材质工作正从「重建后反推」迁移到「生成时内建」，且 8 月开始出现<b>采集端</b>的反射 / 偏振感知工作——说明大家意识到材质估计的瓶颈在输入，不在模型。</div>
+  </div>
+</section>
+
+<!-- ============ 7. FULL LIST ============ -->
+<section id="list">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 7 · 完整清单</div>
+      <h2>25 篇一览（按提交日排序）</h2>
+      <p>日期为 arXiv v1 提交日（<code>citation_date</code>），已逐条校准。</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>arXiv</th><th>提交</th><th>层</th><th>名称</th><th>一句话</th><th>优先级</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://arxiv.org/abs/2606.00137" target="_blank">2606.00137</a></td><td>05-28</td><td>L5</td><td>Advances in Neural 3D Mesh Texturing</td><td>纹理合成 / 迁移 / 补全三类方法的统一分类体系</td><td>P1</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.05124" target="_blank">2606.05124</a></td><td>06-03</td><td>L1</td><td>Geometry Gaussians</td><td>独立几何不透明度解耦几何与外观，对透明物体尤其有效</td><td>P2</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.09018" target="_blank">2606.09018</a></td><td>06-08</td><td>L2</td><td>MaterialClusterGS</td><td>BRDF 原型调色板 + 连续材质场，2DGS 上做物理基重光照</td><td><b>P0</b></td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.11894" target="_blank">2606.11894</a></td><td>06-10</td><td>跨层</td><td>Wild3R</td><td>无约束稀疏照片集前馈 3DGS，跨视角外观一致性 + 瞬态移除</td><td>P2</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.21898" target="_blank">2606.21898</a></td><td>06-20</td><td>L2</td><td>Mesh2GS</td><td>全光采样从网格生成高斯，albedo-shading 分解 + 神经照明</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.22481" target="_blank">2606.22481</a></td><td>06-21</td><td>L2</td><td>Lighting-Consistent Object Transfer</td><td>扩散模型调和光照，跨辐射场物体迁移</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.27923" target="_blank">2606.27923</a></td><td>06-26</td><td>L3</td><td>Home3D 1.0</td><td>阿里 / 淘宝图生 3D 系统，四模块含材质生成</td><td>P1</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.28635" target="_blank">2606.28635</a></td><td>06-26</td><td>L2</td><td>AEGIR</td><td>显式建模局部面光源，可微延迟渲染 + 多重重要性采样</td><td><b>P0</b></td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.30861" target="_blank">2606.30861</a></td><td>06-29</td><td>L2</td><td>Editable Physically-based Reflections</td><td>漫反射 / 镜面 buffer + 路径追踪，多跳反射与粗糙度编辑</td><td>P1</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.31637" target="_blank">2606.31637</a></td><td>06-30</td><td>L2</td><td>Intrinsic decomposition of 3DGS</td><td>高斯基元本征分解 + 单图纹理编辑</td><td>P1</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2607.01222" target="_blank">2607.01222</a></td><td>07-01</td><td>L3</td><td>Ink3D</td><td>视频生成模型合成极复杂纹理 + 神经烘焙</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2607.02301" target="_blank">2607.02301</a></td><td>07-02</td><td>L2</td><td>InvSplat</td><td>前馈预测带材质属性的结构化高斯，几何反射率联合估计</td><td>P1</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2607.05347" target="_blank">2607.05347</a></td><td>07-06</td><td>跨层</td><td>WildSplat</td><td>双分支解耦，野外光照变化下的 NVS 与外观编辑</td><td>P2</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2607.12379" target="_blank">2607.12379</a></td><td>07-14</td><td>L5</td><td>SeamGen</td><td>图流匹配生成艺术家对齐的 UV 接缝布局</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2607.13808" target="_blank">2607.13808</a></td><td>07-15</td><td>L5</td><td>Bake It Till You Make It</td><td>空间纹理图集喷涂，比 3DGS 快 5 倍，4K/60fps</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.00214" target="_blank">2608.00214</a></td><td>07-31</td><td>L2</td><td>Manifold-GS</td><td>外观不透明度与几何质量解耦，可认证开放表面</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.01186" target="_blank">2608.01186</a></td><td>08-02</td><td>L2</td><td>QuerySplat</td><td>几何 / 外观解耦表示的前馈 3DGS 预测</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.01825" target="_blank">2608.01825</a></td><td>08-03</td><td>L4</td><td>PartMat</td><td>单一全局 latent 的材质感知 3D 部件分解</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.01950" target="_blank">2608.01950</a></td><td>08-03</td><td>L1</td><td>FRA-NBV</td><td>反射感知的下一最佳视角策略</td><td>P2</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.14713" target="_blank">2608.14713</a></td><td>08-11</td><td>L2</td><td>SpotlessGS</td><td>SH 光照 + MLP-BRDF，动态照明下可重光照重建</td><td>P1</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.22344" target="_blank">2608.22344</a></td><td>08-23</td><td>L1</td><td>Polarized Opacity Prior</td><td>偏振不透明度先验，偏振对透明 / 镜面退化敏感</td><td>P2</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.23869" target="_blank">2608.23869</a></td><td>08-24</td><td>L4</td><td>Gen2Physics</td><td>多视图材质分解 + 物理属性赋予（物理材质，非 BRDF）</td><td>P3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.23943" target="_blank">2608.23943</a></td><td>08-25</td><td>L3</td><td><b>Luce</b></td><td>Apple：albedo / metallic-roughness / normal 全参数，单图生成可重光照资产</td><td><b>P0</b></td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.28240" target="_blank">2608.28240</a></td><td>08-28</td><td>跨层</td><td>WilLaGS</td><td>β-VAE + 三维神经外观场，野外多视角不一致鲁棒</td><td>P2</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.28310" target="_blank">2608.28310</a></td><td>08-28</td><td>跨层</td><td>Transparency Rendering in CAD</td><td>CAD 透明渲染综述：近似 vs 精确、CSG 挑战、开放问题</td><td><b>P0</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">🔗 <b>相关调研：</b><a href="../transparent-materials/index.html">3D 透明材质表示形式全景调研</a> 按 A~F 六类梳理<b>表示与渲染</b>方法（C 类即 PBR / BSDF）；本页则是从 3D 生成论文合集里抽取的<b>材质生成与估计</b>工作。两者互补，交叉点在 glTF 的 transmission / ior / volume 三个通道。</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    3D-Research · PBR 材质生成专题梳理 · 2026-08-31 更新 · 素材来源：<a href="../3d-generation-2026/index.html">2026 年 6–8 月 3D 生成论文合集（183 篇）</a>
+  </div>
+</footer>
+
+<script>
+Chart.defaults.font.family="'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif";
+new Chart(document.getElementById('layerDonut'),{type:'doughnut',
+  data:{labels:['L2 逆渲染 10','L1 采集 3','L3 生成式材质 3','L5 纹理烘焙 3','L4 结构分解 2','跨层 4'],
+    datasets:[{data:[10,3,3,3,2,4],backgroundColor:['#0d9488','#2563eb','#8b5cf6','#8494a9','#ea8a3c','#6366f1'],borderColor:'#fff',borderWidth:3}]},
+  options:{maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:14,padding:10}}}}});
+new Chart(document.getElementById('monthBar'),{type:'bar',
+  data:{labels:['2026-05','2026-06','2026-07','2026-08'],
+    datasets:[{data:[1,9,6,9],backgroundColor:['#b6c2d2','#6366f1','#93a5f5','#2563eb'],borderRadius:8}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,title:{display:true,text:'论文数（篇）'},ticks:{stepSize:2}}}}});
+</script>
+</body>
+</html>
