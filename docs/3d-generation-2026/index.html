@@ -43,7 +43,26 @@
   .dir-tab{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:600;color:var(--ink2);cursor:pointer;box-shadow:var(--shadow)}
   .dir-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
   .dir-tab .cnt{opacity:.7;font-weight:500;margin-left:4px}
+
+  /* ---------- 可折叠分类分组 ---------- */
+  .list-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px;font-size:13px;color:var(--ink3)}
+  .list-bar button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+  .list-bar button:hover{border-color:var(--blue);color:var(--blue)}
+  .cat-group{margin-bottom:14px}
+  .cat-head{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px 18px;font:inherit;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;box-shadow:var(--shadow);transition:border-color .15s,background .15s}
+  .cat-head:hover{border-color:#c3d3ee;background:#f7f9fd}
+  .cat-caret{font-size:10px;color:var(--ink3);line-height:1;transition:transform .18s}
+  .cat-group[data-open="0"] .cat-caret{transform:rotate(-90deg)}
+  .cat-cnt{background:#eef2f9;color:var(--ink2);font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:20px}
+  .cat-note{margin-left:auto;font-weight:500;font-size:13px;color:var(--ink3)}
+  .cat-body{margin-top:12px}
+  .cat-group[data-open="0"] .cat-body{display:none}
+  @media (max-width:600px){.cat-note{display:none}}
+
   .rw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  /* 性能：屏外卡片跳过渲染 + 懒加载评分控件时占位，避免滚动跳动 */
+  .rw-card{content-visibility:auto;contain-intrinsic-size:auto 240px}
+  .rw-card:not([data-rev])::after{content:"";display:block;margin-top:12px;padding-top:10px;border-top:1px dashed transparent;height:68px}
   .rw-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
   .rw-card:hover{transform:translateY(-2px);border-color:#c7d6f5}
   .rw-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
@@ -136,14 +155,27 @@
       <button class="dir-tab active" data-cat="all">全部<span class="cnt">183</span></button>
       <button class="dir-tab" data-cat="unified">统一多模态<span class="cnt">8</span></button>
       <button class="dir-tab" data-cat="t2i">文/图生 3D<span class="cnt">45</span></button>
+      <button class="dir-tab" data-cat="part">部件/纹理/编辑<span class="cnt">32</span></button>
       <button class="dir-tab" data-cat="ff">Feed-forward 重建<span class="cnt">70</span></button>
       <button class="dir-tab" data-cat="scene">场景/世界生成<span class="cnt">28</span></button>
-      <button class="dir-tab" data-cat="part">部件/纹理/编辑<span class="cnt">32</span></button>
     </div>
     <p class="rev-hint">⭐ 每张卡片下方可评分（支持半星）与简短评论，内容自动保存在本机浏览器（localStorage），刷新/重开自动加载。</p>
-    <div class="rw-grid" id="paperGrid">
+    
+    <div class="list-bar">
+      <span>默认折叠 Feed-forward 重建（70）与场景/世界生成（28）；点分组标题可展开／收起。</span>
+      <button type="button" id="toggleAll">展开全部</button>
+    </div>
 
-      <!-- 统一多模态 -->
+    <div id="paperGroups">
+
+      <section class="cat-group" data-cat="unified" data-open="1">
+        <button class="cat-head" type="button" aria-expanded="true">
+          <span class="cat-caret">▼</span>
+          <span class="cat-title">统一多模态</span>
+          <span class="cat-cnt">8</span>
+          <span class="cat-note">单架构统一理解 / 生成 / 编辑</span>
+        </button>
+        <div class="rw-grid cat-body">
       <div class="rw-card hl" data-cat="unified"><div class="rw-top"><span class="rw-name">Hunyuan3D-Buffalo 1.0</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-unified">统一多模态</span><p class="rw-desc">腾讯混元：单架构统一 3D 理解/生成/编辑/部件生成；87M 语料 + Nano3D-v2 数据引擎；编辑 CD ↓86.7%。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02711" target="_blank">arXiv:2608.02711</a><a class="deep" href="../buffalo/index.html">📖 深度解读页</a></div></div>
       <div class="rw-card" data-cat="unified"><div class="rw-top"><span class="rw-name">SPARGen</span><span class="rw-year">08-14</span></div><span class="rw-cat cat-unified">统一多模态</span><span class="rw-new">NEW</span><p class="rw-desc">统一空间感知与推理的原生多模态生成框架：把 3D 重建等异构空间任务统一转成指令条件的生成任务，单框架内多任务达竞争力水平。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.14138" target="_blank">arXiv:2608.14138</a></div></div>
       <div class="rw-card" data-cat="unified"><div class="rw-top"><span class="rw-name">ELSA3D</span><span class="rw-year">07-07</span></div><span class="rw-cat cat-unified">统一理解+生成</span><span class="rw-new">NEW</span><p class="rw-desc">弹性语义锚定：用尺度感知八叉树 tokenizer 与锚定 token 联合承载语言与几何推理，轻量路由器让计算与推理随输入弹性伸缩，性能领先且降低算力与延迟。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.06565" target="_blank">arXiv:2607.06565</a></div></div>
@@ -152,8 +184,17 @@
       <div class="rw-card" data-cat="unified"><div class="rw-top"><span class="rw-name">3D-CoS</span><span class="rw-year">06-09</span></div><span class="rw-cat cat-unified">VLM 代码合成</span><span class="rw-new">NEW</span><p class="rw-desc">把 3D 资产表示为<b>可执行的 Blender 代码</b>，用 VLM 做程序化重建，换来高可控性与<b>局部可编辑性</b>——与参数化 CAD 生成同一条思路。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.10478" target="_blank">arXiv:2606.10478</a></div></div>
       <div class="rw-card" data-cat="unified"><div class="rw-top"><span class="rw-name">PixWorld</span><span class="rw-year">07-06</span></div><span class="rw-cat cat-unified">像素空间统一</span><span class="rw-new">NEW</span><p class="rw-desc">在<b>像素空间</b>统一 3D 场景生成与重建的扩散框架，引入几何感知损失，<b>不需要预训练自编码器</b>，避免了潜空间的信息损失。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.05373" target="_blank">arXiv:2607.05373</a></div></div>
       <div class="rw-card" data-cat="unified"><div class="rw-top"><span class="rw-name">GaussFusion</span><span class="rw-year">07-07</span></div><span class="rw-cat cat-unified">多模态预训练</span><span class="rw-new">NEW</span><p class="rw-desc">多模态 3D 高斯预训练：跨模态语义对齐把<b>图像与文本监督</b>注入高斯表示，并提出高斯显著性引导的多尺度空洞掩码，提升表示可迁移性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.05906" target="_blank">arXiv:2607.05906</a></div></div>
+        </div>
+      </section>
 
-      <!-- 文/图生 3D -->
+      <section class="cat-group" data-cat="t2i" data-open="1">
+        <button class="cat-head" type="button" aria-expanded="true">
+          <span class="cat-caret">▼</span>
+          <span class="cat-title">文/图生 3D</span>
+          <span class="cat-cnt">45</span>
+          <span class="cat-note">文生 3D、图生 3D、人体与头像</span>
+        </button>
+        <div class="rw-grid cat-body">
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">DreamStyle3D</span><span class="rw-year">07-27</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">双注意力解耦的高效风格化 3D 资产生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.24721" target="_blank">arXiv:2607.24721</a></div></div>
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">3DCarGen</span><span class="rw-year">06-23</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">3D 一致多视图合成驱动的可扩展汽车 3D 生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.24257" target="_blank">arXiv:2606.24257</a></div></div>
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">4DHumanDiff</span><span class="rw-year">07-30</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">文本直接生成 360° 一致的动态 4D 高斯人体。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.27634" target="_blank">arXiv:2607.27634</a></div></div>
@@ -199,8 +240,60 @@
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">Stream4D</span><span class="rw-year">08-20</span></div><span class="rw-cat cat-t2i">4D 一致性视频</span><span class="rw-new">NEW</span><p class="rw-desc">用显式建模场景动力学的<b>前馈 4D 重建奖励</b>替代静态评判器，配合运动先验与感知锚，提升流式自回归扩散视频模型的 4D 一致性、运动保真与人类偏好对齐。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.19556" target="_blank">arXiv:2608.19556</a></div></div>
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">4DAnyone</span><span class="rw-year">08-20</span></div><span class="rw-cat cat-t2i">随手视频 → 4D 人</span><span class="rw-new">NEW</span><p class="rw-desc">从<b>随手拍的单目视频</b>重建 4D 人体，用 RCP 与 TCR 解决多视角一致性问题，泛化性优于现有方法。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.20335" target="_blank">arXiv:2608.20335</a></div></div>
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">FixAnything</span><span class="rw-year">08-24</span></div><span class="rw-cat cat-t2i">渲染伪影修复</span><span class="rw-new">NEW</span><p class="rw-desc">复用预训练视频生成模型、<b>只做轻量微调</b>的单一模型，统一修复 3DGS、NeRF 等<b>四种 3D 表示</b>的渲染伪影，替代一堆专用优化管线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.23549" target="_blank">arXiv:2608.23549</a></div></div>
+        </div>
+      </section>
 
-      <!-- Feed-forward 重建 -->
+      <section class="cat-group" data-cat="part" data-open="1">
+        <button class="cat-head" type="button" aria-expanded="true">
+          <span class="cat-caret">▼</span>
+          <span class="cat-title">部件/纹理/编辑</span>
+          <span class="cat-cnt">32</span>
+          <span class="cat-note">部件分解、纹理材质、编辑</span>
+        </button>
+        <div class="rw-grid cat-body">
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">PartMat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-part">部件/纹理</span><p class="rw-desc">单一全局 latent 的材质感知 3D 部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01825" target="_blank">arXiv:2608.01825</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">EditFlow3D</span><span class="rw-year">08-04</span></div><span class="rw-cat cat-part">部件/编辑</span><p class="rw-desc">轨迹保持的 3D 资产自动局部编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.03179" target="_blank">arXiv:2608.03179</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">MegaParts</span><span class="rw-year">08-14</span></div><span class="rw-cat cat-part">部件生成</span><span class="rw-new">NEW</span><p class="rw-desc">Token 高效的 VQ 形状 tokenizer + 结构化序列自回归，把部件感知 3D 生成规模推到 300 个部件，显著超越基线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.14783" target="_blank">arXiv:2608.14783</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">MultiCube</span><span class="rw-year">08-20</span></div><span class="rw-cat cat-part">组合式生成</span><span class="rw-new">NEW</span><p class="rw-desc">Roblox / CMU / Stanford：两阶段扩散 + 部件布局适配器，实现部件级语义与空间位置的精确控制的组合式 3D 生成，布局独特且质量高。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.20448" target="_blank">arXiv:2608.20448</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SCULPT</span><span class="rw-year">08-13</span></div><span class="rw-cat cat-part">部件生成</span><span class="rw-new">NEW</span><p class="rw-desc">减材（subtractive）组合式 3D 部件生成，缓解现有方法的部件边界问题；PartObjaverse 上几何最优，并支持细粒度纹理部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.13541" target="_blank">arXiv:2608.13541</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SemanticSlider3D</span><span class="rw-year">08-19</span></div><span class="rw-cat cat-part">3D 编辑</span><span class="rw-new">NEW</span><p class="rw-desc">免训练连续语义编辑：在先进 3D 生成模型的潜空间中构造语义编辑方向，以「滑块」方式连续调节物体语义属性，可直接嵌入现有 3D 创作流程。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.18560" target="_blank">arXiv:2608.18560</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">CoGeo-GS</span><span class="rw-year">08-27</span></div><span class="rw-cat cat-part">3D 场景编辑</span><span class="rw-new">NEW</span><p class="rw-desc">概念驱动 + 几何感知的 3D 场景多物体移除：概念感知语义标签定位目标，几何感知补全流水线修复空洞，视觉质量与重建保真度优于现有方法。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.26656" target="_blank">arXiv:2608.26656</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Gen2Physics</span><span class="rw-year">08-24</span></div><span class="rw-cat cat-part">材质/物理属性</span><span class="rw-new">NEW</span><p class="rw-desc">让生成的 mesh 直接可用于仿真：微调 ViT 做稠密材质分割 + 鲁棒的 2D→3D 一致性投影，把生成网格自动分解为材质组成并赋予物理属性（区别于体素方案，直接作用于 mesh）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.23869" target="_blank">arXiv:2608.23869</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">RORA</span><span class="rw-year">08-05</span></div><span class="rw-cat cat-part">关节资产</span><span class="rw-new">NEW</span><p class="rw-desc">端到端管线：从单个静态物体的视频输入重建出带精确关节运动的仿真就绪资产，PartNet-Mobility-V0 与真实物体上效果良好，可直接用于灵巧手操作的机器人学习。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.04842" target="_blank">arXiv:2608.04842</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">ISAP-3D</span><span class="rw-year">06-10</span></div><span class="rw-cat cat-part">部件生成</span><span class="rw-new">NEW</span><p class="rw-desc">北大 / 腾讯 / 华为：针对部件感知 3D 生成中身份与布局纠缠导致的结构歧义，提出身份槽对齐框架——用语义身份 token 锚定每个部件并做一对一布局预测，实现稳定可控的部件级生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.12099" target="_blank">arXiv:2606.12099</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">3DGS on a Graph Processor</span><span class="rw-year">07-17</span></div><span class="rw-cat cat-part">异构硬件渲染</span><span class="rw-new">NEW</span><p class="rw-desc">在 Graphcore <b>IPU</b> 上实现 3D 高斯渲染器：按特定模式路由高斯基元、遵循 BSP 计算模型，系统评估<b>纯 SRAM</b> 实现的瓶颈，并讨论对 GPU 等主流架构的启示——3DGS 光栅化走向非 GPU 硬件的一次实测。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.15951" target="_blank">arXiv:2607.15951</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Neural 3D Mesh Texturing Survey</span><span class="rw-year">05-28</span></div><span class="rw-cat cat-part">纹理化综述</span><span class="rw-new">NEW</span><p class="rw-desc">系统综述神经 3D 网格纹理化的最新进展，覆盖<b>纹理合成 / 迁移 / 补全</b>三类方法，并给出统一分类体系——进资产管线前值得先读的地图。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.00137" target="_blank">arXiv:2606.00137</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">MaterialClusterGS</span><span class="rw-year">06-08</span></div><span class="rw-cat cat-part">材质分解与重光照</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>共享 BRDF 原型调色板</b> + 连续空间材质场，在 2DGS 上做基于物理的重光照与材质编辑，解决逐基元材质分解不一致的老问题。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.09018" target="_blank">arXiv:2606.09018</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">AEGIR</span><span class="rw-year">06-26</span></div><span class="rw-cat cat-part">逆渲染 · 面光源</span><span class="rw-new">NEW</span><p class="rw-desc">在可重光照高斯表示中<b>显式建模局部面光源</b>，可微延迟渲染管线 + 多重重要性采样与正则化，让局部光照场景的照明与材质分解更一致。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.28635" target="_blank">arXiv:2606.28635</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Editable PB Reflections (Ray-traced GS)</span><span class="rw-year">06-29</span></div><span class="rw-cat cat-part">反射编辑</span><span class="rw-new">NEW</span><p class="rw-desc">从 3DGS 抽出<b>漫反射与镜面反射缓冲</b>，结合路径追踪与快速光线追踪实现可编辑的物理基镜面反射，支持<b>多跳反射</b>与粗糙度编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.30861" target="_blank">arXiv:2606.30861</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Intrinsic Decomposition of 3DGS</span><span class="rw-year">06-30</span></div><span class="rw-cat cat-part">本征分解</span><span class="rw-new">NEW</span><p class="rw-desc">把本征分解扩展到高斯辐射场：独立高斯基元 + 数据驱动优化 + 单图纹理编辑，实现场景<b>材质与光照的分离及编辑</b>。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.31637" target="_blank">arXiv:2606.31637</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SeamGen</span><span class="rw-year">07-14</span></div><span class="rw-cat cat-part">UV 接缝生成</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>图流匹配</b>从现有接缝布局学习，Mesh Transformer 主干 + 流模型修复能力，生成更贴合艺术家偏好的 UV 布局。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.12379" target="_blank">arXiv:2607.12379</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Bake It Till You Make It</span><span class="rw-year">07-15</span></div><span class="rw-cat cat-part">纹理烘焙加速</span><span class="rw-new">NEW</span><p class="rw-desc">解耦辐射表示 + 稀疏性增强优化，利用几何稀疏性与 GPU 纹理映射做空间纹理图集喷涂，比 3DGS <b>快 5 倍</b>，消费级硬件实时 4K/60fps。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.13808" target="_blank">arXiv:2607.13808</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">GRay</span><span class="rw-year">06-29</span></div><span class="rw-cat cat-part">光线追踪 3DGS</span><span class="rw-new">NEW</span><p class="rw-desc">利用光追的<b>对数级图元缩放</b>特性，在密集小高斯场景下把 3D 高斯光线追踪做到接近 splatting 的渲染与优化速度。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.30869" target="_blank">arXiv:2606.30869</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Lighting-Consistent Object Transfer</span><span class="rw-year">06-21</span></div><span class="rw-cat cat-part">一致光照迁移</span><span class="rw-new">NEW</span><p class="rw-desc">用扩散模型调和合成图像，混合合成/生成/真实数据训练，再后优化整合回 3DGS，解决跨辐射场<b>物体迁移时的光照不一致</b>。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.22481" target="_blank">arXiv:2606.22481</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">XPR</span><span class="rw-year">06-10</span></div><span class="rw-cat cat-part">可微渲染基建</span><span class="rw-new">NEW</span><p class="rw-desc">高级编程接口 + 模块化渲染管线，少量代码即可实现 3DGS 等新方法，借 <b>XLA 编译器跨平台</b>运行（GPU/TPU 等）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.11529" target="_blank">arXiv:2606.11529</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Transparency Rendering in CAD</span><span class="rw-year">08-28</span></div><span class="rw-cat cat-part">透明渲染综述</span><span class="rw-new">NEW</span><p class="rw-desc">系统综述 CAD 透明渲染：<b>近似 vs 精确</b>技术的权衡、强调内部组件的技术、CSG 对象的渲染挑战，刻画当前能力边界并给出开放问题清单——<b>与本站透明材质调研直接相邻</b>。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.28310" target="_blank">arXiv:2608.28310</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">ESVR</span><span class="rw-year">08-06</span></div><span class="rw-cat cat-part">椭球体绘制</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>椭球基元 + 结构感知基元学习 + 逐基元光线采样</b>做稀疏体绘制，摆脱对 DVR 图像学习的依赖（信息损失与传递函数受限），实现大规模体数据高效压缩与实时高质量渲染。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.05564" target="_blank">arXiv:2608.05564</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SpotlessGS</span><span class="rw-year">08-11</span></div><span class="rw-cat cat-part">可重光照</span><span class="rw-new">NEW</span><p class="rw-desc">联合优化光照参数，用 <b>SH 光照模型 + MLP-BRDF</b> 实现<b>动态照明下可重光照</b>的三维重建，面向光照条件恶劣时的感知鲁棒性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.14713" target="_blank">arXiv:2608.14713</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">VoroTracing</span><span class="rw-year">08-18</span></div><span class="rw-cat cat-part">可微光追 · Voronoi</span><span class="rw-new">NEW</span><p class="rw-desc">协同设计场景表示、优化与 GPU 执行的<b>可微 Voronoi 光线追踪</b>：RTX 5090 上 <b>623 FPS</b> 实时新视角合成，吞吐优于现有光线方法与 3DGS，还支持非针孔效应。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.17682" target="_blank">arXiv:2608.17682</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">3DGART</span><span class="rw-year">08-18</span></div><span class="rw-cat cat-part">光追训练加速</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>基元导向的粒子反向传播</b>打通 3D 高斯光追的训练瓶颈，在 Mip-NeRF 360 上显著提速，让「全光线追踪训练高斯」从纸面走向实用。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.17298" target="_blank">arXiv:2608.17298</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Super-Gaussian</span><span class="rw-year">08-05</span></div><span class="rw-cat cat-part">自然语言编辑</span><span class="rw-new">NEW</span><p class="rw-desc">VR 中的 3DGS 交互编辑框架：特征感知聚类 + <b>分层选择-细化</b>工作流 + <b>自然语言交互（NLI）</b>驱动体可视化，降低体数据的编辑与分析门槛。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.04475" target="_blank">arXiv:2608.04475</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">PartInteractor</span><span class="rw-year">08-02</span></div><span class="rw-cat cat-part">部件感知创作</span><span class="rw-new">NEW</span><p class="rw-desc">支持语音 / 草图 / 图像输入的<b>部件感知三维创作</b>框架，把语义部件层级作为可操控单元，显著提升生成后的可控性与意图一致性，面向 XR 中的人机协同创作。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01335" target="_blank">arXiv:2608.01335</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Seed2GS</span><span class="rw-year">08-12</span></div><span class="rw-cat cat-part">目标提取</span><span class="rw-new">NEW</span><p class="rw-desc"><b>无相机、无训练</b>地从 3DGS 场景中提取目标：把目标身份与三维覆盖范围解耦，单张参考视图 grounding 即可，LERF-MASK 与 3D-OVS 上高精度且延迟低。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.11928" target="_blank">arXiv:2608.11928</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">3DGSI-Assessor</span><span class="rw-year">08-04</span></div><span class="rw-cat cat-part">渲染质量评测</span><span class="rw-new">NEW</span><p class="rw-desc">含 <b>15,200 张图像</b>的多维 3DGS 图像质量数据集 3DGS-IEval-15K+，配基于大视觉语言模型的一体化 IQA 框架，补上 3DGS 渲染失真的量化评估缺口。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.03279" target="_blank">arXiv:2608.03279</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">RoofGS</span><span class="rw-year">08-16</span></div><span class="rw-cat cat-part">硬件 · Roofline</span><span class="rw-new">NEW</span><p class="rw-desc">用 <b>Roofline 模型</b>指导 3DGS 端到端加速：分辨率自适应量化深度排序键 + 范围感知比特级快速指数近似，RTX 4090 上 4K 场景 <b>10.1× 加速</b>而 PSNR 损失极小。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.15785" target="_blank">arXiv:2608.15785</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">ABCD</span><span class="rw-year">08-27</span></div><span class="rw-cat cat-part">恒定显存训练</span><span class="rw-new">NEW</span><p class="rw-desc">块坐标下降 + 利用 Alpha 合成特性的<b>外核训练框架</b>，把 3DGS 峰值显存复杂度降到 <b>O(1)</b>，PSNR 下降不足 5% 即可在显存受限的 GPU 上训练大辐射场。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.27735" target="_blank">arXiv:2608.27735</a></div></div>
+        </div>
+      </section>
+
+      <section class="cat-group" data-cat="ff" data-open="0">
+        <button class="cat-head" type="button" aria-expanded="false">
+          <span class="cat-caret">▼</span>
+          <span class="cat-title">Feed-forward 重建</span>
+          <span class="cat-cnt">70</span>
+          <span class="cat-note">前馈重建（默认折叠）</span>
+        </button>
+        <div class="rw-grid cat-body">
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">UniqueSplat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">视角条件 3DGS，可泛化的稀疏视角重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02145" target="_blank">arXiv:2608.02145</a></div></div>
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">StreamSplat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">流式前馈 3DGS，面向实时场景重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01659" target="_blank">arXiv:2608.01659</a></div></div>
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">QuerySplat</span><span class="rw-year">08-02</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">几何/外观解耦表示的前馈 3DGS 预测。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01186" target="_blank">arXiv:2608.01186</a></div></div>
@@ -271,8 +364,17 @@
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">FRA-NBV</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-ff">反射感知视角规划</span><span class="rw-new">NEW</span><p class="rw-desc">先识别<b>反射区域</b>再调整传感器位姿，缓解反射表面造成的深度缺失，提升自主三维重建覆盖率——与透明/高反光物体的采集策略直接相关。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01950" target="_blank">arXiv:2608.01950</a></div></div>
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">PIVOT</span><span class="rw-year">08-26</span></div><span class="rw-cat cat-ff">重建评测基准</span><span class="rw-new">NEW</span><p class="rw-desc">面向真实世界 3D 重建的<b>多轨迹数据集与测试平台</b>，系统揭示新视角合成方法在<b>不同轨迹、位姿与内参</b>下的性能差异——继 Mind the Gap 之后又一记针对评测协议的实证。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.25401" target="_blank">arXiv:2608.25401</a></div></div>
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">Gaussian-JEPA</span><span class="rw-year">08-16</span></div><span class="rw-cat cat-ff">自监督预训练</span><span class="rw-new">NEW</span><p class="rw-desc">把<b>联合嵌入预测</b>搬到 3D 高斯：预测高斯 token 块的潜在表示做自监督学习，在多类任务上优于重建式预训练，给 3DGS 补上缺失的通用表示学习目标。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.15651" target="_blank">arXiv:2608.15651</a></div></div>
+        </div>
+      </section>
 
-      <!-- 场景/世界生成 -->
+      <section class="cat-group" data-cat="scene" data-open="0">
+        <button class="cat-head" type="button" aria-expanded="false">
+          <span class="cat-caret">▼</span>
+          <span class="cat-title">场景/世界生成</span>
+          <span class="cat-cnt">28</span>
+          <span class="cat-note">场景与世界生成（默认折叠）</span>
+        </button>
+        <div class="rw-grid cat-body">
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Beyond Global Latents (Sparse Grid VAE)</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">腾讯混元：分块稀疏网格 VAE，突破全局 latent 瓶颈的可扩展 3D 建模。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02016" target="_blank">arXiv:2608.02016</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Graph-Validated VLM Scene Gen</span><span class="rw-year">08-04</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">全局图验证优化的 VLM 驱动 3D 室内场景生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.03064" target="_blank">arXiv:2608.03064</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">EmbodiedGen V2</span><span class="rw-year">07-08</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">智能体式、仿真就绪的 3D 世界引擎（具身 AI）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.07459" target="_blank">arXiv:2607.07459</a></div></div>
@@ -301,40 +403,8 @@
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">LagrangeGS</span><span class="rw-year">08-24</span></div><span class="rw-cat cat-scene">非保守拉格朗日</span><span class="rw-new">NEW</span><p class="rw-desc">把动态 3DGS 建模为<b>非保守拉格朗日系统</b>：近似速度-海森矩阵、限制非保守力与时间无关性、引入局部刚性对齐，换来稳定外推、<b>时间可逆</b>与物理可编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.22773" target="_blank">arXiv:2608.22773</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Physics-Integrated Operator Learning</span><span class="rw-year">08-25</span></div><span class="rw-cat cat-scene">物理算子学习</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>前馈高斯溅射（FFGS）表示</b>做物理集成的算子学习，多类 PDE 系统长时序预测相对 ℓ₂ 误差降低 <b>1.5–2.2 倍</b>，光谱保真度更好。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.24049" target="_blank">arXiv:2608.24049</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">ChainSplat</span><span class="rw-year">08-28</span></div><span class="rw-cat cat-scene">可变形线性物体</span><span class="rw-new">NEW</span><p class="rw-desc">物理启发的<b>螺旋理论</b>模型，仅从多视角 RGB 视频联合学习可变形线性物体（绳、缆、线束）的几何、外观、运动学与动力学，SOTA 且支持实时估计与轨迹优化。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.28570" target="_blank">arXiv:2608.28570</a></div></div>
-
-      <!-- 部件/纹理/编辑 -->
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">PartMat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-part">部件/纹理</span><p class="rw-desc">单一全局 latent 的材质感知 3D 部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01825" target="_blank">arXiv:2608.01825</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">EditFlow3D</span><span class="rw-year">08-04</span></div><span class="rw-cat cat-part">部件/编辑</span><p class="rw-desc">轨迹保持的 3D 资产自动局部编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.03179" target="_blank">arXiv:2608.03179</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">MegaParts</span><span class="rw-year">08-14</span></div><span class="rw-cat cat-part">部件生成</span><span class="rw-new">NEW</span><p class="rw-desc">Token 高效的 VQ 形状 tokenizer + 结构化序列自回归，把部件感知 3D 生成规模推到 300 个部件，显著超越基线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.14783" target="_blank">arXiv:2608.14783</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">MultiCube</span><span class="rw-year">08-20</span></div><span class="rw-cat cat-part">组合式生成</span><span class="rw-new">NEW</span><p class="rw-desc">Roblox / CMU / Stanford：两阶段扩散 + 部件布局适配器，实现部件级语义与空间位置的精确控制的组合式 3D 生成，布局独特且质量高。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.20448" target="_blank">arXiv:2608.20448</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SCULPT</span><span class="rw-year">08-13</span></div><span class="rw-cat cat-part">部件生成</span><span class="rw-new">NEW</span><p class="rw-desc">减材（subtractive）组合式 3D 部件生成，缓解现有方法的部件边界问题；PartObjaverse 上几何最优，并支持细粒度纹理部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.13541" target="_blank">arXiv:2608.13541</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SemanticSlider3D</span><span class="rw-year">08-19</span></div><span class="rw-cat cat-part">3D 编辑</span><span class="rw-new">NEW</span><p class="rw-desc">免训练连续语义编辑：在先进 3D 生成模型的潜空间中构造语义编辑方向，以「滑块」方式连续调节物体语义属性，可直接嵌入现有 3D 创作流程。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.18560" target="_blank">arXiv:2608.18560</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">CoGeo-GS</span><span class="rw-year">08-27</span></div><span class="rw-cat cat-part">3D 场景编辑</span><span class="rw-new">NEW</span><p class="rw-desc">概念驱动 + 几何感知的 3D 场景多物体移除：概念感知语义标签定位目标，几何感知补全流水线修复空洞，视觉质量与重建保真度优于现有方法。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.26656" target="_blank">arXiv:2608.26656</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Gen2Physics</span><span class="rw-year">08-24</span></div><span class="rw-cat cat-part">材质/物理属性</span><span class="rw-new">NEW</span><p class="rw-desc">让生成的 mesh 直接可用于仿真：微调 ViT 做稠密材质分割 + 鲁棒的 2D→3D 一致性投影，把生成网格自动分解为材质组成并赋予物理属性（区别于体素方案，直接作用于 mesh）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.23869" target="_blank">arXiv:2608.23869</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">RORA</span><span class="rw-year">08-05</span></div><span class="rw-cat cat-part">关节资产</span><span class="rw-new">NEW</span><p class="rw-desc">端到端管线：从单个静态物体的视频输入重建出带精确关节运动的仿真就绪资产，PartNet-Mobility-V0 与真实物体上效果良好，可直接用于灵巧手操作的机器人学习。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.04842" target="_blank">arXiv:2608.04842</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">ISAP-3D</span><span class="rw-year">06-10</span></div><span class="rw-cat cat-part">部件生成</span><span class="rw-new">NEW</span><p class="rw-desc">北大 / 腾讯 / 华为：针对部件感知 3D 生成中身份与布局纠缠导致的结构歧义，提出身份槽对齐框架——用语义身份 token 锚定每个部件并做一对一布局预测，实现稳定可控的部件级生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.12099" target="_blank">arXiv:2606.12099</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">3DGS on a Graph Processor</span><span class="rw-year">07-17</span></div><span class="rw-cat cat-part">异构硬件渲染</span><span class="rw-new">NEW</span><p class="rw-desc">在 Graphcore <b>IPU</b> 上实现 3D 高斯渲染器：按特定模式路由高斯基元、遵循 BSP 计算模型，系统评估<b>纯 SRAM</b> 实现的瓶颈，并讨论对 GPU 等主流架构的启示——3DGS 光栅化走向非 GPU 硬件的一次实测。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.15951" target="_blank">arXiv:2607.15951</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Neural 3D Mesh Texturing Survey</span><span class="rw-year">05-28</span></div><span class="rw-cat cat-part">纹理化综述</span><span class="rw-new">NEW</span><p class="rw-desc">系统综述神经 3D 网格纹理化的最新进展，覆盖<b>纹理合成 / 迁移 / 补全</b>三类方法，并给出统一分类体系——进资产管线前值得先读的地图。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.00137" target="_blank">arXiv:2606.00137</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">MaterialClusterGS</span><span class="rw-year">06-08</span></div><span class="rw-cat cat-part">材质分解与重光照</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>共享 BRDF 原型调色板</b> + 连续空间材质场，在 2DGS 上做基于物理的重光照与材质编辑，解决逐基元材质分解不一致的老问题。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.09018" target="_blank">arXiv:2606.09018</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">AEGIR</span><span class="rw-year">06-26</span></div><span class="rw-cat cat-part">逆渲染 · 面光源</span><span class="rw-new">NEW</span><p class="rw-desc">在可重光照高斯表示中<b>显式建模局部面光源</b>，可微延迟渲染管线 + 多重重要性采样与正则化，让局部光照场景的照明与材质分解更一致。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.28635" target="_blank">arXiv:2606.28635</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Editable PB Reflections (Ray-traced GS)</span><span class="rw-year">06-29</span></div><span class="rw-cat cat-part">反射编辑</span><span class="rw-new">NEW</span><p class="rw-desc">从 3DGS 抽出<b>漫反射与镜面反射缓冲</b>，结合路径追踪与快速光线追踪实现可编辑的物理基镜面反射，支持<b>多跳反射</b>与粗糙度编辑。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.30861" target="_blank">arXiv:2606.30861</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Intrinsic Decomposition of 3DGS</span><span class="rw-year">06-30</span></div><span class="rw-cat cat-part">本征分解</span><span class="rw-new">NEW</span><p class="rw-desc">把本征分解扩展到高斯辐射场：独立高斯基元 + 数据驱动优化 + 单图纹理编辑，实现场景<b>材质与光照的分离及编辑</b>。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.31637" target="_blank">arXiv:2606.31637</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SeamGen</span><span class="rw-year">07-14</span></div><span class="rw-cat cat-part">UV 接缝生成</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>图流匹配</b>从现有接缝布局学习，Mesh Transformer 主干 + 流模型修复能力，生成更贴合艺术家偏好的 UV 布局。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.12379" target="_blank">arXiv:2607.12379</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Bake It Till You Make It</span><span class="rw-year">07-15</span></div><span class="rw-cat cat-part">纹理烘焙加速</span><span class="rw-new">NEW</span><p class="rw-desc">解耦辐射表示 + 稀疏性增强优化，利用几何稀疏性与 GPU 纹理映射做空间纹理图集喷涂，比 3DGS <b>快 5 倍</b>，消费级硬件实时 4K/60fps。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.13808" target="_blank">arXiv:2607.13808</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">GRay</span><span class="rw-year">06-29</span></div><span class="rw-cat cat-part">光线追踪 3DGS</span><span class="rw-new">NEW</span><p class="rw-desc">利用光追的<b>对数级图元缩放</b>特性，在密集小高斯场景下把 3D 高斯光线追踪做到接近 splatting 的渲染与优化速度。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.30869" target="_blank">arXiv:2606.30869</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Lighting-Consistent Object Transfer</span><span class="rw-year">06-21</span></div><span class="rw-cat cat-part">一致光照迁移</span><span class="rw-new">NEW</span><p class="rw-desc">用扩散模型调和合成图像，混合合成/生成/真实数据训练，再后优化整合回 3DGS，解决跨辐射场<b>物体迁移时的光照不一致</b>。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.22481" target="_blank">arXiv:2606.22481</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">XPR</span><span class="rw-year">06-10</span></div><span class="rw-cat cat-part">可微渲染基建</span><span class="rw-new">NEW</span><p class="rw-desc">高级编程接口 + 模块化渲染管线，少量代码即可实现 3DGS 等新方法，借 <b>XLA 编译器跨平台</b>运行（GPU/TPU 等）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.11529" target="_blank">arXiv:2606.11529</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Transparency Rendering in CAD</span><span class="rw-year">08-28</span></div><span class="rw-cat cat-part">透明渲染综述</span><span class="rw-new">NEW</span><p class="rw-desc">系统综述 CAD 透明渲染：<b>近似 vs 精确</b>技术的权衡、强调内部组件的技术、CSG 对象的渲染挑战，刻画当前能力边界并给出开放问题清单——<b>与本站透明材质调研直接相邻</b>。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.28310" target="_blank">arXiv:2608.28310</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">ESVR</span><span class="rw-year">08-06</span></div><span class="rw-cat cat-part">椭球体绘制</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>椭球基元 + 结构感知基元学习 + 逐基元光线采样</b>做稀疏体绘制，摆脱对 DVR 图像学习的依赖（信息损失与传递函数受限），实现大规模体数据高效压缩与实时高质量渲染。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.05564" target="_blank">arXiv:2608.05564</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SpotlessGS</span><span class="rw-year">08-11</span></div><span class="rw-cat cat-part">可重光照</span><span class="rw-new">NEW</span><p class="rw-desc">联合优化光照参数，用 <b>SH 光照模型 + MLP-BRDF</b> 实现<b>动态照明下可重光照</b>的三维重建，面向光照条件恶劣时的感知鲁棒性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.14713" target="_blank">arXiv:2608.14713</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">VoroTracing</span><span class="rw-year">08-18</span></div><span class="rw-cat cat-part">可微光追 · Voronoi</span><span class="rw-new">NEW</span><p class="rw-desc">协同设计场景表示、优化与 GPU 执行的<b>可微 Voronoi 光线追踪</b>：RTX 5090 上 <b>623 FPS</b> 实时新视角合成，吞吐优于现有光线方法与 3DGS，还支持非针孔效应。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.17682" target="_blank">arXiv:2608.17682</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">3DGART</span><span class="rw-year">08-18</span></div><span class="rw-cat cat-part">光追训练加速</span><span class="rw-new">NEW</span><p class="rw-desc">用<b>基元导向的粒子反向传播</b>打通 3D 高斯光追的训练瓶颈，在 Mip-NeRF 360 上显著提速，让「全光线追踪训练高斯」从纸面走向实用。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.17298" target="_blank">arXiv:2608.17298</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Super-Gaussian</span><span class="rw-year">08-05</span></div><span class="rw-cat cat-part">自然语言编辑</span><span class="rw-new">NEW</span><p class="rw-desc">VR 中的 3DGS 交互编辑框架：特征感知聚类 + <b>分层选择-细化</b>工作流 + <b>自然语言交互（NLI）</b>驱动体可视化，降低体数据的编辑与分析门槛。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.04475" target="_blank">arXiv:2608.04475</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">PartInteractor</span><span class="rw-year">08-02</span></div><span class="rw-cat cat-part">部件感知创作</span><span class="rw-new">NEW</span><p class="rw-desc">支持语音 / 草图 / 图像输入的<b>部件感知三维创作</b>框架，把语义部件层级作为可操控单元，显著提升生成后的可控性与意图一致性，面向 XR 中的人机协同创作。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01335" target="_blank">arXiv:2608.01335</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Seed2GS</span><span class="rw-year">08-12</span></div><span class="rw-cat cat-part">目标提取</span><span class="rw-new">NEW</span><p class="rw-desc"><b>无相机、无训练</b>地从 3DGS 场景中提取目标：把目标身份与三维覆盖范围解耦，单张参考视图 grounding 即可，LERF-MASK 与 3D-OVS 上高精度且延迟低。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.11928" target="_blank">arXiv:2608.11928</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">3DGSI-Assessor</span><span class="rw-year">08-04</span></div><span class="rw-cat cat-part">渲染质量评测</span><span class="rw-new">NEW</span><p class="rw-desc">含 <b>15,200 张图像</b>的多维 3DGS 图像质量数据集 3DGS-IEval-15K+，配基于大视觉语言模型的一体化 IQA 框架，补上 3DGS 渲染失真的量化评估缺口。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.03279" target="_blank">arXiv:2608.03279</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">RoofGS</span><span class="rw-year">08-16</span></div><span class="rw-cat cat-part">硬件 · Roofline</span><span class="rw-new">NEW</span><p class="rw-desc">用 <b>Roofline 模型</b>指导 3DGS 端到端加速：分辨率自适应量化深度排序键 + 范围感知比特级快速指数近似，RTX 4090 上 4K 场景 <b>10.1× 加速</b>而 PSNR 损失极小。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.15785" target="_blank">arXiv:2608.15785</a></div></div>
-      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">ABCD</span><span class="rw-year">08-27</span></div><span class="rw-cat cat-part">恒定显存训练</span><span class="rw-new">NEW</span><p class="rw-desc">块坐标下降 + 利用 Alpha 合成特性的<b>外核训练框架</b>，把 3DGS 峰值显存复杂度降到 <b>O(1)</b>，PSNR 下降不足 5% 即可在显存受限的 GPU 上训练大辐射场。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.27735" target="_blank">arXiv:2608.27735</a></div></div>
+        </div>
+      </section>
 
     </div>
   </div>
@@ -368,28 +438,21 @@
 </footer>
 
 <script>
-/* category filter */
-document.querySelectorAll('.dir-tab').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.dir-tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const cat=btn.dataset.cat;
-    document.querySelectorAll('#paperGrid .rw-card').forEach(c=>{
-      c.style.display=(cat==='all'||c.dataset.cat===cat)?'flex':'none';
-    });
-  });
-});
-
-/* ===== 用户评分 & 评论（localStorage 自动保存/加载） ===== */
+/* ===== 分类分组折叠 + 评分控件懒加载（性能） ===== */
 (function(){
   const KEY='paperReviews_v1';
   let store={};
   try{store=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){store={}}
   const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
-  let timer=null, savedEls=[];
-  const debounceSave=()=>{clearTimeout(timer);timer=setTimeout(()=>{persist();savedEls.forEach(el=>{el.textContent='✓ 已保存';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1200)});},400)};
+  let timer=null;
+  const debounceSave=(only)=>{clearTimeout(timer);timer=setTimeout(()=>{persist();
+    (only?[only]:[]).forEach(el=>{el.textContent='✓ 已保存';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1200)});},400)};
 
-  document.querySelectorAll('#paperGrid .rw-card').forEach(card=>{
+  /* ---- 单卡评分控件：按需构建（原来 183 张全在加载时同步构建）---- */
+  function buildReview(card){
+    if(card.dataset.rev) return;
+    card.dataset.rev='1';
+    card.removeAttribute('data-rev-pend');
     const a=card.querySelector('.rw-links a[href*="arxiv.org/abs/"]');
     if(!a)return;
     const id=a.href.split('/abs/')[1].replace(/[^\d.]/g,'');
@@ -398,7 +461,7 @@ document.querySelectorAll('.dir-tab').forEach(btn=>{
     const row=document.createElement('div');row.className='rev-row';
     const stars=document.createElement('div');stars.className='stars';stars.title='点击评分（左半=半星），再次点击同分值可清除';
     const val=document.createElement('span');val.className='rev-val';
-    const saved=document.createElement('span');saved.className='rev-saved';savedEls.push(saved);
+    const saved=document.createElement('span');saved.className='rev-saved';
     row.append(stars,val,saved);
     const cmt=document.createElement('input');cmt.className='rev-cmt';cmt.type='text';cmt.maxLength=120;cmt.placeholder='简短评论（自动保存）…';
     cmt.value=(store[id]&&store[id].c)||'';
@@ -411,38 +474,112 @@ document.querySelectorAll('.dir-tab').forEach(btn=>{
       const f=document.createElement('span');f.className='fill';
       s.appendChild(f);stars.appendChild(s);fills.push(f);
     }
-    const render=v=>{
+    const renderStar=v=>{
       fills.forEach((f,i)=>{f.style.width=(Math.max(0,Math.min(1,v-i))*100)+'%'});
       val.textContent=v>0?v.toFixed(1):'';
     };
     let cur=(store[id]&&store[id].r)||0;
-    render(cur);
+    renderStar(cur);
     const valFromEvent=e=>{
       const r=stars.getBoundingClientRect();
       const x=Math.min(Math.max(e.clientX-r.left,0),r.width-0.01);
       const sw=r.width/5, idx=Math.floor(x/sw);
       return Math.min(5,idx+((x-idx*sw)<sw/2?0.5:1));
     };
-    stars.addEventListener('mousemove',e=>render(valFromEvent(e)));
-    stars.addEventListener('mouseleave',()=>render(cur));
+    stars.addEventListener('mousemove',e=>renderStar(valFromEvent(e)));
+    stars.addEventListener('mouseleave',()=>renderStar(cur));
     stars.addEventListener('click',e=>{
       const v=valFromEvent(e);
       cur=(v===cur)?0:v;
       store[id]=Object.assign(store[id]||{},{r:cur});
-      render(cur);debounceSave();
+      renderStar(cur);debounceSave(saved);
     });
     cmt.addEventListener('input',()=>{
       store[id]=Object.assign(store[id]||{},{c:cmt.value});
-      debounceSave();
+      debounceSave(saved);
+    });
+  }
+
+  /* ---- 视口内才构建：折叠组与屏外卡片零成本 ---- */
+  const io=('IntersectionObserver' in window)
+    ? new IntersectionObserver((entries,obs)=>{
+        entries.forEach(en=>{ if(en.isIntersecting){ buildReview(en.target); obs.unobserve(en.target); } });
+      },{rootMargin:'500px 0px'})
+    : null;
+
+  function queueReviews(group){
+    group.querySelectorAll('.rw-card').forEach(c=>{
+      if(c.dataset.rev||c.dataset.revPend) return;
+      if(io){ c.dataset.revPend='1'; io.observe(c); }
+      else buildReview(c);
+    });
+  }
+
+  /* ---- 折叠 / 展开 ---- */
+  const groups=[...document.querySelectorAll('#paperGroups .cat-group')];
+  const ALL_CATS=groups.map(g=>g.dataset.cat);
+  const DEFAULT_COLLAPSED=['ff','scene'];       // 默认折叠
+  const CAT_NAME={'unified':'统一多模态','t2i':'文/图生 3D','part':'部件/纹理/编辑','ff':'Feed-forward 重建','scene':'场景/世界生成'};
+  let collapsed=new Set(DEFAULT_COLLAPSED);
+  let activeCat='all';
+
+  function applyView(){
+    groups.forEach(g=>{
+      const cat=g.dataset.cat;
+      if(activeCat!=='all' && cat!==activeCat){ g.style.display='none'; return; }
+      g.style.display='';
+      // 单类筛选时强制展开该类；「全部」时尊重各自的折叠状态
+      const open = (activeCat!=='all') ? true : !collapsed.has(cat);
+      g.dataset.open = open?'1':'0';
+      g.querySelector('.cat-head').setAttribute('aria-expanded', open?'true':'false');
+      if(open) queueReviews(g);
+    });
+    const bar=document.getElementById('toggleAll');
+    if(bar) bar.textContent = (activeCat==='all' && groups.every(g=>collapsed.has(g.dataset.cat))) ? '展开全部' : '折叠全部';
+  }
+
+  document.querySelectorAll('.dir-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.dir-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCat=btn.dataset.cat;
+      applyView();
     });
   });
+
+  document.querySelectorAll('.cat-head').forEach(hd=>{
+    hd.addEventListener('click',()=>{
+      const c=hd.closest('.cat-group').dataset.cat;
+      if(activeCat!=='all' && activeCat!==c){
+        // 单类筛选下点自己的标题：回到「全部」再切换
+        activeCat='all';
+        document.querySelectorAll('.dir-tab').forEach(b=>b.classList.toggle('active', b.dataset.cat==='all'));
+      }
+      collapsed.has(c)?collapsed.delete(c):collapsed.add(c);
+      applyView();
+    });
+  });
+
+  const allBtn=document.getElementById('toggleAll');
+  if(allBtn) allBtn.addEventListener('click',()=>{
+    if(activeCat!=='all'){
+      activeCat='all';
+      document.querySelectorAll('.dir-tab').forEach(b=>b.classList.toggle('active', b.dataset.cat==='all'));
+    }
+    const anyOpen=ALL_CATS.some(c=>!collapsed.has(c));
+    collapsed = anyOpen ? new Set(ALL_CATS) : new Set();
+    applyView();
+  });
+
+  applyView();
 })();
+
 
 const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
 Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
 new Chart(document.getElementById('catDonut'),{type:'doughnut',
-  data:{labels:['Feed-forward 重建 70','文/图生 3D 45','场景/世界生成 28','部件/纹理/编辑 32','统一多模态 8'],
-    datasets:[{data:[70,45,28,32,8],backgroundColor:['#0d9488','#2563eb','#ea8a3c','#f97066','#8b5cf6'],borderColor:'#fff',borderWidth:3}]},
+  data:{labels:['统一多模态 8','文/图生 3D 45','部件/纹理/编辑 32','Feed-forward 重建 70','场景/世界生成 28'],
+    datasets:[{data:[8,45,32,70,28],backgroundColor:['#8b5cf6','#2563eb','#f97066','#0d9488','#ea8a3c'],borderColor:'#fff',borderWidth:3}]},
   options:{maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:14,padding:10}}}}});
 new Chart(document.getElementById('monthBar'),{type:'bar',
   data:{labels:['2026-06','2026-07','2026-08 上半月','2026-08 下半月'],
