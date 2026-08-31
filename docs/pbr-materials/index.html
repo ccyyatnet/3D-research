@@ -542,6 +542,8 @@
       <li><b>HDR 环境光的显式估计。</b>AEGIR 处理局部面光源、SpotlessGS 用 SH 环境光，但都没显式输出可用的 HDR envmap。而 envmap 是 glTF 资产可重光照的前提。</li>
     </ol>
 
+    <div class="callout" style="margin-top:18px">🏭 <b>工业界旁证：</b>上述第 1、2 条空白不只是学术观察。腾讯 <a href="../buffalo/index.html#conclusion"><b>Hunyuan3D-Buffalo 1.0</b></a>（<code>2608.02711</code>，87M 样本的统一 3D 多模态模型）在 §6 结论里把「<b>端到端纹理编辑基本未被探索（largely unexplored），原因是缺乏合适的训练数据</b>」列为 6 个未解问题之一，并进一步发问「几何与纹理表示能否联合建模」。也就是说：本专题统计出的<b>材质/纹理工作稀缺</b>，与一线团队自述的能力缺口<b>是同一件事的两面</b> —— 需求侧明确存在，供给侧（数据 + 方法）都还是空的。</div>
+
     <h3 class="block-title c-purple">时间线信号</h3>
     <div class="table-scroll">
       <table>

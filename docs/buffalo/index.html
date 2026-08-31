@@ -150,6 +150,7 @@
       <a href="#related">① 相关工作</a>
       <a href="#data">② 数据细节</a>
       <a href="#results">③ 实验结果</a>
+      <a href="#conclusion">④ 结论与展望</a>
     </div>
   </div>
 </nav>
@@ -416,6 +417,25 @@
       </table>
     </div>
 
+    <h3 class="block-title" style="margin-top:26px">Table 4 · UniPart-Bench 全任务细分（论文原表，8 项）</h3>
+    <p style="font-size:14px;color:var(--ink2);margin:0 0 10px">Table 3 只报了 Part QA 与 Captioning 两个汇总口径；Table 4 才给出 benchmark 覆盖的<b>全部 8 个子任务</b>：纯框列出、多部件定位（Q1/Q2）、单部件定位（Q1/Q2）、框→文本（Q1/Q2）、部件问答。定位类报 IoU，语言类报 SBERT / SimCSE / BLEU-1 / ROUGE-L / METEOR。</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>任务</th><th class="num">IoU</th><th class="num">SBERT</th><th class="num">SimCSE</th><th class="num">BLEU-1</th><th class="num">ROUGE-L</th><th class="num">METEOR</th></tr></thead>
+        <tbody>
+          <tr><td class="num">0</td><td>纯框列出 Pure box listing</td><td class="num best">0.864</td><td class="na">–</td><td class="na">–</td><td class="na">–</td><td class="na">–</td><td class="na">–</td></tr>
+          <tr><td class="num">1</td><td>多部件定位 Multi-Part Grounding (Q1)</td><td class="num best">0.880</td><td class="num">68.00</td><td class="num">68.55</td><td class="num">52.06</td><td class="num">52.09</td><td class="num">26.35</td></tr>
+          <tr><td class="num">2</td><td>多部件定位 Multi-Part Grounding (Q2)</td><td class="num">0.844</td><td class="num">70.92</td><td class="num">69.47</td><td class="num">40.04</td><td class="num">41.86</td><td class="num">38.19</td></tr>
+          <tr><td class="num">3</td><td>单部件定位 Single-Part Grounding (Q1)</td><td class="num">0.626</td><td class="num">78.95</td><td class="num">77.92</td><td class="num">45.74</td><td class="num">47.47</td><td class="num">44.07</td></tr>
+          <tr><td class="num">4</td><td>单部件定位 Single-Part Grounding (Q2)</td><td class="num">0.525</td><td class="na">–</td><td class="na">–</td><td class="na">–</td><td class="na">–</td><td class="na">–</td></tr>
+          <tr><td class="num">5</td><td>框→文本 Box-to-Text (Q1)</td><td class="na">–</td><td class="num">67.64</td><td class="num">68.27</td><td class="num">49.89</td><td class="num">50.00</td><td class="num">25.45</td></tr>
+          <tr><td class="num">6</td><td>框→文本 Box-to-Text (Q2)</td><td class="na">–</td><td class="num">74.13</td><td class="num">72.99</td><td class="num">42.01</td><td class="num">44.28</td><td class="num">40.96</td></tr>
+          <tr><td class="num">7</td><td>部件问答 Part QA</td><td class="num">0.633</td><td class="num best">85.47</td><td class="num best">89.06</td><td class="num best">49.95</td><td class="num best">45.01</td><td class="num best">45.79</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout" style="margin-top:12px">📐 <b>两个读数细节：</b>① <b>单部件定位反而比多部件难</b> —— IoU 从多部件的 0.880 / 0.844 掉到单部件的 0.626 / 0.525。并非模型更懂"多个"：单部件框面积小，IoU 对小框的绝对偏移极其敏感，而多部件预测的框总面积大、容错高。<b>这说明 UniPart-Bench 的 IoU 不能跨子任务横向比较。</b>② <b>METEOR 对问法极不稳定</b> —— 同样是多部件定位，Q1 得 26.35、Q2 得 38.19（差 11.8），而 SBERT 只差 2.9。语义类指标（SBERT/SimCSE）稳，词汇类指标（BLEU/METEOR）随问法剧烈抖动，横向对比方法时优先看前者。</div>
+
     <!-- 3.2 Text-to-3D -->
     <h3 class="block-title c-indigo" style="margin-top:40px">3.2 文生 3D · 人类评估偏好率（%，越高越好，随机基线 25%）</h3>
     <div class="kpi-row">
@@ -475,6 +495,51 @@
     <h3 class="block-title c-teal" style="margin-top:40px">3.4 文本引用部件生成（定性）</h3>
     <div class="card">
       <p style="font-size:14px;color:var(--ink2)">论文 Fig. 11 定性展示：开放词汇文本查询（如 "segment the wheels"）即可从章鱼、车辆等多样物体中精确提取对应几何部件；多部件提取后可重组为组合式逐部件生成结果。该能力作为统一 3D MLLM 的<b>原生子任务</b>实现，而非专用管线 —— 体现了框架的通用性。论文未给出该任务的定量基准对比。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Section 4 · Conclusion & Future Work ============ -->
+<section id="conclusion" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 4 · Conclusion &amp; Future Work</div>
+      <h2>作者自述的 6 个未解问题</h2>
+      <p>论文 §6 罕见地逐条列出了统一 3D 多模态模型在"完全实现这一愿景之前"仍未解决的关键挑战 —— 这 6 条基本就是该方向未来 1–2 年的研究清单。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:6px;color:var(--indigo)">① 单阶段高质量几何表示</h4>
+        <p style="font-size:14px;color:var(--ink2)">3D 生成的表示<b>尚未收敛</b>。为拿到高质量几何，现有方法普遍诉诸多阶段 DiT 流水线（如 TRELLIS）。这对统一模型是硬伤：<b>要做编辑，就必须配套做多阶段编辑</b>，难以 scale。3D 能否像图像域那样实现<b>单阶段高质量几何生成</b>，是开放且根本性的问题。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:6px;color:var(--indigo)">② 文生 3D / 编辑数据的标注质量</h4>
+        <p style="font-size:14px;color:var(--ink2)">目前依赖 Gemini 等 MLLM 给 3D 资产打 caption，但描述仍<b>存在相当歧义</b>，导致训练对含噪。作者判断这只能随 MLLM 进步逐步缓解 —— 即<b>数据质量的天花板被上游 VLM 卡住</b>。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:6px;color:var(--indigo)">③ 端到端纹理编辑 <span class="tag">与你最相关</span></h4>
+        <p style="font-size:14px;color:var(--ink2)">当前模型<b>主要聚焦几何编辑，纹理编辑基本未被探索</b>（largely unexplored），原因是缺乏合适的训练数据。作者进一步抛出一个更根本的问题：<b>几何与纹理表示能否联合建模</b>，是否存在两者统一的高质量单阶段表示。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:6px;color:var(--indigo)">④ 更鲁棒的编辑数据构建管线</h4>
+        <p style="font-size:14px;color:var(--ink2)">Nano3D-v2 靠<b>替换 box mask 之外的 token</b> 来保持一致性 —— 外部未编辑区保住了，但<b>mask 内部往往含有不该被编辑的区域</b>，其一致性无法保证。这类不一致在训练时会传导进端到端模型，直接拉低编辑质量。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:6px;color:var(--indigo)">⑤ 新架构探索</h4>
+        <p style="font-size:14px;color:var(--ink2)">当前是<b>级联 AR + DiT</b>。图像/视频域的 <b>Transfusion 式架构</b>通过深度融合多模态信息已显出很强效果，把这类架构搬到 3D 生成是自然且有希望的下一步。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:15px;margin-bottom:6px;color:var(--indigo)">⑥ 数据 scaling</h4>
+        <p style="font-size:14px;color:var(--ink2)">3D 数据的<b>量与质都还没到理想规模</b>。继续在 volume 和 quality 两个维度上 scale 仍是关键方向 —— 与此页 §2 的 87M 数据引擎互为呼应。</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:16px">🎨 <b>跨页联动：</b>第 ③ 条「<b>纹理编辑基本未被探索</b>」与本站点 <a href="../pbr-materials/index.html"><b>PBR 材质生成专题梳理</b></a> 的结论高度吻合 —— 那 25 篇工作里，能真正产出 glTF 式 albedo / metallic-roughness / normal 的只有 Luce 一篇，而 transmission / ior / volume 等透明通道<b>零覆盖</b>。Buffalo 从"统一模型缺纹理编辑能力"这一侧、PBR 专题从"材质生成方法稀缺"这一侧，指向的是同一个空白：<b>纹理/材质的可控编辑（而非仅生成）是 3D 统一模型下一个真正的战场</b>。</div>
+
+    <div class="card" style="margin-top:14px">
+      <h4 style="font-size:15px;margin-bottom:8px">原文致谢（Acknowledgement）</h4>
+      <p style="font-size:14px;color:var(--ink2)">感谢 <b>Omni123</b> 作者提供评测结果；感谢 <b>Zehuan Huang</b> 在 Hunyuan 实习期间的贡献。</p>
     </div>
   </div>
 </section>
