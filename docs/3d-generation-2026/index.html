@@ -60,6 +60,7 @@
   .rw-links a{font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;border:1px solid var(--line);color:var(--ink2)}
   .rw-links a:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
   .rw-links a.deep{background:#eef5ff;border-color:#c7d9f8;color:var(--blue)}
+  .rw-new{margin-left:6px;font-size:10px;font-weight:700;background:#fee2e2;color:#dc2626;border-radius:4px;padding:2px 6px;vertical-align:middle;letter-spacing:.3px}
   .rw-card.hl{border-color:#c7d9f8;background:linear-gradient(180deg,#f5f9ff,#fff)}
   /* ===== 用户评分 & 评论 ===== */
   .review{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
@@ -100,14 +101,14 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="tag">前沿追踪 · 检索日期 2026-08-12 · ArXiv cs.CV / cs.GR / cs.AI</span>
+    <span class="tag">前沿追踪 · 更新至 2026-08-31 · ArXiv cs.CV / cs.GR / cs.AI</span>
     <h1>2026 年 6 月以来 <em>3D 生成</em>论文速览</h1>
-    <p class="sub">覆盖文生 3D（Text-to-3D）、图生 3D（Image-to-3D）、Feed-forward 3D 重建、3D 场景/世界生成、部件与纹理生成等方向，共收录 <b>28 篇</b>。</p>
+    <p class="sub">覆盖文生 3D（Text-to-3D）、图生 3D（Image-to-3D）、Feed-forward 3D 重建、3D 场景/世界生成、部件与纹理生成等方向，共收录 <b>56 篇</b>；其中 8 月下半月（8/9–8/31）一次性新增 <b>28 篇</b>。</p>
     <div class="stats">
-      <div class="stat"><b>28 篇</b><span>收录论文（6 月 3 篇 / 7 月 11 篇 / 8 月 14 篇）</span></div>
-      <div class="stat"><b>5 个方向</b><span>统一多模态 / 文图生 3D / FF 重建 / 场景生成 / 部件纹理</span></div>
-      <div class="stat"><b>12 篇</b><span>Feed-forward 3DGS 重建（今夏最热方向）</span></div>
-      <div class="stat"><b>1 篇已精读</b><span>Hunyuan3D-Buffalo 1.0（含完整深度解读页）</span></div>
+      <div class="stat"><b>56 篇</b><span>收录论文（6 月 3 篇 / 7 月 11 篇 / 8 月 42 篇）</span></div>
+      <div class="stat"><b>5 个方向</b><span>统一多模态 2 / 文图生 3D 15 / FF 重建 22 / 场景生成 9 / 部件纹理 8</span></div>
+      <div class="stat"><b>22 篇</b><span>Feed-forward 3DGS 重建（今夏最热方向，占 39%）</span></div>
+      <div class="stat"><b>3 篇已精读</b><span>Hunyuan3D-Buffalo / TRELLIS 2 / EditFlow3D（含深度解读页）</span></div>
     </div>
   </div>
 </header>
@@ -122,7 +123,7 @@
       <div class="card">
         <h3 style="font-size:16px;margin-bottom:6px">发表时间分布（按月）</h3>
         <div class="chart-box"><canvas id="monthBar"></canvas></div>
-        <p class="chart-note">8 月统计至 8 月 12 日已 14 篇，密度约为 7 月同期的 2 倍 —— 3D 生成正处于加速期。</p>
+        <p class="chart-note">8 月全月 42 篇，是 7 月（11 篇）的近 4 倍 —— 3D 生成仍在加速，且 8 月下半月（28 篇）比上半月更密集。</p>
       </div>
     </div>
   </div>
@@ -132,18 +133,19 @@
   <div class="wrap">
     <h2 style="font-size:22px;margin-bottom:14px;letter-spacing:-.3px">论文列表</h2>
     <div class="dir-tabs">
-      <button class="dir-tab active" data-cat="all">全部<span class="cnt">28</span></button>
-      <button class="dir-tab" data-cat="unified">统一多模态<span class="cnt">1</span></button>
-      <button class="dir-tab" data-cat="t2i">文/图生 3D<span class="cnt">7</span></button>
-      <button class="dir-tab" data-cat="ff">Feed-forward 重建<span class="cnt">12</span></button>
-      <button class="dir-tab" data-cat="scene">场景/世界生成<span class="cnt">6</span></button>
-      <button class="dir-tab" data-cat="part">部件/纹理/编辑<span class="cnt">2</span></button>
+      <button class="dir-tab active" data-cat="all">全部<span class="cnt">56</span></button>
+      <button class="dir-tab" data-cat="unified">统一多模态<span class="cnt">2</span></button>
+      <button class="dir-tab" data-cat="t2i">文/图生 3D<span class="cnt">15</span></button>
+      <button class="dir-tab" data-cat="ff">Feed-forward 重建<span class="cnt">22</span></button>
+      <button class="dir-tab" data-cat="scene">场景/世界生成<span class="cnt">9</span></button>
+      <button class="dir-tab" data-cat="part">部件/纹理/编辑<span class="cnt">8</span></button>
     </div>
     <p class="rev-hint">⭐ 每张卡片下方可评分（支持半星）与简短评论，内容自动保存在本机浏览器（localStorage），刷新/重开自动加载。</p>
     <div class="rw-grid" id="paperGrid">
 
       <!-- 统一多模态 -->
       <div class="rw-card hl" data-cat="unified"><div class="rw-top"><span class="rw-name">Hunyuan3D-Buffalo 1.0</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-unified">统一多模态</span><p class="rw-desc">腾讯混元：单架构统一 3D 理解/生成/编辑/部件生成；87M 语料 + Nano3D-v2 数据引擎；编辑 CD ↓86.7%。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02711" target="_blank">arXiv:2608.02711</a><a class="deep" href="../buffalo/index.html">📖 深度解读页</a></div></div>
+      <div class="rw-card" data-cat="unified"><div class="rw-top"><span class="rw-name">SPARGen</span><span class="rw-year">08-17</span></div><span class="rw-cat cat-unified">统一多模态</span><span class="rw-new">NEW</span><p class="rw-desc">统一空间感知与推理的原生多模态生成框架：把 3D 重建等异构空间任务统一转成指令条件的生成任务，单框架内多任务达竞争力水平。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.14138" target="_blank">arXiv:2608.14138</a></div></div>
 
       <!-- 文/图生 3D -->
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">DreamStyle3D</span><span class="rw-year">07-27</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">双注意力解耦的高效风格化 3D 资产生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.24721" target="_blank">arXiv:2607.24721</a></div></div>
@@ -153,6 +155,14 @@
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">S-Avatar</span><span class="rw-year">07-30</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">单张图像扩散引导的高斯头部头像生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.28164" target="_blank">arXiv:2607.28164</a></div></div>
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">G-Skin</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">用生成视觉先验绑定 3D 高斯，单图高质量重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01726" target="_blank">arXiv:2608.01726</a></div></div>
       <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">PhotoHOI</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-t2i">文/图生 3D</span><p class="rw-desc">单张 RGB 照片合成 3D 手-物交互。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01905" target="_blank">arXiv:2608.01905</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">Block3D</span><span class="rw-year">08-26</span></div><span class="rw-cat cat-t2i">文生 3D</span><span class="rw-new">NEW</span><p class="rw-desc">分块扩散 T2-3D：把形状 token 序列切块自回归生成、块内联合去噪，并用置信度引导的块内修正抑制误差累积；端到端 25.71s→4.99s（5.15×）且不损几何保真。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.19567" target="_blank">arXiv:2608.19567</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">Luce</span><span class="rw-year">08-26</span></div><span class="rw-cat cat-t2i">图生 3D · PBR</span><span class="rw-new">NEW</span><p class="rw-desc">Apple：用体素化多模态高斯云统一几何与 PBR（albedo / metallic-roughness / normal），VAE 压进材质感知隐空间，rectified-flow 从单图生成，可重光照 + 可选带切空间法线的贴图网格；Toys4K FID 较最强基线 ↓28%。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.23943" target="_blank">arXiv:2608.23943</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">GS-Voxel</span><span class="rw-year">08-19</span></div><span class="rw-cat cat-t2i">3DGS 生成</span><span class="rw-new">NEW</span><p class="rw-desc">免拟合结构化隐变量：把预优化 3DGS 重建转成稀疏活跃体素，经 GS 专用 VAE 编码为稀疏 3D 隐变量，再用图像条件流模型做大规模航空场景 3DGS 生成。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.17988" target="_blank">arXiv:2608.17988</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">GaussVid</span><span class="rw-year">08-25</span></div><span class="rw-cat cat-t2i">稀疏视角生成</span><span class="rw-new">NEW</span><p class="rw-desc">把 3D 感知的视频扩散先验注入稀疏视角 3DGS：构建 3DGS 视频数据集 + 相机条件几何先验，显著提升像素/结构保真度与多视图一致性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.21849" target="_blank">arXiv:2608.21849</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">DiGS-Avatar</span><span class="rw-year">08-24</span></div><span class="rw-cat cat-t2i">3D 人体</span><span class="rw-new">NEW</span><p class="rw-desc">单图可动画 3D 人体重建：将问题转化为 UV 空间扩散的潜变量补全，师生框架优化后解码为 3D 高斯基元，高效、零样本泛化。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.20759" target="_blank">arXiv:2608.20759</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">View-Adaptive Renderer</span><span class="rw-year">08-11</span></div><span class="rw-cat cat-t2i">2D→3D</span><span class="rw-new">NEW</span><p class="rw-desc">视图自适应神经渲染 + 自注意力融合，解决单目 2D→3D 的视图不一致与算力开销；无需扩散 SDS 监督即可高效高保真重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.09110" target="_blank">arXiv:2608.09110</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">ReX-Shot</span><span class="rw-year">08-20</span></div><span class="rw-cat cat-t2i">生成式重拍</span><span class="rw-new">NEW</span><p class="rw-desc">首个从单图联合控制视点、焦距与摄影效果的统一生成框架，几何与相机双重接地，性能更优且接近实时交互。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.18593" target="_blank">arXiv:2608.18593</a></div></div>
+      <div class="rw-card" data-cat="t2i"><div class="rw-top"><span class="rw-name">Cyc3D</span><span class="rw-year">08-28</span></div><span class="rw-cat cat-t2i">评测基准</span><span class="rw-new">NEW</span><p class="rw-desc">Image-to-3D 评测新基准：从跨视角物体一致性与表征质量两轴诊断，提出视角循环结构一致性闭环协议；发现闭源前馈模型多项指标优于开源优化基线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.28080" target="_blank">arXiv:2608.28080</a></div></div>
 
       <!-- Feed-forward 重建 -->
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">UniqueSplat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">视角条件 3DGS，可泛化的稀疏视角重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02145" target="_blank">arXiv:2608.02145</a></div></div>
@@ -167,6 +177,16 @@
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">FastPano3D</span><span class="rw-year">06-29</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">单张全景图前馈室内 3D 重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.30352" target="_blank">arXiv:2606.30352</a></div></div>
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">Scene &amp; Human in One World</span><span class="rw-year">06-26</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">场景与人物单次前馈联合重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2606.27720" target="_blank">arXiv:2606.27720</a></div></div>
       <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">FlexSplat</span><span class="rw-year">08-08</span></div><span class="rw-cat cat-ff">FF 重建</span><p class="rw-desc">免标定前馈 3DGS：几何 Transformer 联合预测相机参数+深度，无需位姿与真值深度；GSO 上 LPIPS 最优。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.07937" target="_blank">arXiv:2608.07937</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">LocusGS</span><span class="rw-year">08-14</span></div><span class="rw-cat cat-ff">FF 重建</span><span class="rw-new">NEW</span><p class="rw-desc">为高斯查询显式增加 3D 锚定状态（中心 + 支撑半径），以 anchor-to-ray 几何偏置引导跨视图聚合与锚心解码，解决同查询高斯散落问题；同等高斯预算下渲染质量更优。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.12825" target="_blank">arXiv:2608.12825</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">InstanceSplat</span><span class="rw-year">08-10</span></div><span class="rw-cat cat-ff">FF 重建 · 理解</span><span class="rw-new">NEW</span><p class="rw-desc">统一前馈 3DGS：单次前向即构建联合编码外观 / 几何 / 实例 ID / 语言对齐语义的实例感知高斯表示，实例为中心的学习策略让重建与场景理解互益。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.07144" target="_blank">arXiv:2608.07144</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">SeeU（Seeing the Unseen）</span><span class="rw-year">08-25</span></div><span class="rw-cat cat-ff">FF 重建</span><span class="rw-new">NEW</span><p class="rw-desc">Semantic-in-Gaussian：跨视图熵感知模块聚合语义与几何线索，条件高斯 Transformer 对粗高斯做残差更新，补全欠观测区域；挑战性外推设置下 PSNR 较 SOTA +2.44 dB。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.22740" target="_blank">arXiv:2608.22740</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">GroupForward</span><span class="rw-year">08-19</span></div><span class="rw-cat cat-ff">FF 重建 · 指代</span><span class="rw-new">NEW</span><p class="rw-desc">实例分组的前馈 3DGS：从稀疏多视图重建 3D 场景并组织为实例分组，结合 RSRF 支撑复杂 3D 指代推理，构建可 refer 的场景表示。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.17535" target="_blank">arXiv:2608.17535</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">SplatGuide</span><span class="rw-year">08-18</span></div><span class="rw-cat cat-ff">无位姿 NVS</span><span class="rw-new">NEW</span><p class="rw-desc">从单个 3DGS 场景复用出三种互补信号作为几何先验，实现无位姿新视角合成；多基准 SOTA，RealEstate10K 上超越真值位姿基线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.16863" target="_blank">arXiv:2608.16863</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">Depth Anything V4</span><span class="rw-year">08-21</span></div><span class="rw-cat cat-ff">动态 4D 重建</span><span class="rw-new">NEW</span><p class="rw-desc">把黎曼流匹配（RFM）作用在 4D 高斯参数上做动态 4D 场景重建，F-score 较基线 +0.044，且无需人工深度标注。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.18388" target="_blank">arXiv:2608.18388</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">GenRec</span><span class="rw-year">08-19</span></div><span class="rw-cat cat-ff">重建+生成</span><span class="rw-new">NEW</span><p class="rw-desc">多视图流匹配模型，在架构层面内置「何处重建 / 何处生成」的划分：观测区保持高重建保真，未观测区追求感知质量。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.17832" target="_blank">arXiv:2608.17832</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">Per-View Gaussian Predictions</span><span class="rw-year">08-28</span></div><span class="rw-cat cat-ff">FF 重建 · 鲁棒</span><span class="rw-new">NEW</span><p class="rw-desc">免训练的干扰物过滤：利用逐视图高斯预测识别并剔除瞬态物体（distractor）伪影，跨模型跨基准提升新视图质量且不破坏干净场景重建。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.26951" target="_blank">arXiv:2608.26951</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">VGGT-Align</span><span class="rw-year">08-18</span></div><span class="rw-cat cat-ff">长序列重建</span><span class="rw-new">NEW</span><p class="rw-desc">长序列 3D 重建的局部-全局一致性桥接：SGIA + 测试时适配策略缓解尺度漂移，ATE 最多降低 32%。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.15260" target="_blank">arXiv:2608.15260</a></div></div>
+      <div class="rw-card" data-cat="ff"><div class="rw-top"><span class="rw-name">Gaussian Sculpting</span><span class="rw-year">08-12</span></div><span class="rw-cat cat-ff">表面重建</span><span class="rw-new">NEW</span><p class="rw-desc">场优化的端到端可控表面重建：双层训练策略配合多分辨率细分，改善视角受限时 3DGS 的表面精度与几何可校正性。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.10602" target="_blank">arXiv:2608.10602</a></div></div>
 
       <!-- 场景/世界生成 -->
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Beyond Global Latents (Sparse Grid VAE)</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">腾讯混元：分块稀疏网格 VAE，突破全局 latent 瓶颈的可扩展 3D 建模。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.02016" target="_blank">arXiv:2608.02016</a></div></div>
@@ -175,6 +195,9 @@
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">Glob3R</span><span class="rw-year">07-10</span></div><span class="rw-cat cat-scene">场景/基础模型</span><p class="rw-desc">3D 基础模型驱动的全局 Structure-from-Motion。</p><div class="rw-links"><a href="https://arxiv.org/abs/2607.09225" target="_blank">arXiv:2607.09225</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">WorldClaw</span><span class="rw-year">08-05</span></div><span class="rw-cat cat-scene">场景/世界生成</span><p class="rw-desc">腾讯混元：全 Agentic 粗到细开放世界生成——规划代理拆解 prompt、语义布局+高度场建地形、细节区单独重建可编辑纹理网格；Claude Opus 4.8 编排，输出游戏引擎就绪实例网格。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.05248" target="_blank">arXiv:2608.05248</a><a class="gh" href="https://github.com/Tencent-Hunyuan/Hunyuan3D-WorldClaw" target="_blank">GitHub（开源）</a></div></div>
       <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">HoloWorld</span><span class="rw-year">08-06</span></div><span class="rw-cat cat-scene">场景/世界生成</span><p class="rw-desc">统一室内-室外城市世界生成：跨尺度持续更新世界上下文，室内与对应建筑外部显式对应；AQS 超 SOTA 7.68%。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.05879" target="_blank">arXiv:2608.05879</a></div></div>
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">SceneReGen</span><span class="rw-year">08-25</span></div><span class="rw-cat cat-scene">场景生成</span><span class="rw-new">NEW</span><p class="rw-desc">把场景重建重释为「生成并装配完整物体资产」：选择性位姿分解——朝向直接烘焙进生成的 mesh，平移与尺度由实例级与全局场景证据估计；3D-FUTURE 上场景级 CD / F-Score / 3D box IoU 最优。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.23930" target="_blank">arXiv:2608.23930</a></div></div>
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">NeoWorld-Pro</span><span class="rw-year">08-25</span></div><span class="rw-cat cat-scene">具身世界</span><span class="rw-new">NEW</span><p class="rw-desc">把单目场景重建改写为「程序化编程」：MLLM 将单张 RGB 转成描述几何、关节与物理属性的可执行程序，physics-in-the-loop 在物理引擎中校验并迭代精修，直接产出交互仿真场景。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.24212" target="_blank">arXiv:2608.24212</a></div></div>
+      <div class="rw-card" data-cat="scene"><div class="rw-top"><span class="rw-name">DesignAgent3D</span><span class="rw-year">08-25</span></div><span class="rw-cat cat-scene">Agent 场景编辑</span><span class="rw-new">NEW</span><p class="rw-desc">类设计师「规划-感知-行动」多模态智能体做交互式 3D 场景编辑，在 NeRF 与 3DGS 两种表示上均优于现有方法，语义对齐、空间定位与多视图一致性更好。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.21438" target="_blank">arXiv:2608.21438</a></div></div>
 
       <!-- 部件/纹理/编辑 -->
       <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">PartMat</span><span class="rw-year">08-03</span></div><span class="rw-cat cat-part">部件/纹理</span><p class="rw-desc">单一全局 latent 的材质感知 3D 部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.01825" target="_blank">arXiv:2608.01825</a></div></div>
@@ -188,17 +211,19 @@
   <div class="wrap">
     <h2 style="font-size:22px;margin-bottom:6px;letter-spacing:-.3px">趋势观察</h2>
     <div class="trend">
-      <div class="card">🚀 <b>Feed-forward 3DGS 重建是绝对主力</b>（12/28 篇）：各团队在流式推理（StreamSplat）、无位姿输入（NoDrift3R）、恶劣条件（DerainSplat）、免标定（FlexSplat）、表示解耦（QuerySplat）上持续内卷。</div>
-      <div class="card">🎨 <b>文/图生 3D 转向可控性与垂直场景</b>：风格化（DreamStyle3D）、服装（Fashion-3DLR）、汽车（3DCarGen）、动态人体（4DHumanDiff），从"生成万物"走向"按需生成"。</div>
-      <div class="card">🌍 <b>3D 世界引擎/基础模型兴起</b>：EmbodiedGen V2、Glob3R 对标 2D 基础模型路线；<b>Agentic 世界生成成为新热点</b>（WorldClaw 全代理编排、HoloWorld 室内外统一城市），从"生成资产"走向"生成世界"。</div>
-      <div class="card">🧠 <b>VLM 深度赋能 3D 生成</b>：VLRC 用 VLM 信号预训练、图验证 VLM 场景生成、Buffalo 统一理解-生成-编辑，"理解驱动生成"成为新范式。</div>
+      <div class="card">🚀 <b>Feed-forward 3DGS 仍是绝对主力</b>（22/56 篇，39%）：下半月内卷点从「能不能重建」转向<b>表示质量</b>——LocusGS 给查询加 3D 锚点、SeeU 补欠观测区域、GroupForward 做实例分组、Per-View Predictions 去干扰物，都是在修 pixel-aligned 表示的结构性缺陷。</div>
+      <div class="card">🧩 <b>「重建 vs 生成」的边界正在被显式建模</b>：GenRec 在架构里内置何处重建/何处生成的划分，SceneReGen 把场景重建重释为「生成+装配物体资产」，GaussVid / FixAnything 引入视频扩散先验补未观测区。生成式补全正成为重建的默认第二引擎。</div>
+      <div class="card">🎨 <b>资产管理级需求浮出水面</b>：Luce（PBR 可重光照）、Gen2Physics（材质分解→物理属性）、Cyc3D（资产可用性评测）三条线同时出现，说明业界关注点已从「渲出来好看」转向「能进引擎、进仿真、进产线」。</div>
+      <div class="card">🤖 <b>Agent 化与可编程化</b>：DesignAgent3D 用「规划-感知-行动」做交互场景编辑，NeoWorld-Pro 让 MLLM 把单图<b>编程</b>成可执行仿真程序并由物理引擎闭环校验；世界生成从「端到端输出」走向「可干预、可验证」。</div>
+      <div class="card">⚡ <b>效率成为 T2-3D 的硬指标</b>：Block3D 用分块扩散把端到端时间砍到 1/5，SemanticSlider3D 走免训练编辑路线——生成质量之外，<b>推理成本与可编辑性</b>正被放进同一张评分表。</div>
+      <div class="card">🗂️ <b>部件级可控生成显著升温</b>（8 篇）：MegaParts 撑到 300 部件、MultiCube 控部件语义与空间、SCULPT 用减材组合，与 Buffalo / PartMat 的部件生成主线形成合力。</div>
     </div>
-    <div class="callout" style="margin-top:16px">📌 <b>检索说明：</b>数据来源 ArXiv（cs.CV / cs.GR / cs.AI，提交日期 ≥ 2026-06-01，人工筛选）；8 月 6 日新增 3 篇（WorldClaw / HoloWorld / FlexSplat，API 限流期间以 WebSearch 补充检索）。8 月数据截至 2026-08-12，合集将持续更新。</div>
+    <div class="callout" style="margin-top:16px">📌 <b>检索说明：</b>本轮（8/9–8/31）检索以 arXivDaily「3D 视觉」专题（3D 生成 / Gaussian Splatting / 三维重建 / 新视角合成四个子专题，逐日遍历）为主源，逐篇人工筛选，并保留 arXiv ID 以 <code>2608</code> 开头（2026 年 8 月首次提交）的论文——共得 28 篇，按页面既有五分类归档（统一多模态 1 / 文图生 3D 8 / FF 重建 10 / 场景生成 3 / 部件编辑 6）。已剔除医学影像、SLAM、自动驾驶数据、遥感、天文、纯压缩加速与对抗攻击等方向。检索期间 arXiv 官方 API 持续 429/503 限流，故未采用 API 全量拉取；8 月上半月数据沿用 8/12 那轮检索结果。<span class="rw-new">NEW</span> 标记为本轮新增。</div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">3D-Research · 前沿追踪合集 · 更新于 2026-08-12 · <a href="../index.html">返回首页</a></div>
+  <div class="wrap">3D-Research · 前沿追踪合集 · 更新于 2026-08-31 · <a href="../index.html">返回首页</a></div>
 </footer>
 
 <script>
@@ -275,14 +300,20 @@ document.querySelectorAll('.dir-tab').forEach(btn=>{
 const FONT={family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",size:12};
 Chart.defaults.font=FONT; Chart.defaults.color='#4b5a6e';
 new Chart(document.getElementById('catDonut'),{type:'doughnut',
-  data:{labels:['Feed-forward 重建 12','文/图生 3D 7','场景/世界生成 6','部件/纹理/编辑 2','统一多模态 1'],
-    datasets:[{data:[12,7,6,2,1],backgroundColor:['#0d9488','#2563eb','#ea8a3c','#f97066','#8b5cf6'],borderColor:'#fff',borderWidth:3}]},
+  data:{labels:['Feed-forward 重建 22','文/图生 3D 15','场景/世界生成 9','部件/纹理/编辑 8','统一多模态 2'],
+    datasets:[{data:[22,15,9,8,2],backgroundColor:['#0d9488','#2563eb','#ea8a3c','#f97066','#8b5cf6'],borderColor:'#fff',borderWidth:3}]},
   options:{maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:14,padding:10}}}}});
 new Chart(document.getElementById('monthBar'),{type:'bar',
-  data:{labels:['2026-06','2026-07','2026-08（截至 8/6）'],
-    datasets:[{data:[3,11,14],backgroundColor:['#b6c2d2','#6366f1','#2563eb'],borderRadius:8}]},
+  data:{labels:['2026-06','2026-07','2026-08 上半月','2026-08 下半月'],
+    datasets:[{data:[3,11,14,28],backgroundColor:['#b6c2d2','#6366f1','#93a5f5','#2563eb'],borderRadius:8}]},
   options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{y:{beginAtZero:true,title:{display:true,text:'论文数（篇）'},ticks:{stepSize:2}}}}});
+    scales:{y:{beginAtZero:true,title:{display:true,text:'论文数（篇）'},ticks:{stepSize:5}}}}});
 </script>
 </body>
 </html>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">MegaParts</span><span class="rw-year">08-18</span></div><span class="rw-cat cat-part">部件生成</span><span class="rw-new">NEW</span><p class="rw-desc">Token 高效的 VQ 形状 tokenizer + 结构化序列自回归，把部件感知 3D 生成规模推到 300 个部件，显著超越基线。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.14783" target="_blank">arXiv:2608.14783</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">MultiCube</span><span class="rw-year">08-24</span></div><span class="rw-cat cat-part">组合式生成</span><span class="rw-new">NEW</span><p class="rw-desc">Roblox / CMU / Stanford：两阶段扩散 + 部件布局适配器，实现部件级语义与空间位置的精确控制的组合式 3D 生成，布局独特且质量高。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.20448" target="_blank">arXiv:2608.20448</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SCULPT</span><span class="rw-year">08-14</span></div><span class="rw-cat cat-part">部件生成</span><span class="rw-new">NEW</span><p class="rw-desc">减材（subtractive）组合式 3D 部件生成，缓解现有方法的部件边界问题；PartObjaverse 上几何最优，并支持细粒度纹理部件分解。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.13541" target="_blank">arXiv:2608.13541</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">SemanticSlider3D</span><span class="rw-year">08-20</span></div><span class="rw-cat cat-part">3D 编辑</span><span class="rw-new">NEW</span><p class="rw-desc">免训练连续语义编辑：在先进 3D 生成模型的潜空间中构造语义编辑方向，以「滑块」方式连续调节物体语义属性，可直接嵌入现有 3D 创作流程。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.18560" target="_blank">arXiv:2608.18560</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">CoGeo-GS</span><span class="rw-year">08-28</span></div><span class="rw-cat cat-part">3D 场景编辑</span><span class="rw-new">NEW</span><p class="rw-desc">概念驱动 + 几何感知的 3D 场景多物体移除：概念感知语义标签定位目标，几何感知补全流水线修复空洞，视觉质量与重建保真度优于现有方法。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.26656" target="_blank">arXiv:2608.26656</a></div></div>
+      <div class="rw-card" data-cat="part"><div class="rw-top"><span class="rw-name">Gen2Physics</span><span class="rw-year">08-24</span></div><span class="rw-cat cat-part">材质/物理属性</span><span class="rw-new">NEW</span><p class="rw-desc">让生成的 mesh 直接可用于仿真：微调 ViT 做稠密材质分割 + 鲁棒的 2D→3D 一致性投影，把生成网格自动分解为材质组成并赋予物理属性（区别于体素方案，直接作用于 mesh）。</p><div class="rw-links"><a href="https://arxiv.org/abs/2608.23869" target="_blank">arXiv:2608.23869</a></div></div>
