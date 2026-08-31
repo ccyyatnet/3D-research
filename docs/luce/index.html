@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Luce 深度解读 · 可重光照 PBR 高斯 · 3D-Research</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:32px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:920px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:330px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#f0f6ff;font-weight:600}
+  tr.ours:hover td{background:#e6efff}
+  tr.dim td{color:var(--ink3)}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .sub-h .t.orange{background:#fde8d4;color:#b45309}
+  .sub-h .t.teal{background:#d5f2ee;color:#0f766e}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--teal)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#d5f2ee;color:#0f766e;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#position">② 定位</a>
+      <a href="#method">③ 方法</a>
+      <a href="#exp">④ 实验</a>
+      <a href="#cost">⑤ 训练成本</a>
+      <a href="#limits">⑥ 局限</a>
+      <a href="#takeaway">⑦ 启示</a>
+      <a href="../pbr-materials/index.html" style="font-weight:700;color:#0d9488">PBR 专题 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-08-31 · arXiv:2608.23943v1 · Apple</span>
+    <h1><em>Luce</em>：把 PBR 材质写进高斯原语<br>可重光照的 3D 资产生成</h1>
+    <p class="sub">
+      Luce 用一组<strong>体素化多模态高斯云</strong>统一表示几何与物理材质：每个被占据的体素内，albedo、metallic-roughness、surface normal 各有<strong>一套独立的高斯原语</strong>，而非共享。
+      VAE 压缩成统一的 material-aware latent，rectified-flow transformer 从单图生成该 latent，解码即可直接丢进标准 PBR 渲染管线重打光。
+      在 Toys4K 上 FID <strong>20.99</strong>，比最强 baseline（TRELLIS 2 的 29.22）低 <strong>28%</strong>。
+    </p>
+    <div class="meta">
+      <span class="pill">Mayank Singh 等 10 人 · Apple</span>
+      <span class="pill">arXiv:2608.23943v1 [cs.CV] · 2026-08-25</span>
+      <span class="pill">33 页 · 5 表 · 19 图 · 6 附录</span>
+      <span class="pill">P0 · 唯一产出完整 PBR 三件套的生成工作</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>−28%</b><span>Toys4K FID 相对最强 baseline（20.99 vs 29.22）</span></div>
+      <div class="stat"><b>0.8519</b><span>AI 生成图基准 CLIP 对齐（best baseline 0.8299）</span></div>
+      <div class="stat"><b>42.2 s</b><span>单图生成耗时（H100），TRELLIS 2 需 176.7 s</span></div>
+      <div class="stat"><b>4.48 B</b><span>模型参数，比 TRELLIS 2 的 7.48 B 少 40%</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= ① 结论先行 ================= -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 01 · Bottom Line</div>
+      <h2>结论先行</h2>
+      <p>如果只有三分钟，看这四张卡。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl">
+        <span class="n">结论 01</span>
+        <h4>它是合集中唯一「生成即 PBR」的工作</h4>
+        <p>
+          在 183 篇 6–8 月 3D 生成论文里，<a href="../pbr-materials/index.html">PBR 专题</a>抽出 25 篇材质相关工作，
+          其中<strong>只有 Luce 一篇</strong>能直接产出 glTF 式的 albedo / metallic-roughness / normal 三件套。
+          其余要么只做逆渲染（不生成），要么把光照烘进颜色（不可重光照）。
+        </p>
+      </div>
+
+      <div class="concl c-green">
+        <span class="n">结论 02</span>
+        <h4>最大的单项增益来自一个 conditioning 改动</h4>
+        <p>
+          把 DINOv2 从单层（layer 24）换成<strong>多层拼接（layers 6/12/18/24）</strong>，
+          Toys4K FID 从 25.21 降到 20.99（<strong>−16.7%</strong>），AI 图基准 CLIP 从 0.8081 升到 0.8519（<strong>+5.4%</strong>）。
+          这是全文性价比最高的一处改动——不动架构，只改条件注入。
+        </p>
+      </div>
+
+      <div class="concl c-orange">
+        <span class="n">结论 03</span>
+        <h4>per-modality 解耦是「文字可读」的关键</h4>
+        <p>
+          三组高斯<strong>各有独立的位置/尺度/旋转/不透明度</strong>，可以按自身细节密度分配容量：
+          抛光木纹需要密集 albedo 高斯但法线平滑，拉丝金属则相反。共享一套会让三个模态互相抢原语。
+          这正是 Luce 能在表面上保住 logo、标签、铭文的原因。
+        </p>
+      </div>
+
+      <div class="concl c-purple">
+        <span class="n">结论 04</span>
+        <h4>它没做的，恰好是透明材质调研的靶心</h4>
+        <p>
+          作者明确列出<strong>未建模</strong>的效果：subsurface scattering、anisotropy、<strong>translucency</strong>、
+          thin-film interference、强视角相关反射。其中 translucency 与
+          <a href="../transparent-materials/index.html">透明材质调研</a>的靶心完全重合——需求侧（本页 §6）与供给侧（专题统计零覆盖）再次互证。
+        </p>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      🎯 <b>一句话定位：</b>Luce 不是「生成后再逆渲染出材质」，而是<strong>把材质作为表示本身的一部分</strong>——
+      高斯原语上直接参数化 PBR 三模态，所以生成出来的东西<em>天生</em>可重光照、天生能进生产管线。
+      这是它区别于 TRELLIS 2 / LiTo 的根本设计选择，而不是指标上的小幅领先。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ② 定位 ================= -->
+<section id="position" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 02 · Where It Sits</div>
+      <h2>在 PBR 生产管线里的位置</h2>
+      <p>对照 <a href="../pbr-materials/index.html">PBR 专题</a> 的五层管线，Luce 落在 <b>L3 生成式材质</b>，并且是唯一一条走通到 glTF 的链路。</p>
+    </div>
+
+    <div class="card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>管线层</th><th>做什么</th><th>合集中篇数</th><th>Luce 的位置</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><b>L1 采集</b></td><td>多视角 / 光照舞台捕获原始数据</td><td>3 篇</td><td>—</td></tr>
+            <tr><td><b>L2 逆渲染</b></td><td>从图像反推 albedo / roughness / normal</td><td>10 篇</td><td>用它做<b>数据预处理</b>（拟合多模态高斯的监督源），非贡献点</td></tr>
+            <tr class="ours"><td><b>L3 生成式材质</b></td><td>直接生成带 PBR 属性的 3D 资产</td><td>3 篇</td><td><b>核心贡献</b>：唯一端到端产出三件套</td></tr>
+            <tr><td><b>L4 结构分解</b></td><td>部件级语义拆分</td><td>2 篇</td><td>—</td></tr>
+            <tr><td><b>L5 纹理 / UV 烘焙</b></td><td>把表示烘成贴图贴到网格上</td><td>3 篇</td><td><b>次要贡献</b>：§3.4 切线空间法线烘焙</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="block-title c-teal">glTF 2.0 材质通道覆盖：Luce 命中 3 / 9</h3>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>glTF 2.0 通道</th><th>Luce 是否产出</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>baseColorTexture</code></td><td><span class="badge-tag tag-good">✓ 命中</span></td><td>albedo 高斯 → diffuse 贴图，或 GS 直接 splat</td></tr>
+            <tr><td><code>metallicRoughnessTexture</code></td><td><span class="badge-tag tag-good">✓ 命中</span></td><td>metallic-roughness 高斯，合成单通道对（论文 Fig.1 用 R=metallic, G=roughness 可视化）</td></tr>
+            <tr><td><code>normalTexture</code></td><td><span class="badge-tag tag-good">✓ 命中</span></td><td>§3.4 烘焙成<b>切线空间</b>法线贴图，而非物体空间</td></tr>
+            <tr><td><code>occlusionTexture</code></td><td><span class="badge-tag tag-bad">✗ 无</span></td><td>由 IBL 漫反射辐照度项隐式处理，不单独输出</td></tr>
+            <tr><td><code>emissiveTexture</code></td><td><span class="badge-tag tag-bad">✗ 无</span></td><td>表示中没有自发光通道</td></tr>
+            <tr><td><code>KHR_materials_transmission</code></td><td><span class="badge-tag tag-bad">✗ 无</span></td><td>§6 明确列为未建模（translucency）</td></tr>
+            <tr><td><code>KHR_materials_ior</code></td><td><span class="badge-tag tag-bad">✗ 无</span></td><td>折射率未参数化</td></tr>
+            <tr><td><code>KHR_materials_volume</code></td><td><span class="badge-tag tag-bad">✗ 无</span></td><td>体内散射未建模</td></tr>
+            <tr><td><code>KHR_materials_clearcoat</code> / <code>sheen</code> / <code>anisotropy</code></td><td><span class="badge-tag tag-bad">✗ 无</span></td><td>Cook–Torrance 单层模型，无第二镜面瓣、无各向异性</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="summary-box">
+        <b>读法：</b>Luce 覆盖的是「标准不透明硬表面材质」这一最大公约数——金属-粗糙度工作流 + 切线法线，
+        这已经能吃下玩具、家电、器械等绝大多数常见资产。但凡是涉及<strong>透光、次表面、各向异性、薄膜</strong>的材质（玻璃、玉石、皮肤、织物、车漆），
+        它的表示里<em>根本没有对应的通道</em>，不是精度不够而是<strong>无槽位可放</strong>。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ③ 方法 ================= -->
+<section id="method">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 03 · Method</div>
+      <h2>方法拆解</h2>
+      <p>四个组件，每个解决一个具体问题。§3.1 解决「表示什么」，§3.2 解决「怎么压缩」，§3.3 解决「怎么生成 + 怎么保细节」，§3.4 解决「怎么对接生产管线」。</p>
+    </div>
+
+    <!-- 总览图 -->
+    <div class="svg-card">
+      <svg viewBox="0 0 940 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Luce 整体管线流程图">
+        <defs>
+          <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3.2" orient="auto">
+            <path d="M0,0 L0,6.4 L8,3.2 z" fill="#8494a9"/>
+          </marker>
+          <marker id="ar-b" markerWidth="9" markerHeight="9" refX="8" refY="3.2" orient="auto">
+            <path d="M0,0 L0,6.4 L8,3.2 z" fill="#2563eb"/>
+          </marker>
+        </defs>
+
+        <!-- 输入 -->
+        <rect x="14" y="150" width="88" height="76" rx="9" fill="#eef2fb" stroke="#c7d7f5" stroke-width="1.5"/>
+        <text x="58" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#1a2332">输入</text>
+        <text x="58" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#1a2332">单图 1024²</text>
+
+        <!-- DINOv2 -->
+        <rect x="126" y="138" width="112" height="100" rx="9" fill="#e0f2f1" stroke="#7fcdc4" stroke-width="1.5"/>
+        <text x="182" y="164" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">DINOv2</text>
+        <text x="182" y="182" text-anchor="middle" font-size="11" fill="#0f766e">multi-layer</text>
+        <text x="182" y="198" text-anchor="middle" font-size="11" fill="#0f766e">L6 · L12 · L18 · L24</text>
+        <text x="182" y="216" text-anchor="middle" font-size="10.5" fill="#0f766e">拼接后线性投影</text>
+
+        <!-- Structure stage -->
+        <rect x="264" y="34" width="150" height="82" rx="9" fill="#f6f9ff" stroke="#b9cdf5" stroke-width="1.5" stroke-dasharray="5 3"/>
+        <text x="339" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">① 稀疏结构 Flow</text>
+        <text x="339" y="76" text-anchor="middle" font-size="10.5" fill="#4b5a6e">12 steps</text>
+        <text x="339" y="93" text-anchor="middle" font-size="10" fill="#8494a9">复用 TRELLIS 2 预训练</text>
+        <text x="339" y="107" text-anchor="middle" font-size="10" fill="#8494a9">（未修改）</text>
+
+        <!-- SLatFlow -->
+        <rect x="264" y="152" width="150" height="72" rx="9" fill="#e0e9ff" stroke="#8aaef5" stroke-width="1.5"/>
+        <text x="339" y="176" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">② SLatFlow</text>
+        <text x="339" y="193" text-anchor="middle" font-size="10.5" fill="#4b5a6e">rectified-flow DiT · 10 steps</text>
+        <text x="339" y="209" text-anchor="middle" font-size="10.5" fill="#4b5a6e">30 blocks · 1536 ch · RoPE</text>
+
+        <!-- latent z -->
+        <rect x="448" y="152" width="96" height="72" rx="9" fill="#fff4e0" stroke="#eab66b" stroke-width="1.5"/>
+        <text x="496" y="178" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b45309">latent z</text>
+        <text x="496" y="196" text-anchor="middle" font-size="10.5" fill="#b45309">32 ch / voxel</text>
+        <text x="496" y="211" text-anchor="middle" font-size="10" fill="#b45309">几何+材质联合</text>
+
+        <!-- 分支 A: 高斯解码 -->
+        <rect x="576" y="30" width="150" height="66" rx="9" fill="#e4f7ec" stroke="#86d9a8" stroke-width="1.5"/>
+        <text x="651" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#15803d">③A 高斯解码器</text>
+        <text x="651" y="70" text-anchor="middle" font-size="10.5" fill="#15803d">predicts K Gaussians</text>
+        <text x="651" y="85" text-anchor="middle" font-size="10.5" fill="#15803d">per voxel per modality</text>
+
+        <!-- 三模态 -->
+        <rect x="576" y="112" width="46" height="52" rx="7" fill="#fff" stroke="#cfe3d8" stroke-width="1.2"/>
+        <text x="599" y="134" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Gᵃˡᵇ</text>
+        <text x="599" y="148" text-anchor="middle" font-size="9" fill="#8494a9">albedo</text>
+        <rect x="628" y="112" width="46" height="52" rx="7" fill="#fff" stroke="#cfe3d8" stroke-width="1.2"/>
+        <text x="651" y="134" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Gᵐʳ</text>
+        <text x="651" y="148" text-anchor="middle" font-size="9" fill="#8494a9">metal/rough</text>
+        <rect x="680" y="112" width="46" height="52" rx="7" fill="#fff" stroke="#cfe3d8" stroke-width="1.2"/>
+        <text x="703" y="134" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Gⁿᵒʳ</text>
+        <text x="703" y="148" text-anchor="middle" font-size="9" fill="#8494a9">normal</text>
+
+        <!-- Deferred shading -->
+        <rect x="748" y="30" width="178" height="134" rx="9" fill="#f0fdf5" stroke="#86d9a8" stroke-width="1.5"/>
+        <text x="837" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#15803d">Deferred PBR Shading</text>
+        <text x="837" y="74" text-anchor="middle" font-size="10.5" fill="#4b5a6e">split-sum IBL +</text>
+        <text x="837" y="89" text-anchor="middle" font-size="10.5" fill="#4b5a6e">Cook–Torrance GGX</text>
+        <text x="837" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">→ 任意环境贴图</text>
+        <text x="837" y="130" text-anchor="middle" font-size="10" fill="#8494a9">无需网格 / 无需 UV</text>
+        <text x="837" y="148" text-anchor="middle" font-size="10.5" font-weight="700" fill="#15803d">42.2 s · 36.1 dB PSNR</text>
+
+        <!-- 分支 B: mesh -->
+        <rect x="576" y="252" width="150" height="66" rx="9" fill="#f3e8ff" stroke="#c9a6f5" stroke-width="1.5"/>
+        <text x="651" y="274" text-anchor="middle" font-size="12.5" font-weight="700" fill="#7c3aed">③B FlexiCubes 解码</text>
+        <text x="651" y="292" text-anchor="middle" font-size="10.5" fill="#7c3aed">架构沿用 TRELLIS</text>
+        <text x="651" y="307" text-anchor="middle" font-size="10.5" fill="#7c3aed">在我们的 latent 上重训</text>
+
+        <!-- bake -->
+        <rect x="748" y="252" width="178" height="118" rx="9" fill="#faf5ff" stroke="#c9a6f5" stroke-width="1.5"/>
+        <text x="837" y="276" text-anchor="middle" font-size="12.5" font-weight="700" fill="#7c3aed">④ 贴图烘焙</text>
+        <text x="837" y="296" text-anchor="middle" font-size="10.5" fill="#4b5a6e">albedo · metallic · roughness</text>
+        <text x="837" y="311" text-anchor="middle" font-size="10.5" fill="#4b5a6e">+ tangent-space normal</text>
+        <text x="837" y="334" text-anchor="middle" font-size="11" font-weight="700" fill="#7c3aed">→ glTF 可导入</text>
+        <text x="837" y="352" text-anchor="middle" font-size="10" fill="#8494a9">法线 PSNR 29.5 → 33.0 dB</text>
+
+        <!-- arrows -->
+        <line x1="104" y1="188" x2="124" y2="188" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+        <line x1="240" y1="188" x2="262" y2="188" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+        <line x1="416" y1="188" x2="446" y2="188" stroke="#2563eb" stroke-width="1.8" marker-end="url(#ar-b)"/>
+        <path d="M339,116 L339,150" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+        <path d="M496,152 C496,90 540,63 574,63" stroke="#2563eb" stroke-width="1.8" fill="none" marker-end="url(#ar-b)"/>
+        <path d="M496,224 C496,290 540,285 574,285" stroke="#2563eb" stroke-width="1.8" fill="none" marker-end="url(#ar-b)"/>
+        <path d="M651,98 L651,110" stroke="#8494a9" stroke-width="1.4" marker-end="url(#ar)"/>
+        <path d="M651,116 L651,110" stroke="#8494a9" stroke-width="1.4"/>
+        <line x1="599" y1="166" x2="599" y2="176" stroke="#8494a9" stroke-width="1.2"/>
+        <path d="M599,176 L820,176 L820,166" stroke="#8494a9" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+        <line x1="728" y1="285" x2="746" y2="285" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <!-- 图例 -->
+        <text x="14" y="368" font-size="11" fill="#8494a9">虚线框 = 直接复用 TRELLIS 2 预训练权重，未重训 · 实线框 = Luce 自己的贡献</text>
+        <text x="14" y="386" font-size="11" fill="#8494a9">同一份 latent 双路解码：GS 路径 42.2 s 出可重光照资产，mesh 路径 159.2 s 出带四张贴图的网格</text>
+      </svg>
+      <div class="svg-cap">图 1 · Luce 整体管线（对应原论文 Figure 3）。关键在 latent <code>z</code> 之后的分叉：GS 路径是主输出，mesh 路径是为了和 baseline 公平比较而做的适配。</div>
+    </div>
+
+    <!-- 3.1 -->
+    <h3 class="block-title c-green">3.1 多模态 PBR 高斯表示</h3>
+
+    <div class="grid2">
+      <div>
+        <div class="sub-h"><span class="t teal">核心设计</span>每个体素三套独立高斯</div>
+        <p style="font-size:13.8px;color:var(--ink2)">
+          资产是一组附着在<strong>稀疏体素</strong>上的高斯。每个被占据的体素内，三个模态
+          <code>ℳ = {alb, mr, nor}</code> 各有 <code>K</code> 个高斯，每个高斯带
+          <strong>自己的</strong>位置偏移 <code>p</code>、各向异性尺度 <code>s</code>、旋转四元数 <code>q</code>、不透明度 <code>o</code>，
+          外加一个与视角无关的模态值 <code>c</code>（albedo 为 RGB、mr 为 metallic+roughness、nor 为法线方向）。
+        </p>
+        <div class="eq">
+          F<sub>i</sub> = { G<sub>i</sub><sup>m</sup> }<sub>m∈ℳ</sub>,&nbsp;&nbsp;
+          G<sub>i</sub><sup>m</sup> = { (p<sup>m</sup><sub>ij</sub>, s<sup>m</sup><sub>ij</sub>, q<sup>m</sup><sub>ij</sub>, o<sup>m</sup><sub>ij</sub>, c<sup>m</sup><sub>ij</sub>) }<sup>K</sup><sub>j=1</sub>
+          <span class="cmt">— 式 (2)：体素 i 内的完整表示</span>
+        </div>
+        <div class="callout ok" style="margin-top:12px">
+          <b>为什么要「独立」而不是「共享」？</b>论文给的例子很直观：抛光木纹需要密集的 albedo 高斯去抓木纹，但法线是平滑的；
+          拉丝金属恰好相反——albedo 近乎均匀，metallic-roughness 和法线却要密集去抓划痕。
+          <strong>共享一套会强迫三个模态抢同一批原语</strong>，容量分配不由细节密度决定，而是被平均掉。
+        </div>
+        <div class="summary-box">
+          <b>顺带推出的 K：</b>Table 3 给出 SLatVAE 输入通道 <code>336</code>。
+          单高斯参数量 = p(3) + s(3) + q(4) + o(1) + c(3) = <code>14</code>，
+          故 <code>336 ÷ (3 模态 × 14) = 8</code> → <strong>每体素每模态 K = 8 个高斯</strong>（论文未在正文显式给出，此为推算）。
+        </div>
+      </div>
+
+      <div>
+        <div class="sub-h"><span class="t orange">渲染</span>不存球谐，靠解析着色</div>
+        <p style="font-size:13.8px;color:var(--ink2)">
+          每个模态独立做标准 3DGS alpha 合成，得到逐像素的 albedo <code>a</code>、metallic <code>κ</code>、
+          roughness <code>α</code>、法线 <code>n</code>、不透明度 <code>o</code>（法线合成后重新归一化）。
+          然后用 <strong>split-sum IBL + Cook–Torrance microfacet BRDF</strong> 着色：
+        </p>
+        <div class="eq">
+          L<sub>o</sub><sup>IBL</sup>(ω<sub>o</sub>) ≈ [(1−κ)·a/π] · E(n) + L<sub>pref</sub>(r, α) · [F<sub>0</sub>·A(μ<sub>o</sub>,α) + B(μ<sub>o</sub>,α)]
+          <span class="cmt">— 式 (1)：漫反射辐照度项 + 预滤波镜面项</span><br>
+          <span class="cmt">F₀ = (1−κ)·0.04 + κ·a &nbsp;（标准金属工作流：介电体取 0.04，金属取 albedo 作彩色镜面）</span>
+        </div>
+        <ul class="tight">
+          <li><b>与原始 3DGS 的关键差异：</b><strong>不存球谐系数</strong>。视角相关的外观由 PBR 合成<em>解析地</em>产生，而不是靠 SH 拟合。这是「可重光照」的技术根源——SH 把光照烘进了表示，PBR 没有。</li>
+          <li><b>法线是显式存储的，不是从形状推的。</b>所以它可以<em>偏离</em>底层几何，这正是 §3.4 能做切线空间法线烘焙的前提。</li>
+          <li><b>无需网格提取、无需 UV 展开</b>就能着色出图。论文 Fig.10 把这套 deferred renderer 与 Blender EEVEE 做了定性对比。</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 3.2 -->
+    <h3 class="block-title c-indigo">3.2 SLatVAE：拿空间分辨率换每体素密度</h3>
+
+    <div class="grid2">
+      <div>
+        <p style="font-size:13.8px;color:var(--ink2)">
+          原始多模态高斯云维度高、结构稀疏，直接上生成模型代价太大。SLatVAE 把它压成紧凑的逐体素 latent。
+        </p>
+        <div class="sub-h"><span class="t">Encoder</span>降分辨率</div>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          稀疏 transformer + <strong>shifted-window attention</strong>，把体素网格从分辨率 <code>d</code> 下采样到更粗的 <code>d′ &lt; d</code>，
+          输出 <code>z ∈ ℝ^(N_v^{d′³} × C)</code>，<code>C = 32</code>。
+        </p>
+        <div class="sub-h"><span class="t">Decoder</span>提密度</div>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          在粗 latent 分辨率上运行（省算力），<strong>通过预测更多每体素高斯来补偿丢失的分辨率</strong>。
+          这是整个 VAE 设计里最值得抄的一条。
+        </p>
+        <div class="callout">
+          💡 <b>「降分辨率 → 提密度」是一个通用的显存-细节权衡技巧。</b>
+          latent 网格小 → attention 序列短 → 扩散便宜；但每个 token 携带的高斯数多 → 重建时细节不丢。
+          比「保持高分辨率、压缩通道」更适合稀疏 3D 结构。
+        </div>
+      </div>
+
+      <div>
+        <div class="sub-h"><span class="t orange">训练目标</span>渲染监督，不是 latent MSE</div>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          端到端训练，沿用 TRELLIS 的<strong>基于渲染的重建损失</strong>：解码出的高斯按模态分别可微渲染，与 GT intrinsic 图比对。
+        </p>
+        <div class="eq">
+          L = λ<sub>ℓ1</sub>·ℓ<sub>1</sub> + λ<sub>LPIPS</sub>·LPIPS + λ<sub>SSIM</sub>·SSIM + λ<sub>KL</sub>·KL + λ<sub>vol</sub>·L<sub>vol</sub> + λ<sub>o</sub>·L<sub>o</sub>
+          <span class="cmt">— 附录 A：1.0 / 0.2 / 0.2 / 1e-3 / 1e4 / 1e-3</span>
+        </div>
+        <ul class="tight">
+          <li><b>KL 权重只有 1e-3</b> —— 极弱。latent 几乎不被压向标准正态，优先保重建质量。</li>
+          <li><b>体积正则 λ<sub>vol</sub> = 1e4</b> —— 全文最大的系数。压制高斯尺度膨胀，防止「用大团高斯糊过去」。</li>
+          <li><b>不透明度正则 λ<sub>o</sub> = 1e-3</b> —— 抑制漂浮的半透明高斯（3DGS 类方法的常见伪影）。</li>
+        </ul>
+        <div class="summary-box">
+          <b>为什么渲染监督重要：</b>latent MSE 会让模型去拟合<em>参数空间的数值</em>，
+          但高斯参数与视觉质量之间没有单调关系（位置微调 0.01 可能视觉无损也可能崩掉）。
+          在<strong>渲染结果</strong>上算损失，梯度才真正对齐「人眼看到的对不对」。
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.3 -->
+    <h3 class="block-title c-purple">3.3 Flow 生成 + 多层 DINOv2 条件注入</h3>
+
+    <div class="grid2">
+      <div>
+        <div class="sub-h"><span class="t">两阶段</span>结构先，latent 后</div>
+        <ul class="tight">
+          <li><b>阶段 ① 稀疏结构生成：</b>直接<strong>复用 TRELLIS 2 的 sparse-structure VAE 与 flow，未做任何修改</strong>。输入条件图，输出被占据的体素集合，作为下一阶段的脚手架。</li>
+          <li><b>阶段 ② latent 生成（SLatFlow）：</b>DiT 风格 transformer，适配稀疏 3D latent——每个样本的活跃体素构成<strong>变长 token 序列</strong>，用 flash varlen attention。时间步经 adaLN（6-way）调制，图像特征经 cross-attention 注入。时间步采样用 logit-normal(μ=1, σ=1)。</li>
+        </ul>
+        <div class="callout ok">
+          ⚡ <b>值得注意的工程决策：结构阶段直接白嫖 TRELLIS 2。</b>
+          Luce 只重训了 latent 阶段（含 VAE + flow），把「哪些体素被占据」这件事外包给现成模型。
+          这意味着它省掉了整整一套 64 卡 ×14 天的训练（见 §5）——<strong>把算力全部压在自己的差异化贡献上</strong>。
+        </div>
+
+        <div class="sub-h"><span class="t teal">双解码</span>一份 latent，两条出路</div>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          主输出是 PBR 高斯云（GS 路径，42.2 s）。为了与以 mesh 为主输出的 baseline 公平比较，
+          同一份 latent 也用 <strong>FlexiCubes</strong> 解码成网格——架构沿用 TRELLIS 未改，只是在 Luce 的 latent 空间上重训。
+        </p>
+      </div>
+
+      <div>
+        <div class="sub-h"><span class="t orange">核心增益</span>Multi-layer DINOv2</div>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          冻结的 ViT 里，<strong>浅层携带精细空间结构，深层携带语义</strong>。Luce 把多个 layer 的特征拼接后线性投影：
+        </p>
+        <div class="eq">
+          h = W<sub>proj</sub> · [ f<sub>ℓ₁</sub>; f<sub>ℓ₂</sub>; …; f<sub>ℓ_L</sub> ] + b<sub>proj</sub>,&nbsp; ℓ ∈ {6, 12, 18, 24}
+          <span class="cmt">— 式 (3)</span>
+        </div>
+        <div class="chart-box" style="height:250px">
+          <canvas id="ablChart"></canvas>
+        </div>
+        <div class="chart-note">
+          图 2 · 多层 vs 单层 DINOv2 条件的相对改善（Table 4）。CLIP 类指标为「越高越好」的改善幅度，FID/KID 类为「越低越好」的下降幅度。
+          <b>AI 生成图基准上的 CLIP 改善（+5.4%）是 Toys4K 上（+0.95%）的 5.7 倍。</b>
+        </div>
+        <div class="callout warn">
+          🔍 <b>这个非对称很说明问题：</b>Toys4K 是真实玩具照片，AI 生成图基准是 130 张富含文字/logo/铭文的高细节图。
+          多层特征在后者上收益远大于前者，说明<strong>它补的是高频空间细节，而不是语义理解</strong>——
+          深层特征已经够语义了，浅层补的是「这个字母到底长什么样」。
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.4 -->
+    <h3 class="block-title c-teal">3.4 切线空间法线贴图烘焙</h3>
+
+    <div class="grid2">
+      <div>
+        <div class="sub-h"><span class="t">问题</span>网格提取被体素分辨率卡住频率上限</div>
+        <p style="font-size:13.8px;color:var(--ink2)">
+          从体素网格提取网格，几何频率的上限就是网格分辨率。<strong>亚体素的表面特征</strong>——
+          雕刻、织物纹理、压印文字——在提取出的几何里根本不存在。
+        </p>
+        <div class="sub-h"><span class="t teal">解法</span>让法线高斯去学「被扰动后的有效法线」</div>
+        <ul class="tight">
+          <li>关键前提：<strong>PBR 高斯与网格是解耦的</strong>。所以可以拿<em>施加了作者法线贴图之后的有效法线</em>去监督法线高斯——也就是让它学一个比网格能表示的频率<strong>更细</strong>的表面朝向。</li>
+          <li>推理时：把解码出的法线高斯表达在<strong>网格的局部切线坐标系</strong>里，得到 UV 参数化曲面上的切线空间法线贴图。</li>
+          <li>最终网格带<strong>四张贴图</strong>：diffuse(albedo)、metallic、roughness、tangent-space normal —— 直接可导入生产渲染器。</li>
+        </ul>
+      </div>
+      <div>
+        <div class="sub-h"><span class="t orange">收益</span>零面数代价</div>
+        <div class="grid2" style="gap:12px;margin-top:8px">
+          <div class="stat" style="margin:0">
+            <b>29.5 → 33.0 dB</b>
+            <span>mesh 法线 PSNR（Table 2）</span>
+          </div>
+          <div class="stat" style="margin:0">
+            <b>+3.5 dB</b>
+            <span>且多边形数不变</span>
+          </div>
+        </div>
+        <div class="summary-box" style="margin-top:14px">
+          <b>连带收益：</b>烘焙法线还<em>顺带提升了颜色重建</em>——Table 2 中 mesh color PSNR 从 31.1 升到 32.5 dB，
+          LPIPS 从 0.091 降到 0.080。原因是着色时用了更准确的法线，漫反射与高光都更对。
+        </div>
+        <div class="callout">
+          🧩 <b>这一步是把「生成模型」和「生产管线」缝合起来的地方。</b>
+          纯 GS 输出虽然能重光照，但进不了 Unity/Unreal/Blender 的标准资产流程；
+          纯 mesh 输出又丢高频细节。Luce 用「法线高斯 → 切线空间贴图」把两者的优点合起来：
+          细节来自高斯，载体是标准网格 + glTF 贴图。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ④ 实验 ================= -->
+<section id="exp" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 04 · Experiments</div>
+      <h2>实验结果</h2>
+      <p>两个基准：Toys4K（N=412，真实玩具照片）与论文自建的 130 张 AI 生成图（富含文字/logo）。所有指标均为单张 H100 上测得。</p>
+    </div>
+
+    <h3 class="block-title">4.2 生成质量（Table 1）</h3>
+    <div class="grid2" style="align-items:start">
+      <div>
+        <div class="chart-box" style="height:300px">
+          <canvas id="fidChart"></canvas>
+        </div>
+        <div class="chart-note">图 3 · Toys4K FID（越低越好）。Luce GS 20.99，比 TRELLIS 2 的 29.22 低 28.2%，比 LiTo 的 29.76 低 29.5%。</div>
+      </div>
+      <div>
+        <div class="chart-box" style="height:300px">
+          <canvas id="clipChart"></canvas>
+        </div>
+        <div class="chart-note">图 4 · 两个基准上的 CLIP 图像对齐（越高越好）。AI 图基准上 0.8519 vs TRELLIS GS 的 0.8299，即摘要中引用的数字。</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">方法</th><th rowspan="2">参数<br>(B)</th><th rowspan="2">耗时<br>(s)</th>
+              <th colspan="4" style="text-align:center;border-left:2px solid var(--line)">Toys4K (N=412)</th>
+              <th colspan="2" style="text-align:center;border-left:2px solid var(--line)">AI 生成图 (N=130)</th>
+            </tr>
+            <tr>
+              <th style="border-left:2px solid var(--line)">FID ↓</th><th>KID ↓</th><th>FID<sub>dino</sub> ↓</th><th>KID<sub>dino</sub> ↓</th>
+              <th style="border-left:2px solid var(--line)">CLIP ↑</th><th>SigLIP2 ↑</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="dim"><td>TRELLIS GS (2024)</td><td>1.70</td><td>29.56</td><td style="border-left:2px solid var(--line)">30.75</td><td>0.212</td><td>0.109</td><td>0.0013</td><td style="border-left:2px solid var(--line)">0.8299</td><td>0.8339</td></tr>
+            <tr class="dim"><td>TRELLIS mesh (2024)</td><td>1.80</td><td>50.86</td><td style="border-left:2px solid var(--line)">32.39</td><td>0.263</td><td>0.145</td><td>0.0039</td><td style="border-left:2px solid var(--line)">0.8000</td><td>0.7958</td></tr>
+            <tr class="dim"><td>3DTopia-XL (2025)</td><td>1.02</td><td>25.65</td><td style="border-left:2px solid var(--line)">83.23</td><td>2.726</td><td>0.542</td><td>0.0306</td><td style="border-left:2px solid var(--line)">0.6481</td><td>0.6458</td></tr>
+            <tr class="dim"><td>TRELLIS 2 (2025)</td><td>7.48</td><td>176.72</td><td style="border-left:2px solid var(--line)">29.22</td><td>0.165</td><td>0.129</td><td>0.0022</td><td style="border-left:2px solid var(--line)">0.8110</td><td>0.8166</td></tr>
+            <tr class="dim"><td>LiTo (2026)</td><td>1.84</td><td>76.41</td><td style="border-left:2px solid var(--line)">29.76</td><td>0.208</td><td>0.128</td><td>0.0025</td><td style="border-left:2px solid var(--line)">0.8234</td><td>0.8240</td></tr>
+            <tr class="ours"><td><b>Luce GS</b></td><td>4.48</td><td><b>42.20</b></td><td style="border-left:2px solid var(--line)"><b>20.99</b></td><td><b>0.033</b></td><td><b>0.100</b></td><td>0.0028</td><td style="border-left:2px solid var(--line)"><b>0.8519</b></td><td>0.8508</td></tr>
+            <tr class="ours"><td>Luce mesh（无切线法线）</td><td>4.58</td><td>148.13</td><td style="border-left:2px solid var(--line)">25.04</td><td>0.102</td><td>0.112</td><td>0.0019</td><td style="border-left:2px solid var(--line)">0.8505</td><td>0.8466</td></tr>
+            <tr class="ours"><td><b>Luce mesh（含切线法线）</b></td><td>4.58</td><td>159.16</td><td style="border-left:2px solid var(--line)">21.10</td><td>0.042</td><td>0.088</td><td><b>0.0006</b></td><td style="border-left:2px solid var(--line)">0.8508</td><td><b>0.9288</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="summary-box">
+        <b>三条读数：</b>
+        ① <b>GS 路径性价比最高</b>——42.2 s 拿下 FID/CLIP 双第一，耗时只有 TRELLIS 2 的 1/4.2，参数少 40%。
+        ② <b>mesh 路径的额外 106 s 几乎全花在网格提取与烘焙上</b>（42.2 → 148.1 s），法线烘焙本身只再加 11 s（148.13 → 159.16）。
+        ③ <b>KID<sub>dino</sub> 是唯一 Luce GS 落后的指标</b>（0.0028 vs TRELLIS GS 的 0.0013）；但烘焙成 mesh 后反超到 0.0006，全场最佳。
+        说明 GS 直接 splat 在 DINO 特征的分布尾部上略吃亏，而 mesh 的规整采样更合该指标的胃口——<strong>比较 KID<sub>dino</sub> 时务必对齐渲染路径</strong>。
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">4.3 重建质量（Table 2）· 论文没强调的那半张表</h3>
+    <div class="grid2" style="align-items:start">
+      <div>
+        <div class="chart-box" style="height:300px">
+          <canvas id="reconChart"></canvas>
+        </div>
+        <div class="chart-note">图 5 · Toys4K PBR 子集（N=338）上逐模态 PSNR。注意 albedo 与 metallic-roughness 两列 TRELLIS 2 反而更高。</div>
+      </div>
+      <div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>模态</th><th>Luce GS</th><th>TRELLIS 2</th><th>差值</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>Color</b> PSNR ↑</td><td><b>36.1</b></td><td>34.5</td><td><span class="badge-tag tag-good">+1.6</span></td></tr>
+              <tr><td><b>Albedo</b> PSNR ↑</td><td>38.6</td><td><b>40.7</b></td><td><span class="badge-tag tag-bad">−2.1</span></td></tr>
+              <tr><td><b>Albedo</b> LPIPS ↓</td><td>0.055</td><td><b>0.051</b></td><td><span class="badge-tag tag-mid">+0.004</span></td></tr>
+              <tr><td><b>Metal-Rough</b> PSNR ↑</td><td>39.1</td><td><b>42.7</b></td><td><span class="badge-tag tag-bad">−3.6</span></td></tr>
+              <tr><td><b>Normal</b> PSNR ↑</td><td><b>34.6</b></td><td>32.1</td><td><span class="badge-tag tag-good">+2.5</span></td></tr>
+              <tr style="border-top:2px solid var(--line)"><td><b>VAE 耗时</b> (s)</td><td><b>0.74</b></td><td>88.92</td><td><span class="badge-tag tag-good">120× 快</span></td></tr>
+              <tr><td><b>VAE 参数</b> (B)</td><td>1.82</td><td>1.66</td><td><span class="badge-tag tag-mid">+0.16</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warn" style="margin-top:14px">
+          ⚠️ <b>诚实的观察：Luce 的 VAE 在 albedo 与 metallic-roughness 的 PSNR 上输给了 TRELLIS 2（−2.1 / −3.6 dB）。</b>
+          论文自己定位得很清楚——原文 §4.3 写明「我们把重建作为表示选择的<em>支撑性证据</em>，生成（§4.2）才是主要贡献」。
+          但 VAE 快 <strong>120 倍</strong>（0.74 s vs 88.92 s）这点在正文完全没提，只在 Table 2 的 Cost 列里。
+          <b>如果你的场景需要高频跑 VAE（如大数据预处理、在线编辑），这个 120× 比那 3 dB 重要得多。</b>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">4.4 消融（Table 4 / Table 5）</h3>
+    <div class="grid2" style="align-items:start">
+      <div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>DINOv2 条件</th><th>Toys4K FID ↓</th><th>FID<sub>dino</sub> ↓</th><th>AI 图 CLIP ↑</th></tr>
+            </thead>
+            <tbody>
+              <tr class="dim"><td>单层（layer 24）</td><td>25.21</td><td>0.121</td><td>0.8081</td></tr>
+              <tr class="ours"><td><b>多层（6/12/18/24）</b></td><td><b>20.99</b></td><td><b>0.100</b></td><td><b>0.8519</b></td></tr>
+              <tr style="background:#f8fafc"><td><b>改善幅度</b></td><td><b>−16.7%</b></td><td><b>−17.4%</b></td><td><b>+5.4%</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="summary-box">
+          法线烘焙消融见 Table 2：normal PSNR 29.5 → 33.0 dB，color PSNR 31.1 → 32.5 dB，
+          且<strong>多边形数完全不变</strong>。
+        </div>
+      </div>
+      <div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>方法</th><th>结构阶段</th><th>Latent 阶段</th><th>合计 NFE</th></tr>
+            </thead>
+            <tbody>
+              <tr class="dim"><td>3DTopia-XL</td><td>—</td><td>25 (DDIM)</td><td>25</td></tr>
+              <tr class="dim"><td>TRELLIS</td><td>25</td><td>25</td><td>50</td></tr>
+              <tr class="dim"><td>LiTo</td><td>—</td><td>20 (Heun)</td><td>≈40<span style="color:var(--ink3)"> (2 NFE/step)</span></td></tr>
+              <tr class="dim"><td>TRELLIS 2</td><td>12</td><td>12 形状 + 12 纹理</td><td>36</td></tr>
+              <tr class="ours"><td><b>Luce</b></td><td>12</td><td>10</td><td><b>22</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          📉 <b>Luce 用最少的采样步数拿到最好的指标。</b>
+          22 NFE vs TRELLIS 2 的 36、TRELLIS 的 50。
+          注意 LiTo 的 Heun 求解器每步要 2 次函数评估，所以「20 步」实际约等于 40 NFE——<strong>Table 5 的原始数字不能直接横向比</strong>。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑤ 训练成本 ================= -->
+<section id="cost">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 05 · Training Cost</div>
+      <h2>训练成本（Table 3）</h2>
+      <p>论文没有把这一栏写进正文，全部在附录 A 的 Table 3。这是评估「我能不能复现」的关键信息。</p>
+    </div>
+
+    <div class="grid2" style="align-items:start">
+      <div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>配置项</th><th>SLatVAE</th><th>SLatFlow</th></tr></thead>
+            <tbody>
+              <tr><td>Transformer blocks</td><td>16</td><td>30</td></tr>
+              <tr><td>Model channels</td><td>1536</td><td>1536</td></tr>
+              <tr><td>Attention heads</td><td>12</td><td>12</td></tr>
+              <tr><td>MLP ratio</td><td>4</td><td>6</td></tr>
+              <tr><td>Attention 模式</td><td>Swin（window 8）</td><td>Full（flash varlen）</td></tr>
+              <tr><td>输入通道</td><td>336</td><td>32</td></tr>
+              <tr><td>Latent 通道</td><td>32</td><td>32</td></tr>
+              <tr><td>位置编码</td><td>—</td><td>RoPE</td></tr>
+              <tr><td>adaLN</td><td>—</td><td>6-way</td></tr>
+              <tr style="border-top:2px solid var(--line)"><td><b>GPU</b></td><td colspan="2" style="text-align:center"><b>64 × H100</b></td></tr>
+              <tr><td>Batch / GPU</td><td>2</td><td>3</td></tr>
+              <tr><td>Max voxels / batch</td><td>400 K</td><td>8 M</td></tr>
+              <tr><td>训练步数</td><td>500 K</td><td>500 K</td></tr>
+              <tr><td><b>Wall-clock</b></td><td><b>≈ 14 天</b></td><td><b>≈ 14 天</b></td></tr>
+              <tr><td>EMA decay</td><td>0.9999</td><td>0.9999</td></tr>
+              <tr><td>精度</td><td>BF16</td><td>BF16</td></tr>
+              <tr><td>优化器</td><td colspan="2" style="text-align:center">Muon（lr 1e-3，wd 1e-3）</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="grid2" style="gap:12px">
+          <div class="stat" style="margin:0"><b>≈ 28 天</b><span>两个 stage 各 14 天（串行）</span></div>
+          <div class="stat" style="margin:0"><b>≈ 43 K</b><span>GPU-hours（64 卡 × 28 天）</span></div>
+        </div>
+        <div class="summary-box" style="margin-top:14px">
+          <b>口径提醒：</b>这 43K GPU-hours <strong>不含</strong>数据预处理（拟合每个资产的多模态高斯需要多视角 PBR 渲染 + 逐模态优化），
+          也<strong>不含</strong>结构阶段（直接复用 TRELLIS 2，零成本）。论文未披露数据与总算力。
+        </div>
+        <div class="sub-h"><span class="t">可抄的工程细节</span></div>
+        <ul class="tight">
+          <li><b>用 Muon 而不是 AdamW。</b>两个 stage 都用它，lr 统一 1e-3、wd 1e-3。对 transformer 类大模型，Muon 在同等算力下收敛更快。</li>
+          <li><b>EMA decay 0.9999</b> —— 相当激进的平滑，配合 500K 长训练。</li>
+          <li><b>序列长度差 20 倍：</b>VAE 每 batch 400K voxels，Flow 8M。这正是 §3.2「降分辨率换密度」的回报——latent 网格小，才能在 8M voxels 的 batch 上跑 full attention。</li>
+          <li><b>Swin vs Full attention 按 stage 分工：</b>VAE 需要局部性（下采样）用窗口注意力；Flow 需要全局一致（生成）用全注意力 + varlen 处理变长。</li>
+          <li><b>数据增强细节：</b>VAE 用随机背景（防背景泄露），Flow 用 0.5 固定背景 + 1.2 裁切 padding。</li>
+        </ul>
+        <div class="callout">
+          💰 <b>复现门槛判断：</b>43K H100 GPU-hours 属于「大厂中等规模项目」量级。
+          但对多数团队更有参考价值的是它的<strong>取舍策略</strong>——结构阶段白嫖现成模型、只训差异化的 latent 阶段，
+          相当于把预算砍掉三分之一。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑥ 局限 ================= -->
+<section id="limits" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 06 · Limitations</div>
+      <h2>局限与开放问题</h2>
+      <p>论文 §5 的 Limitations 写得很扎实，五条都是真问题，没有拿「future work」凑数。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls p0">L1</span>有限分辨率体素 → 细节欠采样</h4>
+        <div class="tagline">表示层面的根本约束</div>
+        <p>细节尺度相对整体尺寸过小的资产会被欠采样，特征可能只跨越几个体素。作者建议的解法是<strong>级联或自适应分辨率解码</strong>：粗 latent 抓全局形状与材质结构，高分辨率阶段细化局部几何、纹理与法线。</p>
+      </div>
+
+      <div class="method-card hl">
+        <h4><span class="cls p0">L2</span>材质模型只覆盖标准 PBR 属性</h4>
+        <div class="tagline">与本站透明材质调研直接对接</div>
+        <p>当前只建模 albedo / metallic-roughness / normal，外加 Cook–Torrance 反射模型。<strong>未建模：subsurface scattering、anisotropy、translucency、thin-film interference、强视角相关反射。</strong>作者建议扩展材质通道或学习视角相关的残差。</p>
+        <div class="pros">机会点：translucency / transmission / IOR / volume —— 四个通道在 183 篇合集中零覆盖，本论文又亲口承认未建模。</div>
+      </div>
+
+      <div class="method-card">
+        <h4><span class="cls p1">L3</span>网格导出用的是 TRELLIS 的 FlexiCubes</h4>
+        <div class="tagline">架构未改，只在自己的 latent 上重训</div>
+        <p>Table 2 里 mesh 路径的耗时（79.45 s）远高于 GS 路径（0.74 s），且与 TRELLIS 2 的 88.92 s 同量级——<strong>瓶颈就在这个沿用来的网格解码器</strong>。作者把「更高分辨率或可学习的 UV-aware 提取」列为未来工作。</p>
+      </div>
+
+      <div class="method-card">
+        <h4><span class="cls p1">L4</span>只面向物体级资产</h4>
+        <div class="tagline">无场景级生成</div>
+        <p>扩展到场景级需要处理<strong>光照一致性、材质一致性、物体间交互</strong>。这三条恰好是本合集里 scene 类（28 篇）在攻的问题——两条线尚未合流。</p>
+      </div>
+
+      <div class="method-card" style="grid-column:1/-1">
+        <h4><span class="cls p2">L5</span>数据依赖：仍需多视角 PBR 渲染做监督</h4>
+        <div class="tagline">表示强，但喂养成本没降</div>
+        <p>
+          每个资产的 <code>𝒱</code> 是在预处理阶段<strong>逐个拟合</strong>出来的：对资产做多视角 PBR 渲染，然后逐模态独立优化 K 个高斯。
+          这意味着 Luce 的数据管线<strong>依赖已有的 PBR 资产与其 authored 贴图</strong>（法线高斯监督的是「施加了作者法线贴图后的有效法线」）。
+          Toys4K 只有 412 个测试样本、PBR 子集 338 个——规模远小于 87M 级别的 Buffalo 数据引擎。
+          <strong>表示的上限被数据的稀缺卡住了。</strong>
+        </p>
+        <div class="cons">对比参照：<a href="../buffalo/index.html#conclusion">Hunyuan3D-Buffalo 1.0</a> §6 第 ③ 条同样把「端到端纹理编辑基本未被探索、缺训练数据」列为未解问题——两个团队从供给侧和需求侧给出了同一个诊断。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑦ 启示 ================= -->
+<section id="takeaway">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 07 · Takeaways</div>
+      <h2>可复用的设计选择</h2>
+      <p>抛开具体任务，这几条对做 3D 生成 / PBR 材质 pipeline 有直接参考价值。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="takeaway">
+        <h4><span class="idx">1</span>条件注入：先试试多层特征，再动架构</h4>
+        <p>把 DINOv2 从最后一层换成 4 层拼接，FID −16.7%、细节图 CLIP +5.4%。<strong>零架构改动、零额外训练成本</strong>。</p>
+        <div class="why">适用于任何「用冻结 ViT 做条件」的生成任务。如果输入侧富含文字/纹理/logo，收益会被放大——本例中细节图上的收益是普通图的 5.7 倍。</div>
+      </div>
+
+      <div class="takeaway">
+        <h4><span class="idx">2</span>多模态输出：解耦 > 共享</h4>
+        <p>三个模态各有独立的位置/尺度/旋转/不透明度，让容量按<strong>细节密度</strong>而非平均分配。</p>
+        <div class="why">凡是「一个网络输出多种异构目标」的场景都适用（color+depth+normal、RGB+alpha+material）。共享骨干 + 独立头是常见做法，但独立到<em>几何参数</em>这一层是 Luce 的关键一步。</div>
+      </div>
+
+      <div class="takeaway">
+        <h4><span class="idx">3</span>VAE：降分辨率、提密度、渲染监督</h4>
+        <p>encoder 下采样网格，decoder 每体素预测更多高斯来补偿；损失算在<strong>渲染结果</strong>上而非 latent 上。</p>
+        <div class="why">这条组合拳让 Luce 的 VAE 比 TRELLIS 2 快 120 倍（0.74 s vs 88.92 s）。代价是 albedo/MR 的 PSNR 低 2–4 dB——<strong>如果你的场景 VAE 要跑很多次，这个交换非常划算。</strong></div>
+      </div>
+
+      <div class="takeaway">
+        <h4><span class="idx">4</span>高频细节别硬塞进几何，走法线贴图</h4>
+        <p>让显式法线通道去学「被扰动后的有效法线」，推理时烘焙成切线空间贴图：<strong>+3.5 dB 法线 PSNR，多边形数不变。</strong></p>
+        <div class="why">这是把生成模型接入生产管线的通用接口设计——细节由连续表示承载，交付物是标准网格 + glTF 贴图。比提高网格分辨率划算得多。</div>
+      </div>
+
+      <div class="takeaway">
+        <h4><span class="idx">5</span>非差异化环节直接复用，把算力压在贡献点上</h4>
+        <p>稀疏结构阶段直接用 TRELLIS 2 预训练权重，未修改；网格解码器沿用 TRELLIS 架构只重训。</p>
+        <div class="why">相当于省掉一整套 64 卡 ×14 天的训练。<strong>先问「这一步我的方法真的需要不一样吗」，再决定要不要训。</strong></div>
+      </div>
+
+      <div class="takeaway" style="border-top-color:var(--purple)">
+        <h4><span class="idx" style="background:#ede9fe;color:#7c3aed">6</span>机会：透明材质是明确的空白</h4>
+        <p>Luce 亲口承认 translucency / anisotropy / SSS / thin-film 未建模；183 篇合集中 transmission / IOR / volume / clearcoat / sheen / anisotropy <strong>零覆盖</strong>。</p>
+        <div class="why">
+          需求侧（Apple 团队自述缺口）与供给侧（学术界无工作）已双向确认。
+          下一步可做的：在 Luce 的 per-modality 框架上<strong>加第四个高斯模态</strong>（如 transmission + IOR + attenuation），
+          复用它现成的 VAE/Flow 骨架——这是最省力的切入点。
+          详见 <a href="../transparent-materials/index.html">透明材质调研</a> 与 <a href="../pbr-materials/index.html#gaps">PBR 专题 · 空白与机会</a>。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>Luce: Relightable Gaussians for 3D Asset Generation</b> · Mayank Singh, Michele Stoppa, Alvise Memo, Rui Yu, Harsha Kalli, Srimanth Gunturi, Muhammad Ahmed Riaz, Behrooz Shahsavari, Waleed Abdulla, David E. Jacobs（Apple）
+      · arXiv:2608.23943v1 [cs.CV] · 2026-08-25 · 33 页 / 5 表 / 19 图 / 6 附录
+    </p>
+    <p style="margin-top:8px">
+      本页所有数值均取自论文正文与附录表格（Table 1–5），未做二次加工。K=8 与 GPU-hour 为推算值，已在正文标注。
+      解读与判断为本站观点。
+    </p>
+    <p style="margin-top:12px">
+      <a href="../index.html">← 返回首页</a> ·
+      <a href="../pbr-materials/index.html">PBR 材质生成专题梳理</a> ·
+      <a href="../3d-generation-2026/index.html">2026 年 6–8 月 3D 生成论文合集</a> ·
+      <a href="../transparent-materials/index.html">透明材质调研</a> ·
+      <a href="../buffalo/index.html">Hunyuan3D-Buffalo 1.0</a> ·
+      <a href="https://arxiv.org/abs/2608.23943" target="_blank" rel="noopener">arXiv 原文 ↗</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  if (typeof Chart === "undefined") return;
+  Chart.defaults.font.family = '"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = "#4b5a6e";
+
+  var BLUE = "#2563eb", GREEN = "#16a34a", ORANGE = "#ea8a3c",
+      PURPLE = "#8b5cf6", GREY = "#b6c2d2", TEAL = "#0d9488";
+
+  // 图 3: Toys4K FID
+  new Chart(document.getElementById("fidChart"), {
+    type: "bar",
+    data: {
+      labels: ["Luce GS", "Luce mesh\n+tangent", "TRELLIS 2", "LiTo", "TRELLIS GS", "TRELLIS mesh", "3DTopia-XL"],
+      datasets: [{
+        label: "Toys4K FID ↓",
+        data: [20.99, 21.10, 29.22, 29.76, 30.75, 32.39, 83.23],
+        backgroundColor: [BLUE, TEAL, GREY, GREY, GREY, GREY, GREY],
+        borderRadius: 5, barThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function (c) { return "FID " + c.parsed.x + "（越低越好）"; } } }
+      },
+      scales: {
+        x: { title: { display: true, text: "FID（越低越好）" }, grid: { color: "#eef2f8" } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // 图 4: CLIP 两个基准
+  new Chart(document.getElementById("clipChart"), {
+    type: "bar",
+    data: {
+      labels: ["Luce GS", "Luce mesh\n+tangent", "TRELLIS GS", "LiTo", "TRELLIS 2", "TRELLIS mesh", "3DTopia-XL"],
+      datasets: [
+        { label: "Toys4K CLIP", data: [0.9062, 0.9072, 0.8898, 0.8909, 0.8895, 0.8829, 0.7644],
+          backgroundColor: BLUE, borderRadius: 4 },
+        { label: "AI 生成图 CLIP", data: [0.8519, 0.8508, 0.8299, 0.8234, 0.8110, 0.8000, 0.6481],
+          backgroundColor: TEAL, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top", labels: { boxWidth: 11, padding: 12 } },
+        tooltip: { callbacks: { label: function (c) { return c.dataset.label + ": " + c.parsed.y.toFixed(4); } } }
+      },
+      scales: {
+        y: { min: 0.6, max: 0.93, title: { display: true, text: "CLIP 图像对齐 ↑" }, grid: { color: "#eef2f8" } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // 图 5: 逐模态重建 PSNR
+  new Chart(document.getElementById("reconChart"), {
+    type: "bar",
+    data: {
+      labels: ["Color", "Albedo", "Metal-Rough", "Normal"],
+      datasets: [
+        { label: "Luce GS", data: [36.1, 38.6, 39.1, 34.6], backgroundColor: BLUE, borderRadius: 4 },
+        { label: "TRELLIS 2", data: [34.5, 40.7, 42.7, 32.1], backgroundColor: ORANGE, borderRadius: 4 },
+        { label: "LiTo", data: [31.9, null, null, 27.6], backgroundColor: GREY, borderRadius: 4 },
+        { label: "TRELLIS mesh", data: [26.3, null, null, 26.9], backgroundColor: "#dbe3ee", borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top", labels: { boxWidth: 11, padding: 10 } },
+        tooltip: {
+          callbacks: {
+            label: function (c) {
+              return c.parsed.y === null ? c.dataset.label + ": 不产出该模态" : c.dataset.label + ": " + c.parsed.y + " dB";
+            }
+          }
+        }
+      },
+      scales: {
+        y: { min: 24, title: { display: true, text: "PSNR (dB) ↑" }, grid: { color: "#eef2f8" } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // 图 2: multi-layer DINOv2 改善幅度
+  new Chart(document.getElementById("ablChart"), {
+    type: "bar",
+    data: {
+      labels: ["AI 图\nCLIP", "AI 图\nSigLIP2", "FID\ndino", "Toys4K\nFID", "Toys4K\nKID", "Toys4K\nCLIP", "Toys4K\nSigLIP2"],
+      datasets: [{
+        label: "相对改善 (%)",
+        data: [5.42, 4.48, 17.36, 16.74, 67.33, 0.95, 0.72],
+        backgroundColor: [PURPLE, PURPLE, TEAL, TEAL, TEAL, BLUE, BLUE],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function (c) { return "改善 " + c.parsed.y + "%"; } } }
+      },
+      scales: {
+        y: { title: { display: true, text: "相对改善 / 下降幅度 (%)" }, grid: { color: "#eef2f8" } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

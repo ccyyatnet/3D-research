@@ -163,6 +163,7 @@
         <div class="pros">✔ 物理语义正确、资产一次制作全平台一致；渐进增强（不支持 volume 的引擎仍能渲染 transmission）；Three.js / Babylon.js / Filament / Blender 等广泛支持</div>
         <div class="cons">✘ 实时引擎实现复杂：多层透射物间可见性受限；真折射需 volume 且无光追引擎只能屏幕空间近似；diffuse_transmission 目前仍为 release candidate</div>
       </div>
+    </div>
     <h4 class="sub-h"><span class="t">C2.1</span>深挖：KHR_materials_volume 体积扩展</h4>
     <div class="card">
       <p style="font-size:13.5px;color:var(--ink2);margin-bottom:10px"><b>设计意图</b>：默认 glTF 材质描述的是包裹<b>无限薄表面</b>（thin wall）的散射属性；volume 扩展把表面升级为<b>"体与体之间的界面"</b>（interface between volumes）——网格定义均匀介质的边界，提供折射、吸收效果（<b>散射不在此扩展范围</b>，σs=0，仅吸收）。</p>

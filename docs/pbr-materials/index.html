@@ -111,6 +111,7 @@
       <a href="#gltf">④ glTF 覆盖</a>
       <a href="#papers">⑤ 逐篇</a>
       <a href="#gaps">⑥ 空白</a>
+      <a href="../luce/index.html" style="font-weight:700;color:#16a34a">Luce 深度解读 →</a>
       <a href="../transparent-materials/index.html" style="font-weight:700;color:#8b5cf6">透明材质调研 →</a>
     </div>
   </div>
@@ -148,7 +149,7 @@
       <div class="concl">
         <div class="n">结论 01</div>
         <h4>只有 1 篇真正产出 glTF 完整 PBR 三件套</h4>
-        <p><b>Luce</b>（Apple，<code>2608.23943</code>）把几何与 PBR 统一进体素化多模态高斯云，显式参数化 <b>albedo / metallic-roughness / normal</b>，可导出带切空间法线的贴图网格。其余 24 篇要么停在 albedo-shading 分解，要么把 BRDF 存在隐式 MLP 或调色板里，导不出 glTF 材质。</p>
+        <p><b>Luce</b>（Apple，<code>2608.23943</code>，<a href="../luce/index.html"><b>本站深度解读 →</b></a>）把几何与 PBR 统一进体素化多模态高斯云，显式参数化 <b>albedo / metallic-roughness / normal</b>，可导出带切空间法线的贴图网格。其余 24 篇要么停在 albedo-shading 分解，要么把 BRDF 存在隐式 MLP 或调色板里，导不出 glTF 材质。</p>
       </div>
       <div class="concl c-red">
         <div class="n">结论 02</div>
@@ -278,7 +279,7 @@
         <tbody>
           <tr><td><b>L1</b></td><td>采集与先验（透明/高反光物体怎么拍）</td><td>3</td><td>FRA-NBV、Polarized Opacity Prior、Geometry Gaussians</td></tr>
           <tr><td><b>L2</b></td><td>材质 / 光照分解（逆渲染）</td><td>10</td><td>MaterialClusterGS、AEGIR、Editable PB Reflections、Intrinsic Decomp of 3DGS、SpotlessGS、InvSplat、Mesh2GS、QuerySplat、Manifold-GS、Lighting-Consistent Transfer</td></tr>
-          <tr><td><b>L3</b></td><td>生成式材质（latent 直出 PBR 参数 / 贴图）</td><td>3</td><td><b>Luce</b>、Home3D 1.0、Ink3D</td></tr>
+          <tr><td><b>L3</b></td><td>生成式材质（latent 直出 PBR 参数 / 贴图）</td><td>3</td><td><b><a href="../luce/index.html">Luce</a></b>、Home3D 1.0、Ink3D</td></tr>
           <tr><td><b>L4</b></td><td>材质感知的结构分解</td><td>2</td><td>PartMat、Gen2Physics</td></tr>
           <tr><td><b>L5</b></td><td>纹理 / UV / 烘焙 → 可交付资产</td><td>3</td><td>Neural 3D Mesh Texturing Survey、SeamGen、Bake It Till You Make It</td></tr>
           <tr><td>跨层</td><td>野外光照鲁棒（横跨 L1–L2）</td><td>3</td><td>Wild3R、WildSplat、WilLaGS</td></tr>
