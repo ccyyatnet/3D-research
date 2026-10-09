@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HKTex 深度解读 · 无 UV 的测地热核纹理 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:32px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:920px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:330px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#f0f6ff;font-weight:600}
+  tr.ours:hover td{background:#e6efff}
+  tr.dim td{color:var(--ink3)}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--teal)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#d5f2ee;color:#0f766e;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .pain{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px}
+  .pain div{background:#fff;border:1px solid #f2d9d5;border-radius:10px;padding:12px 10px;text-align:center}
+  .pain b{display:block;font-size:13px;color:#c2410c}
+  .pain span{font-size:11.5px;color:var(--ink3)}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.pain{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#antiuv">② 反 UV</a>
+      <a href="#method">③ 方法</a>
+      <a href="#modes">④ 两种拟合</a>
+      <a href="#exp">⑤ 实验</a>
+      <a href="#ablation">⑥ 消融</a>
+      <a href="#cost">⑦ 开销</a>
+      <a href="#limits">⑧ 局限</a>
+      <a href="../ultratex/index.html" style="font-weight:700;color:#0d9488">UltraTex →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-10-09 · arXiv:2609.07557 · ECCV 2026 <b>最佳论文奖</b></span>
+    <h1><em>HKTex</em>：会测地弯曲的高斯，因此不需要 splat<br>用各向异性热核彻底取消 UV 展开</h1>
+    <p class="sub">
+      3DGS 之后，很多人想把高斯搬到网格表面做纹理。HKTex 的判断是：<b>这条路走不通，因为欧氏高斯本身不会弯</b>——
+      无论加多少正则把它们压到表面上，刚性的 3D 高斯都没法贴合流形。
+      作者换了个思路：不做"贴上去的高斯"，而做<b>长在流形上的核</b>——用黎曼几何里的<b>各向异性热核</b>作为测地意义上的高斯。
+      核的参数化、位置优化（Riemannian 梯度下降 + 动量并行传输）、自适应加密（沿主曲率方向用指数映射分裂）全部定义在曲面上。
+      最后接入 <b>Mitsuba3</b> 可微 PBR：光线打到曲面任意一点时<b>动态求值</b>核，而不是把它们 splat 出来。
+      结果是：无接缝、无畸变、无顶点复制，存储只有同质量神经表示的 <b>1/5 – 1/10</b>。
+    </p>
+    <div class="meta">
+      <span class="pill">Simone Foti* · Caner Korkmaz* · Stefanos Zafeiriou · Tolga Birdal（Imperial College London）</span>
+      <span class="pill">arXiv:2609.07557v1 [cs.CV] · 2026-09-07</span>
+      <span class="pill">32 页（正文 15 + 附录）· 4 表 · 11 图</span>
+      <span class="pill">ECCV 2026 · LNCS · pp. 306–323 · 最佳论文奖</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>0</b><span>UV 展开 / 接缝 / 顶点复制（构造上不存在）</span></div>
+      <div class="stat"><b>96.6 KB</b><span>UV 纹理拟合的存储（同质量神经方法需 473–928 KB）</span></div>
+      <div class="stat"><b>78.7 KB</b><span>多视图逆向渲染存储（NVDiffRec 需 516 KB）</span></div>
+      <div class="stat"><b>4.8 k</b><span>核数量（网格平均 9.6 k 顶点）</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= ① 结论先行 ================= -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 01 · Bottom Line</div>
+      <h2>结论先行</h2>
+      <p>如果只有三分钟，看这四张卡。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl">
+        <span class="n">结论 01</span>
+        <h4>它不是"更好的压缩"，是"换掉参数化"</h4>
+        <p>
+          UV 的问题不在压缩率，而在<b>参数化本身</b>：接缝、畸变、浪费的 UV 空间、接缝线上必须复制顶点、分辨率不均。
+          HKTex 把纹理定义为<b>流形上内蕴的函数</b>，这些问题不是被缓解，而是<b>在构造上不存在</b>。
+          存储下降只是副作用——真正的卖点是"再也不用管 UV 了"。
+        </p>
+      </div>
+
+      <div class="concl c-orange">
+        <span class="n">结论 02</span>
+        <h4>关键分歧点：欧氏高斯不会弯</h4>
+        <p>
+          已有工作（MeshGS、SuGaR 等）靠额外正则把高斯<b>压</b>到表面上，但论文认为"根本性的脱节依然存在"。
+          HKTex 的替代方案是把欧氏高斯换成<b>各向异性热核</b>——它在曲面上天然就是"测地高斯"，
+          各向异性（η, θ）控制的是<b>沿曲面的扩散方向</b>，而不是 3D 空间里的椭球。
+        </p>
+      </div>
+
+      <div class="concl c-purple">
+        <span class="n">结论 03</span>
+        <h4>从不 splat，只在光线交点求值</h4>
+        <p>
+          标题里 "Do Not Splat" 是字面意思。渲染时不做光栅化，而是在<b>光线与网格求交的连续点 p</b> 上，
+          取出局部 KNN 核子集 K(p)，按式 7 的 alpha 加权单位分解算颜色。
+          这带来两个后果：能直接塞进 Mitsuba3 的可微光线追踪/PBR 管线；代价是<b>求值比 splat 慢</b>（Table 1：784.7 ms vs MLP 90.9 ms）。
+        </p>
+      </div>
+
+      <div class="concl c-green">
+        <span class="n">结论 04</span>
+        <h4>工作流是"拟合"，不是"生成"</h4>
+        <p>
+          HKTex 有两种优化入口：<b>拟合已有 UV 纹理</b>（当压缩器用）与<b>从多视图图像逆向渲染</b>（当采集工具用）。
+          两者都需要<b>给定网格和相机</b>。它不生成几何、也不从单图生成纹理——
+          这与 <a href="../ultratex/index.html">UltraTex</a> 那类生成式路线是完全不同的分工，不要放在一起比。
+        </p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>一句话版本：</b>把"纹理"从"贴在 2D 图上的像素"重新定义为"曲面上的连续函数"，
+      而这个函数的基函数换成<b>各向异性热核</b>——它在黎曼几何里就是高斯在流形上的对应物。
+      于是核可以沿测地线移动（Riemannian 优化）、沿主曲率方向分裂（指数映射）、在任意连续点求值（重心插值），
+      整套机制都不再需要 UV 这张平面图。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ② 为什么反 UV ================= -->
+<section id="antiuv">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 02 · The UV Problem</div>
+      <h2>UV 的五宗罪，和前辈们的三条弯路</h2>
+      <p>先说清楚要解决的问题，否则后面那些黎曼几何工具看起来像炫技。</p>
+    </div>
+
+    <div class="card">
+      <h3 class="block-title c-red" style="margin-top:0">UV mapping 带来的固有开销</h3>
+      <div class="pain">
+        <div><b>浪费空间</b><span>UV 图上的空白区域也要占存储</span></div>
+        <div><b>接缝</b><span>展开的切缝在着色处可见</span></div>
+        <div><b>畸变</b><span>参数化无法同时保角保面积</span></div>
+        <div><b>顶点复制</b><span>接缝线上的顶点必须复制一份，还得存 UV 坐标</span></div>
+        <div><b>分辨率不均</b><span>同一张图上不同区域的 texel 密度不一致</span></div>
+      </div>
+      <div class="summary-box">
+        <b>一个容易被忽略的账：</b>per-vertex 的 UV 坐标本身是<b>固定存储开销</b>，要计入纹理预算。
+        论文明确指出——对高顶点数网格，<b>这笔开销会吃掉大部分预算</b>，
+        以至于把降采样纹理压到最低 4×4 像素、ImageGS 压到只剩 10 个高斯，都仍然匹配不上 HKTex 的存储（Table 1 里 ImageGS 那一行是灾难性的）。
+      </div>
+    </div>
+
+    <div class="grid3" style="margin-top:18px">
+      <div class="method-card">
+        <h4><span class="cls">路线 A</span> 隐式神经表示</h4>
+        <div class="tagline">MLP / InstantNGP / Intrinsic Neural Fields</div>
+        <p>
+          用坐标网络表示外观，摆脱手工 UV。INF 甚至在数学上最贴近本文——它重心插值 LBO 的特征向量来条件化 MLP。
+        </p>
+        <div class="cons">→ 但 MLP 求值计算重，且缺乏显式基元的<b>局部自适应表达力</b>；实测存储 473–928 KB，是 HKTex 的 5–10 倍。</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls">路线 B</span> 彩色点云 / 顶点色</h4>
+        <div class="tagline">存储最省，但位置由几何决定</div>
+        <p>
+          GT VTex 只存 17.3 KB，是全场最小。但顶点的位置是<b>几何决定的，不是纹理内容决定的</b>——
+          细分到 210 k 顶点（HR GT VTex）才勉强追上，存储反而涨到 179.6 KB。
+        </p>
+        <div class="cons">→ 顶点是几何采样，不是自适应的纹理基元。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">路线 C</span> 3DGS 及其网格化改造</h4>
+        <div class="tagline">MeshGS / SuGaR / 2DGS-in-UV</div>
+        <p>
+          3DGS  revolutionised 新视角合成，但完全在<b>环境欧氏空间</b>运作。已有改造要么把高斯存进球面 UV 图，
+          要么在未展开的纹理空间里 splat，或加正则把高斯<b>压</b>到表面上。
+        </p>
+        <div class="cons">→ 论文的直接批评：这些原语<b>无法内蕴地弯曲贴合</b>一般拓扑流形，欧氏优化天然会把高斯从几何上剥离。</div>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <b>HKTex 的落点：</b>不做"贴上去的高斯"，做"长在流形上的核"。
+      核的各向异性控制的是<b>沿曲面的扩散</b>，位置更新走<b>测地线</b>，分裂沿<b>主曲率方向 + 指数映射</b>，
+      求值在<b>重心插值的连续点</b>。注意它和 INF 的关系：INF 用 LBO 特征向量喂 MLP，HKTex 用 LBO 特征函数<b>直接构造核</b>——
+      同样是内蕴的，但保留了显式基元的局部自适应性。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ③ 方法 ================= -->
+<section id="method">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 03 · Method</div>
+      <h2>方法：从热方程到可微 PBR 的一条链</h2>
+      <p>五段式：核的定义 → 谱基的参数化插值 → 连续空间求值 → 黎曼优化与密度控制 → 渲染。</p>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 980 220" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif">
+        <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#8494a9"/></marker></defs>
+        <rect x="8" y="42" width="140" height="70" rx="9" fill="#eef2fb" stroke="#c7d7f5"/>
+        <text x="78" y="66" font-size="12.5" font-weight="700" fill="#1a2332" text-anchor="middle">三角网格 M</text>
+        <text x="78" y="84" font-size="10.5" fill="#8494a9" text-anchor="middle">N ≈ 9.6k 顶点</text>
+        <text x="78" y="100" font-size="10.5" fill="#8494a9" text-anchor="middle">（无 UV）</text>
+        <line x1="148" y1="77" x2="184" y2="77" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <rect x="188" y="30" width="152" height="94" rx="10" fill="#fff6ec" stroke="#ea8a3c" stroke-width="1.6"/>
+        <text x="264" y="52" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">① LBO / ALBO</text>
+        <text x="264" y="70" font-size="10.5" fill="#4b5a6e" text-anchor="middle">预计算 7 角度 × 7 各向异性</text>
+        <text x="264" y="86" font-size="10.5" fill="#4b5a6e" text-anchor="middle">网格，每个 256 维特征分解</text>
+        <text x="264" y="104" font-size="10.5" fill="#4b5a6e" text-anchor="middle">+ 特征对齐（Hungarian</text>
+        <text x="264" y="118" font-size="10.5" fill="#4b5a6e" text-anchor="middle">/ Procrustes / 符号）</text>
+        <line x1="340" y1="77" x2="376" y2="77" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <rect x="380" y="30" width="152" height="94" rx="10" fill="#eef5ff" stroke="#2563eb" stroke-width="1.6"/>
+        <text x="456" y="52" font-size="12.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">② 热核 κ</text>
+        <text x="456" y="70" font-size="10.5" fill="#4b5a6e" text-anchor="middle">p⋆, θ, η, τ, ς, c</text>
+        <text x="456" y="86" font-size="10.5" fill="#4b5a6e" text-anchor="middle">谱截断 → 归一化 →</text>
+        <text x="456" y="102" font-size="10.5" fill="#4b5a6e" text-anchor="middle">双调和距离加权 →</text>
+        <text x="456" y="118" font-size="10.5" fill="#4b5a6e" text-anchor="middle">soft-step 滤波 α(p)</text>
+        <line x1="532" y1="77" x2="568" y2="77" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <rect x="572" y="30" width="152" height="94" rx="10" fill="#f6f0ff" stroke="#8b5cf6" stroke-width="1.6"/>
+        <text x="648" y="52" font-size="12.5" font-weight="700" fill="#7c3aed" text-anchor="middle">③ 连续求值</text>
+        <text x="648" y="70" font-size="10.5" fill="#4b5a6e" text-anchor="middle">重心插值到任意点 p</text>
+        <text x="648" y="86" font-size="10.5" fill="#4b5a6e" text-anchor="middle">双调和 KNN 剪枝</text>
+        <text x="648" y="102" font-size="10.5" fill="#4b5a6e" text-anchor="middle">O(P×S) → O(P×K_s)</text>
+        <text x="648" y="118" font-size="10.5" fill="#4b5a6e" text-anchor="middle">K_s = 50</text>
+        <line x1="724" y1="77" x2="760" y2="77" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <rect x="764" y="30" width="208" height="94" rx="10" fill="#eefaf2" stroke="#16a34a" stroke-width="1.6"/>
+        <text x="868" y="52" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">④ 黎曼优化 + 密度控制</text>
+        <text x="868" y="70" font-size="10.5" fill="#4b5a6e" text-anchor="middle">梯度投到切平面 → Exp map 走测地线</text>
+        <text x="868" y="86" font-size="10.5" fill="#4b5a6e" text-anchor="middle">动量并行传输到新位置</text>
+        <text x="868" y="102" font-size="10.5" fill="#4b5a6e" text-anchor="middle">剪枝（hit count / energy）</text>
+        <text x="868" y="118" font-size="10.5" fill="#4b5a6e" text-anchor="middle">加密（克隆 / 沿主轴指数映射分裂）</text>
+
+        <line x1="868" y1="124" x2="868" y2="152" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+        <rect x="700" y="156" width="272" height="52" rx="10" fill="#f6f9ff" stroke="#b9cbe8"/>
+        <text x="836" y="178" font-size="12.5" font-weight="700" fill="#1a2332" text-anchor="middle">⑤ Mitsuba3 + Dr.Jit 可微光线追踪</text>
+        <text x="836" y="196" font-size="10.5" fill="#8494a9" text-anchor="middle">光线命中 p → 查 K(p) → 式 7 算 C(p) → 梯度回传到核参数</text>
+        <text x="836" y="216" font-size="10.5" fill="#8494a9" text-anchor="middle">不是 splat：只在交点动态求值</text>
+      </svg>
+      <div class="svg-cap">图 1 · HKTex 链路（对应论文 Fig. 1 左半与 §4）。</div>
+    </div>
+
+    <h3 class="block-title">3.1 各向异性热核：欧氏高斯在流形上的对应物</h3>
+    <p style="font-size:13.8px;color:var(--ink2)">
+      热扩散过程 <i>L</i> u(x, t) = ∂u/∂t 的解可写成谱形式 u<sub>t</sub> = e<sup>−tL</sup> u<sub>0</sub> ≈ Φ e<sup>−tΛ</sup> Φ<sup>⊤</sup> M u<sub>0</sub>（式 2）。
+      当初值是 Dirac delta 时就是<b>热核</b>——在欧氏空间中它恰好有高斯闭式解，这正是"测地高斯"说法的来源。
+      论文采用谱方法而非解稀疏线性系统，理由是<b>快一个数量级</b>且能扩展到高分辨率网格。
+    </p>
+    <div class="eq">
+      h<sub>t</sub>(p, p⋆ | θ, η) = Σ<sub>k=1..K</sub> e<sup>−t λ<sup>η,θ</sup><sub>k</sub></sup> φ<sup>η,θ</sup><sub>k</sub>(p) φ<sup>η,θ</sup><sub>k</sub>(p⋆) m⋆ &nbsp;&nbsp;<span class="cmt">（式 3，截断连续各向异性热核）</span><br>
+      h̄<sub>t</sub>(p | p⋆, θ, η) = h<sub>t</sub>(p, p⋆ | θ, η) / h<sub>t</sub>(p⋆, p⋆ | θ, η) &nbsp;&nbsp;<span class="cmt">（式 4，除以扩散后源点温度，保证中心最高温 = 1.0）</span><br>
+      h̃<sub>t</sub>(p) = h̄<sub>t</sub>(p) · exp( − d<sub>BH</sub>(p, p⋆)² / (2 σ²<sub>BH</sub>) ) &nbsp;&nbsp;<span class="cmt">（式 5，双调和距离高斯加权）</span><br>
+      α(p) = [ ξ( h̃<sub>t</sub>(p) ) − ξ(0) ] / [ ξ(1) − ξ(0) ], &nbsp; ξ(x) = σ( ς · (x − τ) ) &nbsp;&nbsp;<span class="cmt">（式 6，soft-step 滤波）</span><br>
+      C(p) = c<sub>base</sub> + [ Σ<sub>s∈K(p)</sub> α<sub>s</sub>(p) c<sub>s</sub> ] / [ Σ<sub>s∈K(p)</sub> α<sub>s</sub>(p) ] &nbsp;&nbsp;<span class="cmt">（式 7，alpha 加权单位分解 + 全局基色残差）</span>
+    </div>
+    <div class="grid2">
+      <div class="summary-box">
+        <b>为什么需要式 5（双调和加权）？</b>
+        热核的支撑是<b>整个曲面</b>；而谱截断到前 K 个频率会引入 Gibbs 类现象，在远处产生<b>谱振铃伪影</b>。
+        双调和距离高斯加权强制局部支撑、抑制远处贡献。消融里去掉它<b>所有图像指标都变差</b>（PSNR 45.05 → 43.99），
+        这是 ablation 中掉得最狠的单组件之一。
+      </div>
+      <div class="summary-box">
+        <b>为什么用式 6 滤波而不是优化扩散时间 t？</b>
+        固定 t，改用阈值 τ 控制尺度、锐度 ς 控制边界衰减速率。这样核既能保持渐隐外观，
+        也能变成<b>边缘锐利的测地椭球</b>，并且能缩到点尺寸。值域仍锁在 [0,1]。
+        附录还提到：可视化核时把 ξ 换成 boxcar 函数，就能描出<b>空心测地椭球</b>。
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">3.2 谱基的参数化插值（省掉每次特征分解）</h3>
+    <div class="method-card hl">
+      <h4><span class="cls">工程关键</span> 为每个核单独构造并特征分解 ALBO 是不可承受的</h4>
+      <div class="tagline">7 × 7 半极坐标网格 + 双线性插值 + 特征对齐</div>
+      <p>
+        把 (角度 θ, 各向异性 η) 参数空间离散成网格，<b>各向异性做对数缩放</b>（s = ln(1+η)）使空间感知更均匀、
+        避免高各向异性主导。每个网格节点预计算 Φ<sup>‡</sup><sub>i,j</sub> 与 Λ<sup>‡</sup><sub>i,j</sub>；
+        查询时二分定位所在单元，按 Δθ / Δs 做<b>双线性插值</b>（式 8）。
+      </p>
+      <p style="margin-top:8px">
+        <b>但特征分解有排列 / 旋转 / 符号三重歧义</b>，直接插值会错。论文在<b>网格构建阶段</b>做对齐：
+        ① 用<b>匈牙利算法</b>最大化质量加权互相关 C = Φ<sub>ref</sub><sup>⊤</sup> M Φ<sup>‡</sup> 解排列；
+        ② 解<b>正交 Procrustes</b> 问题（对 Φ<sub>perm</sub><sup>⊤</sup> M Φ<sub>ref</sub> 做 SVD）求旋转；
+        ③ 用对角符号矩阵 S 修符号翻转。最终 Φ<sub>aligned</sub> = Φ<sup>‡</sup> Π R S。
+      </p>
+      <div class="pros">→ 这个对齐步骤是形状匹配里的老问题在新场景的迁移，不做的话整个插值方案不成立。</div>
+    </div>
+
+    <h3 class="block-title c-purple">3.3 连续空间求值：打破顶点离散化的束缚</h3>
+    <div class="grid3">
+      <div class="card">
+        <h4>重心插值</h4>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:4px">
+          所有预计算谱量都定义在顶点上。为在<b>任意连续点 p</b> 求值，利用谱基的光滑性做重心插值 b<sub>p</sub>(A)。
+          这一步是"不受网格离散化约束"的前提。
+        </p>
+      </div>
+      <div class="card">
+        <h4>双调和 KNN</h4>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:4px">
+          对所有 S 个核、P 个点求热方程是 O(P×S)，不可行。
+          构造谱嵌入 <b>Z = Φ<sub>iso</sub> (Λ<sub>iso</sub>)<sup>−1</sup></b>——在这个空间里<b>欧氏距离恰好等于流形上的双调和距离</b>——
+          再建 KNN 图，把每个点的求值限制到 K<sub>s</sub> = 50 个最近源。复杂度降到 <b>O(P×K<sub>s</sub>)</b>。
+        </p>
+      </div>
+      <div class="card">
+        <h4>源点质量 m⋆</h4>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:4px">
+          连续源点处的质量不能像特征向量那样重心插值（离散质量矩阵正比于顶点面积，即局部采样密度）。
+          附录给了 <b>KDE 估计</b>（按周围点密度反比给质量，再归一化使总和 = 曲面总面积）。
+          但实测<b>统一取 m⋆ = 1 更快且不掉点</b>——因为 m⋆ 只是线性标量，其他参数能学到补偿。
+        </p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-green">3.4 黎曼优化与流形感知的密度控制</h3>
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls">优化</span> 核必须待在曲面上</h4>
+        <div class="tagline">Riemannian 梯度下降 + 动量并行传输</div>
+        <p>
+          欧氏优化直接更新 3D 坐标必然把核拉离曲面。做法：把梯度 ∇<sub>p⋆</sub>L <b>投影到局部切平面</b> T<sub>p⋆</sub>M 得到初速度 v⋆，
+          再用<b>指数映射 Exp(p⋆, v⋆)</b> 沿测地线求新位置。加速用的动量必须<b>并行传输</b>到新位置才有意义。
+          两者都用 straightest geodesic 算法（digeo 库，CUDA 并行）。
+        </p>
+        <div class="pros">→ 这是"位置也是内蕴量"的直接体现：不是投到切平面再拉回，而是真的沿曲面走。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">密度控制</span> 剪枝 + 误差驱动加密</h4>
+        <div class="tagline">与 3DGS 同构，但分裂走指数映射</div>
+        <p>
+          <b>剪枝：</b>在窗口 Δ<sub>prune</sub> 内记录命中计数 ν（被选进式 7 的频率）与能量分 ω（滤波权重累计），
+          淘汰 ν &lt; γ<sub>hit</sub>·max(ν) 或 ω &lt; γ<sub>energy</sub> 的核。
+          <b>加密：</b>按局部重建误差 e(p) = ‖c(p) − c<sub>GT</sub>(p)‖₁ 加权分配给贡献核，超阈值的按空间尺度处理——
+          小核（1−τ ≤ γ<sub>size</sub>）<b>原地克隆</b>，大核<b>分裂成两个</b>，沿主曲率主轴用指数映射反向位移，
+          新核空间范围缩小 1.6 倍，<b>优化器状态清零</b>（避免继承触发分裂的极端梯度）。
+        </p>
+      </div>
+    </div>
+    <div class="callout">
+      <b>核会自己跑到该去的地方。</b>论文统计：平均 <b>49.8% 的面一个核都没有</b>，13.2% 的面恰好一个，
+      而每个面上的核中心数平均 4.8 ± 7.1、最多 70 ± 123。
+      也就是说核的分布<b>完全由纹理内容决定</b>，而不是被网格顶点或 UV 图钉死——这正是顶点色方案做不到的（顶点位置由几何决定）。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ④ 两种拟合模式 ================= -->
+<section id="modes">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 04 · Two Modes</div>
+      <h2>两种用法：当压缩器，或当采集工具</h2>
+      <p>都要给定网格（多视图模式还要相机位姿），差别只在监督信号从哪来。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card" style="border-top:3px solid var(--blue)">
+        <h3 class="block-title" style="margin-top:0">模式 A · 拟合已有 UV 纹理</h3>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          在 M 的面上均匀采样密集点集 p，用 C(p) 求值，与同一位置从 UV 纹理查到的真值 C<sub>GT</sub>(p) 比，
+          最小化 <b>L = ‖C(p) − C<sub>GT</sub>(p)‖²₂</b>。
+        </p>
+        <ul class="tight" style="margin-top:10px">
+          <li><b>超参：</b>5,000 steps，batch 4,096 点，MSE loss，初始核 1,000，t = 6.25×10⁻²，K<sub>c</sub> = 30</li>
+          <li><b>重要性采样：</b>先预采 1,000 万点建池，前 250 步均匀采样做 warm-up，之后用 ε(p) 的指数滑动平均（γ=0.99）驱动采样分布偏向<b>重建误差高的区域</b></li>
+          <li><b>效果：</b>相当于把 UV 纹理压成 96.6 KB 的内蕴表示，且解压后无接缝无畸变</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--teal)">
+        <h3 class="block-title c-teal" style="margin-top:0">模式 B · 多视图逆向渲染</h3>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          给定网格 + 相机位姿，每步采样 V 个视角、找出命中网格的所有光线、随机取子集保证覆盖均匀，
+          最小化光线交点处的渲染误差与真值像素之差。
+        </p>
+        <ul class="tight" style="margin-top:10px">
+          <li><b>超参：</b>3,840 steps，batch 1,024 光线，<b>L1 loss</b>，初始核 5,000，t = 1.11×10⁻⁶，K<sub>c</sub> = 20</li>
+          <li><b>渲染：</b>Mitsuba3 + Dr.Jit，path-replay backpropagation 积分器，训练时 ray depth 3</li>
+          <li><b>推理优化：</b>KNN 库与自参考热核<b>只构建一次</b>，显著降低开销</li>
+        </ul>
+        <div class="summary-box" style="margin-top:10px">
+          <b>注意扩散时间 t 差了 5 个数量级</b>（6.25×10⁻² vs 1.11×10⁻⁶）。这是 Optuna 贝叶斯调参在两种设置下各自搜出来的，
+          不是笔误——两种任务的核尺度需求完全不同。
+        </div>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <b>极限测试（Fig. 4）：</b>把一张图拟合到<b>仅由两个三角形组成的矩形</b>上，此时 K = 3（只有 3 个特征模态）。
+      HKTex 依然能表示它。这证明方法<b>不受顶点数约束</b>，可以表达比网格本身更高分辨率的纹理——
+      这是与顶点色方案的根本分野。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑤ 实验 ================= -->
+<section id="exp">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 05 · Experiments</div>
+      <h2>定量结果：存储是主指标，质量是副产品</h2>
+      <p>Objaverse 严格筛选后约 3,000 个模型；UV 拟合 313 个，多视图 162 个，消融 92 个。每物体渲 5 个视角评测。</p>
+    </div>
+
+    <div class="grid3" style="margin-bottom:16px">
+      <div class="card">
+        <b style="font-size:14px">数据怎么筛的</b>
+        <ul class="tight" style="margin-top:6px">
+          <li>有 LVIS 类别标签、有效纹理、至少 1 个社区点赞与浏览</li>
+          <li>排除点云与动画模型，顶点数上限 <b>60,000</b></li>
+          <li>排除<b>多连通分量、非流形几何</b>，以及内部结构复杂的模型（任意射线交点 &gt; 20）</li>
+          <li><b>LBO 特征分解失败的模型直接拒掉</b>——这是硬约束</li>
+        </ul>
+      </div>
+      <div class="card">
+        <b style="font-size:14px">存储怎么算的</b>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:6px">
+          严格计入<b>全部内蕴参数、网络权重，以及 baseline 所需的拓扑开销（如 UV 坐标）</b>。
+          统一格式、不做方法专属量化、统一 zip 压缩。
+          所以 UV 类 baseline 的那笔 per-vertex UV 坐标开销是<b>算进去的</b>——这是公平的。
+        </p>
+      </div>
+      <div class="card">
+        <b style="font-size:14px">实现栈</b>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:6px">
+          PyTorch + <b>FAISS（GPU 版）</b>做双调和 KNN + <b>Mitsuba3 / Dr.Jit</b> 可微光追。
+          不写专用 CUDA kernel，改用 <b>PyTorch Triton</b> 代码生成。
+          各向同性 LBO 预计算 64 维，ALBO 网格（7×7）每个 256 维。
+        </p>
+      </div>
+    </div>
+
+    <h3 class="block-title">Table 1 · UV 纹理拟合（313 个网格）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Method</th><th>PSNR↑</th><th>LPIPS↓<br>(×10⁻²)</th><th>SSIM↑<br>(×10⁻²)</th><th>MS-SSIM↑<br>(×10⁻²)</th><th>MSE↓<br>(×10⁻³)</th><th>Render↓<br>(ms)</th><th>Storage↓<br>(KB)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>LR GT UV Textures</td><td>48.4±15.2</td><td>2.3±4.2</td><td>98.2±3.4</td><td>97.7±5.6</td><td>0.89±3.6</td><td>133.7±3.2</td><td>115.8±103.2</td></tr>
+          <tr class="dim"><td>GT VTex (N≈7.7k)</td><td>37.9±8.5</td><td>4.0±5.0</td><td>96.8±4.2</td><td>96.1±6.6</td><td>0.94±2.3</td><td>325.4±3.1</td><td><b>17.3</b>±32.6</td></tr>
+          <tr><td>HR GT VTex (N≈210k)</td><td>45.3±5.7</td><td>1.1±1.7</td><td>98.8±2.1</td><td>99.4±1.4</td><td>0.08±0.20</td><td>50.3±49.4</td><td>179.6±89.5</td></tr>
+          <tr><td>MLP Pos. Enc.</td><td>42.9±6.6</td><td>2.3±2.5</td><td>98.2±2.2</td><td>99.0±1.3</td><td>0.15±0.30</td><td>90.9±35.2</td><td>551.3±759.6</td></tr>
+          <tr><td>InstantNGP</td><td>41.3±7.4</td><td>3.2±3.5</td><td>97.5±3.1</td><td>98.2±2.7</td><td>0.26±0.52</td><td>90.8±35.3</td><td>473.2±714.9</td></tr>
+          <tr><td>INFs (Intrinsic Neural Fields)</td><td>42.5±6.8</td><td>2.7±3.4</td><td>98.0±2.7</td><td>98.8±1.9</td><td>0.19±0.44</td><td>91.4±35.3</td><td>928.2±1,439.8</td></tr>
+          <tr><td>ImageGS</td><td>44.6±14.6</td><td>2.9±5.4</td><td>97.3±5.6</td><td>95.9±9.6</td><td>3.65±11.95</td><td>NA</td><td>115.4±93.9</td></tr>
+          <tr class="ours"><td>HKTex (S≈4.8k)</td><td>44.8±5.8</td><td><b>1.3</b>±1.6</td><td><b>98.9</b>±1.5</td><td><b>99.5</b>±0.7</td><td><b>0.08</b>±0.20</td><td>784.7±474.3</td><td>96.6±12.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">存储 vs 质量：柱是存储，线是 PSNR</h3>
+        <div class="chart-box"><canvas id="c-uv"></canvas></div>
+        <div class="chart-note">柱子越矮越好（存储 KB），折线越高越好（PSNR）。HKTex 用 96.6 KB 拿到接近 HR GT VTex（179.6 KB）的 PSNR，而神经方法要 473–928 KB。</div>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-green" style="margin-top:0">怎么读这张表</h3>
+        <ul class="tight">
+          <li><b>LR GT UV 的 48.4 dB 是"作弊"基线</b>——它直接存图像样本，PSNR 天然最高，但 LPIPS 2.3 并不好，且占地 115.8 KB。它不是公平对手。</li>
+          <li><b>真正的对照是神经三兄弟</b>（MLP / InstantNGP / INFs）：HKTex 存储只要它们的 <b>1/5 – 1/10</b>，却在 LPIPS、SSIM、MS-SSIM、MSE 四项上<b>全面更好</b>。</li>
+          <li><b>SSIM 98.9 / MS-SSIM 99.5 是全场最高</b>，MSE 0.08 与 HR GT VTex 并列最低——结构细节保得最好。</li>
+          <li><b>ImageGS 的 MSE 3.65±11.95 崩了</b>：存储预算被 UV 坐标开销吃掉，只剩 10 个高斯可用。</li>
+          <li><b>Render 784.7 ms 是全场最慢（约 8.6 倍于 MLP 的 90.9 ms）</b>——这是"不 splat"的代价，见 ⑦。</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">Table 2 · 多视图逆向渲染（162 个网格）</h3>
+    <div class="grid2">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Method</th><th>PSNR↑</th><th>LPIPS↓<br>(×10⁻²)</th><th>SSIM↑<br>(×10⁻²)</th><th>MS-SSIM↑<br>(×10⁻²)</th><th>MSE↓<br>(×10⁻³)</th><th>Render↓<br>(s)</th><th>Storage↓<br>(KB)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>MLP Pos. Enc.</td><td>35.75±7.76</td><td>3.7±3.8</td><td>97.2±3.1</td><td>96.8±4.9</td><td>1.55±4.83</td><td>0.68±0.12</td><td>602.71±755.89</td></tr>
+            <tr><td>NVDiffRec*</td><td>36.40±6.83</td><td>3.4±3.6</td><td>97.4±2.9</td><td>97.4±3.5</td><td>0.79±2.04</td><td>0.66±0.11</td><td>516.12±722.66</td></tr>
+            <tr><td>HR VTex</td><td>37.16±5.69</td><td>3.1±3.4</td><td>97.5±2.8</td><td>97.9±2.6</td><td>0.44±0.85</td><td>0.58±0.08</td><td>81.06±131.16</td></tr>
+            <tr class="ours"><td>HKTex (S≈3.8k)</td><td><b>37.61</b>±4.71</td><td><b>2.1</b>±1.9</td><td><b>98.3</b>±1.6</td><td><b>98.6</b>±1.4</td><td><b>0.30</b>±0.53</td><td>1.2±0.37</td><td><b>78.73</b>±23.12</td></tr>
+          </tbody>
+        </table>
+        <div class="chart-note">Table 2。NVDiffRec* 是论文改造版：网格与环境贴图固定为真值，只输出 albedo 图。</div>
+      </div>
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">这一组才是"采集"场景</h3>
+        <div class="chart-box" style="height:250px"><canvas id="c-mv"></canvas></div>
+        <div class="chart-note">柱 = 存储 KB（越低越好），线 = LPIPS×10⁻²（越低越好）。HKTex 两项都最低。</div>
+        <ul class="tight" style="margin-top:10px">
+          <li>HKTex 在<b>全部 5 个图像指标上都是第一</b>，同时存储最低（78.73 KB）。</li>
+          <li>比 NVDiffRec* 省 <b>6.6 倍</b>存储、比 MLP 省 <b>7.7 倍</b>，PSNR 还高 0.45–1.86 dB。</li>
+          <li>比 HR VTex 只省 2.3 KB，但 PSNR +0.45、LPIPS 3.1→2.1、SSIM 97.5→98.3。<b>顶点色在同等预算下确实不如自适应核。</b></li>
+          <li>渲染 1.2 s 仍是全场最慢，但差距缩小了（0.58–0.68 s vs 1.2 s）——因为多视图场景里<b>光线追踪（更深 ray depth）主导了渲染时间</b>，核求值的额外开销被摊薄。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑥ 消融 ================= -->
+<section id="ablation">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 06 · Ablation</div>
+      <h2>消融：真正起作用的是"加密"，不是"剪枝"</h2>
+      <p>92 个网格子集，每次去掉一个组件。这组数据比主表更能说明各组件的必要性。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>变体</th><th>PSNR↑</th><th>LPIPS↓</th><th>SSIM↑</th><th>MS-SSIM↑</th><th>MSE↓<br>(×10⁻³)</th><th>Storage↓<br>(KB)</th><th>Kernels↓</th><th>判读</th></tr>
+        </thead>
+        <tbody>
+          <tr class="ours"><td><b>Full Model</b></td><td>45.05±4.90</td><td>0.011±0.010</td><td>0.991±0.008</td><td>0.996±0.004</td><td>0.058±0.082</td><td>96.87±11.90</td><td>4811±557</td><td>基线</td></tr>
+          <tr class="dim"><td>No Error-Based Densification</td><td>43.05±5.61</td><td>0.020±0.019</td><td>0.985±0.015</td><td>0.992±0.008</td><td>0.104±0.146</td><td>22.18±1.01</td><td>995±42</td><td><span class="badge-tag tag-bad">−2.00 dB</span> 掉得最狠</td></tr>
+          <tr><td>No Pruning</td><td>45.06±4.91</td><td>0.011±0.010</td><td>0.991±0.008</td><td>0.996±0.004</td><td>0.058±0.083</td><td>96.89±11.94</td><td>4810±558</td><td><span class="badge-tag tag-good">几乎无变化</span></td></tr>
+          <tr class="dim"><td>No Density Control</td><td>43.09±5.60</td><td>0.020±0.019</td><td>0.985±0.015</td><td>0.992±0.009</td><td>0.102±0.142</td><td>22.29±0.54</td><td>1000±0</td><td><span class="badge-tag tag-bad">−1.96 dB</span> 印证加密是主因</td></tr>
+          <tr><td>No Colour Formation KNN</td><td>45.04±4.92</td><td>0.011±0.010</td><td>0.991±0.008</td><td>0.996±0.004</td><td>0.058±0.080</td><td>96.75±11.98</td><td>4804±561</td><td><span class="badge-tag tag-mid">与全模型打平</span></td></tr>
+          <tr class="dim"><td>No Biharmonic Weighting</td><td>43.99±5.71</td><td>0.016±0.015</td><td>0.988±0.012</td><td>0.994±0.006</td><td>0.093±0.154</td><td>95.59±9.48</td><td>4896±427</td><td><span class="badge-tag tag-bad">−1.06 dB</span> 谱振铃回来了</td></tr>
+          <tr><td>No Importance Sampling</td><td>45.13±5.86</td><td>0.012±0.022</td><td>0.988±0.033</td><td>0.993±0.027</td><td>0.691±6.148</td><td>94.39±18.38</td><td>4712±836</td><td><span class="badge-tag tag-bad">MSE 暴涨 12 倍</span></td></tr>
+          <tr class="dim"><td>No PGD</td><td>44.22±5.10</td><td>0.014±0.013</td><td>0.989±0.010</td><td>0.995±0.005</td><td>0.071±0.091</td><td>96.93±12.84</td><td>4853±517</td><td><span class="badge-tag tag-mid">−0.83 dB</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">PSNR 对比（越高越好）</h3>
+        <div class="chart-box"><canvas id="c-abl"></canvas></div>
+        <div class="chart-note">注意"No Pruning"与"No Colour Formation KNN"两根柱子与 Full Model 几乎等长——这正说明它们不是关键组件。</div>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-orange" style="margin-top:0">三条值得记住的结论</h3>
+        <ul class="tight">
+          <li><b>驱动质量的是自适应插入，不是剪枝。</b>去掉 error-based densification 立刻掉 2.00 dB，
+              而去掉 pruning 基本没变化（45.05 → 45.06）。作者的解释：误差驱动加密 + 流形感知分裂本身已经提供了足够自适应性，剪枝只是省算力和存储。</li>
+          <li><b>双调和加权不能省。</b>去掉它所有指标都变差（PSNR −1.06），印证了它在抑制长程谱振铃、强制局部支撑上的作用。</li>
+          <li><b>重要性采样影响的是 MSE 而不是 PSNR。</b>去掉后 PSNR 反而略升（45.13），但 MSE 从 0.058 飙到 <b>0.691</b>（12 倍）。
+              解读：均匀采样<b>在容易的区域过拟合</b>，而没能把难的高频区域一致地解出来。只看 PSNR 会误判。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑦ 开销 ================= -->
+<section id="cost">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 07 · The Cost</div>
+      <h2>代价：不 splat 就要在交点求值</h2>
+      <p>这是论文自己坦白的开销，也是落地前必须知道的。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card" style="border-top:3px solid var(--red)">
+        <h3 class="block-title c-red" style="margin-top:0">渲染耗时</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>场景</th><th>HKTex</th><th>最快 baseline</th><th>倍数</th></tr></thead>
+            <tbody>
+              <tr><td>UV 拟合（Table 1）</td><td>784.7 ± 474.3 ms</td><td>HR GT VTex 50.3 ms</td><td><b>15.6×</b></td></tr>
+              <tr><td>多视图（Table 2）</td><td>1.2 ± 0.37 s</td><td>HR VTex 0.58 s</td><td><b>2.1×</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:10px">
+          原因有两个：核聚合（KNN 查询 + 谱求值）与<b>测地邻域查询</b>。
+          论文指出多视图场景里这个开销被<b>部分摊薄</b>——因为 ray depth 增加后，光线追踪本身主导了渲染时间。
+        </p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--orange)">
+        <h3 class="block-title c-orange" style="margin-top:0">前处理依赖</h3>
+        <ul class="tight">
+          <li><b>LBO 特征分解是硬前提。</b>分解失败的模型直接被数据集拒掉。附录提到 K = 256 经验上够用；
+              K 减小会让核变大，但可学习的 τ 能补偿。</li>
+          <li><b>ALBO 网格要预计算 49 组 256 维特征分解</b>（7 角度 × 7 各向异性），还要做特征对齐（匈牙利 + Procrustes）。这是每个网格的一次性成本。</li>
+          <li><b>几何筛选很严：</b>非流形、多连通分量、复杂内部结构都不行。论文说标准可以放宽，代价是数据质量下降或需要分块处理。</li>
+          <li><b>依赖 digeo 库</b>做指数映射与并行传输（CUDA 并行实现），这是 Riemannian 优化能跑起来的前提。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>怎么看待这个开销：</b>HKTex 换来的是<b>存储省 5–10 倍 + 无接缝无畸变</b>，
+      付的是<b>渲染慢 2–16 倍 + 每个网格的一次性谱预计算</b>。
+      这个交换在<b>存储/传输受限、渲染离线</b>的场景（游戏资产分发、AR/VR 内容、VFX）非常划算；
+      在<b>实时渲染</b>场景则明显不成立。论文没有做实时化尝试。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑧ 局限 ================= -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 08 · Limitations</div>
+      <h2>局限：作者明说的与没说的</h2>
+    </div>
+
+    <div class="grid3">
+      <div class="concl c-orange">
+        <span class="n">局限 01（作者）</span>
+        <h4>目前只有 albedo</h4>
+        <p>
+          论文明确 "without loss of generality, we focus this study on albedo texture properties"。
+          未来工作说每个核<b>可以</b>再挂 roughness / specular 等材质参数并用 Mitsuba3 可微渲染优化——
+          但<b>本文没做</b>，所以它不是 PBR 材质表示（至少现在不是）。
+        </p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">局限 02（附录）</span>
+        <h4>编辑性不友好</h4>
+        <p>
+          附录直言"直接编辑并不简单"（这个局限与 GS 共有，球谐还会加剧）。
+          可行路径是：<b>把目标区域烘焙成稠密点云 → 绘制 → 跑一小段优化</b>把改动传回 HKTex 参数。
+          没有交互式编辑能力。
+        </p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">局限 03（附录）</span>
+        <h4>transmission 还没解决</h4>
+        <p>
+          附录有一句"完全消除对 transmission 的需求……留待未来研究"。
+          也就是说半透明相关的渲染路径目前仍依赖 transmission，且作者没把它纳入本次方案。
+        </p>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <b>本站补充观察（论文未明说）：</b>
+      ① <b>它需要网格</b>——两种模式都以"给定网格"为前提，不能像生成式方法那样从图像造纹理，
+      所以它是<b>资产管线的一环</b>，不是端到端生成器。
+      ② <b>优化是 per-object 的</b>：每个物体跑 3,840–5,000 步优化，没有跨物体共享的先验——
+      这也是它能压到几十 KB 的原因（过拟合到单个物体），但也意味着<b>每个资产都要单独优化一遍</b>。
+      ③ <b>它和测地热扩散的前作（Foti et al., NeurIPS 2024）一脉相承</b>，本文的进步在于各向异性核 + 完整密度控制 + PBR 集成。
+      ④ 与本站 <a href="../transparent-materials/index.html">透明材质调研</a> 的关系：热核天然只处理表面内蕴属性，
+      <b>体散射 / 透明不在这个表示的能力范围内</b>。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑨ 定位 ================= -->
+<section id="position">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 09 · Positioning</div>
+      <h2>它在本站纹理路线图里的位置</h2>
+      <p>9 月的纹理方向有三条线并行，HKTex 是"取消 UV"那条。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>路线</th><th>代表工作</th><th>输入</th><th>产出</th><th>本站页面</th></tr></thead>
+        <tbody>
+          <tr class="ours"><td><b>取消 UV</b></td><td>HKTex（本篇）</td><td>网格（+ 可选 UV 纹理 / 多视图图）</td><td>内蕴热核纹理，无接缝无畸变，几十 KB</td><td>本页</td></tr>
+          <tr><td><b>把分辨率拉满</b></td><td>UltraTex</td><td>参考图 + 几何法线</td><td>2048² 多视图 albedo，重投影到网格</td><td><a href="../ultratex/index.html">UltraTex 解读</a></td></tr>
+          <tr><td><b>直接生成 PBR</b></td><td>Luce / GS-PI</td><td>单图 / 点云</td><td>albedo + metallic-roughness + normal</td><td><a href="../luce/index.html">Luce 解读</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout ok">
+      <b>三者不冲突，且理论上可以串起来：</b>UltraTex 这类生成模型产出的是<b>多视图 albedo 图</b>，
+      而 HKTex 的第二种模式<b>正好就是从多视图图拟合纹理</b>——
+      用生成结果替换掉真值渲染图喂给 HKTex，就能得到"无需 UV 展开、几十 KB、无接缝"的最终资产。
+      论文没有做这个组合实验，但接口是对得上的。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑩ 资源 ================= -->
+<section id="links">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 10 · Resources</div>
+      <h2>资源链接</h2>
+    </div>
+    <div class="grid4">
+      <a class="card" style="display:block" href="http://arxiv.org/abs/2609.07557" target="_blank" rel="noopener">
+        <b>📄 arXiv:2609.07557</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">论文原文 · 32 页 · 2026-09-07</p>
+      </a>
+      <a class="card" style="display:block" href="http://circle-group.github.io/research/HeatKernelTextures" target="_blank" rel="noopener">
+        <b>🌐 项目主页</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">可交互对比滑块 + 材质切换</p>
+      </a>
+      <a class="card" style="display:block" href="https://github.com/circle-group/hktex" target="_blank" rel="noopener">
+        <b>💻 代码 circle-group/hktex</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">已开源</p>
+      </a>
+      <a class="card" style="display:block" href="https://link.springer.com/chapter/10.1007/978-3-032-37595-7_17" target="_blank" rel="noopener">
+        <b>🏛 ECCV 2026 正式版</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">LNCS pp. 306–323 · 最佳论文奖</p>
+      </a>
+    </div>
+
+    <h3 class="block-title">BibTeX</h3>
+    <div class="eq" style="font-family:Consolas,Monaco,monospace;font-size:12.5px;line-height:1.7">
+      @inproceedings{foti2026hktex,<br>
+      &nbsp;&nbsp;author&nbsp;&nbsp;&nbsp;&nbsp;= {Foti, Simone and Korkmaz, Caner and Zafeiriou, Stefanos and Birdal, Tolga},<br>
+      &nbsp;&nbsp;title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {Heat Kernel Textures: the Geodesic Gaussians That Do Not Splat},<br>
+      &nbsp;&nbsp;booktitle = {Computer Vision -- ECCV 2026},<br>
+      &nbsp;&nbsp;year&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {2026},<br>
+      &nbsp;&nbsp;publisher = {Springer Nature Switzerland},<br>
+      &nbsp;&nbsp;pages&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {306--323},<br>
+      &nbsp;&nbsp;doi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {10.1007/978-3-032-37595-7_17}<br>
+      }
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>Heat Kernel Textures: the Geodesic Gaussians That Do Not Splat</b> ·
+      Simone Foti*, Caner Korkmaz*（共同一作）, Stefanos Zafeiriou, Tolga Birdal（Imperial College London）
+      · arXiv:2609.07557v1 [cs.CV] · 2026-09-07 · ECCV 2026 最佳论文奖 · LNCS pp. 306–323
+    </p>
+    <p style="margin-top:8px">
+      本页所有数值均取自论文正文（Table 1–2）与补充材料（Table 3–4），未做二次加工。
+      解读与判断为本站观点。
+    </p>
+    <p style="margin-top:12px">
+      <a href="../index.html">← 返回首页</a> ·
+      <a href="../ultratex/index.html">UltraTex 深度解读</a> ·
+      <a href="../luce/index.html">Luce 深度解读</a> ·
+      <a href="../pbr-materials/index.html">PBR 材质生成专题梳理</a> ·
+      <a href="../transparent-materials/index.html">透明材质调研</a> ·
+      <a href="../3d-generation-2026/index.html">2026 年 3D 生成论文合集</a> ·
+      <a href="http://arxiv.org/abs/2609.07557" target="_blank" rel="noopener">arXiv 原文 ↗</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  if (typeof Chart === "undefined") {
+    document.querySelectorAll(".chart-box").forEach(function (b) {
+      b.innerHTML = '<p style="font-size:13px;color:#8494a9;padding:40px 0;text-align:center">' +
+        '图表需要加载 Chart.js（CDN 不可达时自动降级为表格，上方表格数据完整）</p>';
+    });
+    return;
+  }
+  var FONT = '"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = "#4b5a6e";
+
+  var LEG = { position: "top", labels: { boxWidth: 12, padding: 12 } };
+
+  function mk(id, labels, bars, line, barLabel, lineLabel, lineColor, yMax) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el.getContext("2d"), {
+      data: {
+        labels: labels,
+        datasets: [
+          { type: "bar", label: barLabel, data: bars, backgroundColor: "#9dbaf5", borderRadius: 4, yAxisID: "y", order: 2 },
+          { type: "line", label: lineLabel, data: line, borderColor: lineColor, backgroundColor: lineColor,
+            borderWidth: 2, pointRadius: 3, tension: 0.15, yAxisID: "y1", order: 1 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: LEG },
+        scales: {
+          y: { position: "left", beginAtZero: true, title: { display: true, text: barLabel }, grid: { color: "#eef2f8" } },
+          y1: { position: "right", beginAtZero: !!(yMax === undefined), max: yMax, grid: { display: false },
+                title: { display: true, text: lineLabel } },
+          x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 30 } }
+        }
+      }
+    });
+  }
+
+  // Table 1: 存储 vs PSNR
+  mk("c-uv",
+    ["LR GT UV", "GT VTex", "HR GT VTex", "MLP", "InstantNGP", "INFs", "ImageGS", "HKTex"],
+    [115.8, 17.3, 179.6, 551.3, 473.2, 928.2, 115.4, 96.6],
+    [48.4, 37.9, 45.3, 42.9, 41.3, 42.5, 44.6, 44.8],
+    "Storage (KB) ↓", "PSNR ↑", "#2563eb", 55);
+
+  // Table 2: 存储 vs LPIPS
+  mk("c-mv",
+    ["MLP Pos. Enc.", "NVDiffRec*", "HR VTex", "HKTex"],
+    [602.71, 516.12, 81.06, 78.73],
+    [3.7, 3.4, 3.1, 2.1],
+    "Storage (KB) ↓", "LPIPS (×10⁻²) ↓", "#0d9488", 4.5);
+
+  // Table 4: 消融 PSNR
+  var el = document.getElementById("c-abl");
+  if (el) {
+    new Chart(el.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: ["Full", "No Densif.", "No Pruning", "No Density", "No CF-KNN", "No Biharm.", "No Imp.Samp.", "No PGD"],
+        datasets: [{
+          label: "PSNR (dB) ↑",
+          data: [45.05, 43.05, 45.06, 43.09, 45.04, 43.99, 45.13, 44.22],
+          backgroundColor: ["#16a34a", "#dc4c4c", "#9dbaf5", "#dc4c4c", "#9dbaf5", "#ea8a3c", "#9dbaf5", "#ea8a3c"],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: false, min: 42.5, max: 45.5, title: { display: true, text: "PSNR (dB) ↑" }, grid: { color: "#eef2f8" } },
+          x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 30 } }
+        }
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>
