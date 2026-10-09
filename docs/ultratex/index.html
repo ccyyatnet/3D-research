@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UltraTex 深度解读 · 2K 多视图扩散 3D 纹理化 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:32px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:920px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:330px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#f0f6ff;font-weight:600}
+  tr.ours:hover td{background:#e6efff}
+  tr.dim td{color:var(--ink3)}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .sub-h .t.orange{background:#fde8d4;color:#b45309}
+  .sub-h .t.teal{background:#d5f2ee;color:#0f766e}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--teal)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#d5f2ee;color:#0f766e;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  /* 数据集示例导航大卡 */
+  .nav-hero{display:grid;grid-template-columns:1.15fr .85fr;gap:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+  .nav-hero .l{padding:24px 26px}
+  .nav-hero .r{background:linear-gradient(160deg,#eef4ff,#f3f0ff);padding:20px 22px;border-left:1px solid var(--line)}
+  .nav-hero h3{font-size:19px;margin-bottom:6px}
+  .nav-hero .d{font-size:13.8px;color:var(--ink2)}
+  .nav-hero ul{margin:12px 0 0 18px}
+  .nav-hero ul li{font-size:13.2px;color:var(--ink2);margin-bottom:5px}
+  .nav-hero ul li b{color:var(--ink)}
+  .btn{display:inline-block;background:var(--blue);color:#fff;font-weight:600;font-size:14px;padding:10px 20px;border-radius:10px;margin-top:14px}
+  .btn:hover{background:#1d4ed8;text-decoration:none}
+  .btn.ghost{background:#fff;color:var(--blue);border:1px solid #c7d7f5}
+  .btn.ghost:hover{background:#eef3ff}
+  .thumbs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .thumbs figure{background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px}
+  .thumbs img{display:block;width:100%;height:auto;border-radius:6px}
+  .thumbs figcaption{font-size:11.5px;color:var(--ink3);margin-top:5px;text-align:center}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.nav-hero{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#bill">② 2K 账单</a>
+      <a href="#method">③ 方法</a>
+      <a href="#recipe">④ 训练配方</a>
+      <a href="#dataset">⑤ 数据集</a>
+      <a href="#exp">⑥ 实验</a>
+      <a href="#efficiency">⑦ 效率</a>
+      <a href="#limits">⑧ 局限</a>
+      <a href="#sample" style="font-weight:700;color:#0d9488">数据示例 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-10-09 · arXiv:2609.23169 · SIGGRAPH Asia 2026</span>
+    <h1><em>UltraTex</em>：把多视图扩散纹理生成推到 2048<br>先砍背景 token，再稀疏注意力，最后救回解码</h1>
+    <p class="sub">
+      UltraTex 的出发点不是"注意力太贵"这种口号，而是一笔具体的账：2048 分辨率的六视图 in-context 扩散，
+      输入序列长达 <strong>212,992 token</strong>，任何全注意力 DiT 都跑不动。
+      作者指出其中存在<strong>两类互相独立、可乘性叠加的冗余</strong>——背景导致的序列冗余（物体在画布里常常只占 5%–30%）
+      与前景 token 之间的注意力冗余，并分别用 <strong>Background Token Dropping</strong>（进 DiT 之前就删掉背景 token）
+      与 <strong>Block-Sparse Attention</strong>（保留序列上做 top-k 块选择）来消除。
+      第三块拼图是 <strong>Foreground-Aware VAE Decoding</strong>：推理时只对前景去噪省下了算力，却把纯高斯噪声的背景留给了 VAE 解码器，
+      直接解会毁掉前景——于是换成"合法背景 latent + 前景受限微调"。
+      配套发布 <strong>G-buffer TexVerse</strong>，351,847 个 BSDF 资产、25.3 TB。
+    </p>
+    <div class="meta">
+      <span class="pill">Yibo Zhang 等 7 人 · 吉林大学 / 上海创智 / 港大 / 同济 / 复旦 / VAST</span>
+      <span class="pill">arXiv:2609.23169v1 [cs.CV] · 2026-09-19</span>
+      <span class="pill">14 页 · 2 表 · 11 图</span>
+      <span class="pill">基座：FLUX MM-DiT + Flow Matching + LoRA r=64</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>2048²</b><span>多视图输出分辨率（现有方法普遍 512/768）</span></div>
+      <div class="stat"><b>20.6–91.1×</b><span>训练加速（单 H200，前景占比 10%–30%）</span></div>
+      <div class="stat"><b>22.3–74.6×</b><span>端到端推理加速</span></div>
+      <div class="stat"><b>351,847</b><span>G-buffer TexVerse 发布的 BSDF 资产数（25.3 TB）</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= ① 结论先行 ================= -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 01 · Bottom Line</div>
+      <h2>结论先行</h2>
+      <p>如果只有三分钟，看这四张卡。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl">
+        <span class="n">结论 01</span>
+        <h4>它解决的是"能不能训"的问题，不是"好不好看"的问题</h4>
+        <p>
+          2K 六视图 in-context 扩散的序列是 212,992 token。这个数字下面，<strong>训练和推理都不可行</strong>，
+          所以现有方法全在 512/768。UltraTex 的三个组件本质上都是<strong>可行性工程</strong>：
+          BTD 把序列砍到前景长度，BSA 把剩下的注意力再稀疏一层，第三块则专门为"推理时只去噪前景"这个省算力的决定擦屁股。
+        </p>
+      </div>
+
+      <div class="concl c-orange">
+        <span class="n">结论 02</span>
+        <h4>最关键的一个洞察：1D 序列不必连续</h4>
+        <p>
+          作者用预训练 FLUX 做了个 probe：把 RoPE 打进初始噪声、按前景 mask 删掉背景 token，
+          再对这个<strong>不连续的残缺序列</strong>去噪——结果空间布局依然合理。
+          这说明 DiT 是靠 <strong>RoPE 读绝对坐标</strong>、而不是靠 token 相邻关系理解画布的。
+          所以删掉背景 token 但<strong>保留原始 RoPE 索引</strong>是安全的，多视图的极线/几何先验一并保住了。
+          这一条是整个方法能成立的地基。
+        </p>
+      </div>
+
+      <div class="concl c-purple">
+        <span class="n">结论 03</span>
+        <h4>加速来自两级可乘叠加，且各自的主场不同</h4>
+        <p>
+          BTD 单独给出 <strong>1.4×–53.0×</strong> 训练加速（推理 1.0×–48.1×），在<strong>前景占比低</strong>时碾压——因为背景就是序列的大头；
+          BSA 叠在 BTD 之上再给 <strong>1.7×–2.9×</strong> 训练（推理 1.6×–4.1×），且<strong>随前景占比升高而变强</strong>。
+          两者正好互补。最终在数据集典型区间（前景 10%–30%，ρ=20%）合计 20.6×–91.1× 训练、22.3×–74.6× 推理。
+        </p>
+      </div>
+
+      <div class="concl c-green">
+        <span class="n">结论 04</span>
+        <h4>质量提升主要来自分辨率，而非新架构</h4>
+        <p>
+          Unshaded 赛道 FID 从 LumiTex 的 147.31 降到 <strong>125.13</strong>（−15%），LPIPS 0.138 → <strong>0.082</strong>（−41%）。
+          看 LPIPS 这个感知指标比看 FID 更能说明问题：差的不是分布层面，而是<strong>高频细节真的回来了</strong>。
+          方法上没有提新的生成范式，赢在把 2K 这条路走通了。
+        </p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>一句话版本：</b>在物体中心的多视图渲染里，画布上大部分 token 根本不承载纹理信息。
+      UltraTex 做对了三件事——<b>在进 DiT 之前就把它们删掉</b>（而不是在注意力层里优化）、
+      <b>删完之后再稀疏化剩下的注意力</b>、以及<b>补上"只去噪前景"给 VAE 解码留下的坑</b>。
+      三者相乘，2K 多视图纹理生成从"不可能"变成"18 天训完"。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ② 2K 的账单 ================= -->
+<section id="bill">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 02 · The 2K Bill</div>
+      <h2>2K 走不通，是因为账单长这样</h2>
+      <p>先把"212,992 token"这个数字拆开——它决定了后面每一步设计的必要性。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3 class="block-title">序列长度怎么来的</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>组成</th><th>token 数</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>噪声目标（6 视图）</td><td>6 × 16,384 = 98,304</td><td>2048² → VAE 8× 下采样 → DiT 2×2 patchify</td></tr>
+              <tr><td>几何条件（6 视图法线）</td><td>6 × 16,384 = 98,304</td><td>与目标同分辨率，同样进序列</td></tr>
+              <tr><td>参考图</td><td>16,384</td><td>单张，提供外观条件</td></tr>
+              <tr class="ours"><td>合计</td><td>212,992</td><td>现有方法在 512² 时只有约 13 K</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="summary-box">
+          <b>换算：</b>2048 × 2048 经 8× VAE 下采样为 256 × 256 latent，再经 2 × 2 patchify 得 128 × 128 = <b>16,384 token/图</b>。
+          分辨率从 512 提到 2048，单图 token 数涨 <b>16 倍</b>，而 DiT 的注意力是 <b>O(N²)</b>。
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="block-title c-orange">但真正被浪费的部分有多大</h3>
+        <p style="font-size:13.8px;color:var(--ink2)">
+          物体中心渲染的画布里，前景占比远低于直觉。论文 Fig. 3 给了两个实例：
+        </p>
+        <div class="grid2" style="margin-top:12px">
+          <div style="background:#fff6ec;border:1px solid #f5d9c0;border-radius:10px;padding:14px">
+            <div style="font-size:24px;font-weight:700;color:#c2410c">24.9%</div>
+            <div style="font-size:12.5px;color:var(--ink2)">实例 A 前景像素占比<br><span style="color:var(--ink3)">约 3/4 的画布是空背景</span></div>
+          </div>
+          <div style="background:#ffe4e0;border:1px solid #f5c9c2;border-radius:10px;padding:14px">
+            <div style="font-size:24px;font-weight:700;color:#b91c1c">7.9%</div>
+            <div style="font-size:12.5px;color:var(--ink2)">实例 B 前景像素占比<br><span style="color:var(--ink3)">超过 92% 的 token 不承载纹理</span></div>
+          </div>
+        </div>
+        <div class="callout warn" style="margin-top:14px">
+          <b>数据集层面的证据：</b>G-buffer TexVerse 里 <b>超过 85% 的资产</b>前景占比落在 <b>5%–30%</b> 区间。
+          这不是个别样本，而是物体中心渲染的普遍性质——椅腿、人形四肢这类结构会在包围盒里留下大片空洞，<b>裁剪也去不掉</b>。
+        </div>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <b>为什么不用现成的高效注意力方案？</b>
+      论文 §2.2 把现有工作归为一类：它们都在<b>注意力模块内部</b>做优化（极线对齐、Plücker 射线、代理网格对应、CTR3D 的 token 压缩），
+      <b>整条 token 序列在 DiT 主干里始终不变</b>。当原始序列本身就超过 200 K token 时，
+      attention 侧的节省填不上 feed-forward 和显存的坑——所以必须<b>在进 DiT 之前就把序列缩短</b>。这是 UltraTex 与它们的分水岭。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ③ 方法 ================= -->
+<section id="method">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 03 · Method</div>
+      <h2>三个组件：按"序列 / 注意力 / 解码"三级分层</h2>
+      <p>基座是 FLUX MM-DiT + Flow Matching 的 in-context 条件范式，三个组件分别在三个层级上动手。</p>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 980 250" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif">
+        <defs>
+          <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#8494a9"/></marker>
+        </defs>
+        <!-- 输入 -->
+        <rect x="10" y="30" width="120" height="52" rx="9" fill="#eef2fb" stroke="#c7d7f5"/>
+        <text x="70" y="52" font-size="12.5" font-weight="700" fill="#1a2332" text-anchor="middle">参考图 I_ref</text>
+        <text x="70" y="68" font-size="10.5" fill="#8494a9" text-anchor="middle">16,384 tok</text>
+
+        <rect x="10" y="100" width="120" height="52" rx="9" fill="#eef2fb" stroke="#c7d7f5"/>
+        <text x="70" y="122" font-size="12.5" font-weight="700" fill="#1a2332" text-anchor="middle">几何法线 I_cond</text>
+        <text x="70" y="138" font-size="10.5" fill="#8494a9" text-anchor="middle">6 × 16,384 tok</text>
+
+        <rect x="10" y="170" width="120" height="52" rx="9" fill="#f6f0ff" stroke="#ddd0fb"/>
+        <text x="70" y="192" font-size="12.5" font-weight="700" fill="#1a2332" text-anchor="middle">噪声 ε</text>
+        <text x="70" y="208" font-size="10.5" fill="#8494a9" text-anchor="middle">6 × 16,384 tok</text>
+
+        <line x1="130" y1="196" x2="168" y2="196" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <!-- BTD -->
+        <rect x="172" y="140" width="150" height="82" rx="10" fill="#fff6ec" stroke="#ea8a3c" stroke-width="1.6"/>
+        <text x="247" y="164" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">① Background</text>
+        <text x="247" y="180" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">Token Dropping</text>
+        <text x="247" y="199" font-size="10.5" fill="#4b5a6e" text-anchor="middle">按 mask 删除，保留</text>
+        <text x="247" y="212" font-size="10.5" fill="#4b5a6e" text-anchor="middle">原始 RoPE 索引</text>
+
+        <line x1="322" y1="181" x2="360" y2="181" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <!-- DiT -->
+        <rect x="364" y="120" width="190" height="122" rx="10" fill="#eef5ff" stroke="#2563eb" stroke-width="1.6"/>
+        <text x="459" y="145" font-size="12.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">MM-DiT Blocks</text>
+        <text x="459" y="164" font-size="11.5" fill="#4b5a6e" text-anchor="middle">② Block-Sparse Attention</text>
+        <text x="459" y="180" font-size="10.5" fill="#8494a9" text-anchor="middle">mean-pool 打分 → top-k 块</text>
+        <text x="459" y="196" font-size="10.5" fill="#8494a9" text-anchor="middle">块内仍是全注意力</text>
+        <text x="459" y="215" font-size="10.5" fill="#8494a9" text-anchor="middle">只对前景 token 预测 velocity</text>
+        <text x="459" y="232" font-size="10.5" fill="#8494a9" text-anchor="middle">（背景位置不更新）</text>
+
+        <line x1="554" y1="181" x2="592" y2="181" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <!-- VAE Dec -->
+        <rect x="596" y="120" width="184" height="122" rx="10" fill="#eefaf2" stroke="#16a34a" stroke-width="1.6"/>
+        <text x="688" y="145" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">③ Foreground-Aware</text>
+        <text x="688" y="163" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">VAE Decoding</text>
+        <text x="688" y="183" font-size="10.5" fill="#4b5a6e" text-anchor="middle">噪声背景 → 合法背景 latent</text>
+        <text x="688" y="199" font-size="10.5" fill="#4b5a6e" text-anchor="middle">（纯黑图编码后平铺）</text>
+        <text x="688" y="218" font-size="10.5" fill="#4b5a6e" text-anchor="middle">解码器前景受限微调</text>
+        <text x="688" y="234" font-size="10.5" fill="#4b5a6e" text-anchor="middle">3,000 steps / bs 64</text>
+
+        <line x1="780" y1="181" x2="818" y2="181" stroke="#8494a9" stroke-width="1.6" marker-end="url(#ar)"/>
+
+        <!-- 输出 -->
+        <rect x="822" y="140" width="148" height="82" rx="10" fill="#f6f0ff" stroke="#8b5cf6" stroke-width="1.6"/>
+        <text x="896" y="164" font-size="12.5" font-weight="700" fill="#7c3aed" text-anchor="middle">2048² 多视图</text>
+        <text x="896" y="180" font-size="10.5" fill="#4b5a6e" text-anchor="middle">albedo × 6</text>
+        <text x="896" y="199" font-size="10.5" fill="#4b5a6e" text-anchor="middle">↓ 重投影</text>
+        <text x="896" y="215" font-size="10.5" fill="#4b5a6e" text-anchor="middle">带纹理网格</text>
+
+        <text x="70" y="242" font-size="10.5" fill="#8494a9" text-anchor="middle">训练：全图噪声目标 → 应用 mask</text>
+      </svg>
+      <div class="svg-cap">图 1 · UltraTex 推理链路（对应论文 Fig. 2b）。训练时（Fig. 2a）目标走 VAE Encoder，在完整 latent 网格上构造 z(t)，再施加 token-dropping mask。</div>
+    </div>
+
+    <h3 class="block-title">3.0 基座：in-context 多视图扩散</h3>
+    <p style="font-size:13.8px;color:var(--ink2)">
+      生成器从预训练 <strong>FLUX</strong>（MM-DiT + Flow Matching）出发。参考图 I<sub>ref</sub>、多视图法线 I<sub>cond</sub>、
+      真值多视图 albedo I<sub>tgt</sub> 分别编码成 latent token 序列 z<sub>ref</sub> / z<sub>cond</sub> / z<sub>tgt</sub>，拼接成统一序列。
+      Flow Matching 的数据—噪声路径与训练目标：
+    </p>
+    <div class="eq">
+      z<sup>(t)</sup><sub>tgt</sub> = (1 − t) · z<sub>tgt</sub> + t · ε ,  t ∈ [0,1],  ε ∼ 𝒩(0, I) &nbsp;&nbsp;<span class="cmt">（式 1）</span><br>
+      ℒ<sub>FM</sub>(θ) = 𝔼 ‖ v̂<sub>θ</sub>( z<sup>(t)</sup><sub>tgt</sub>, z<sub>ref</sub>, z<sub>cond</sub>, t ) − (ε − z<sub>tgt</sub>) ‖₂² &nbsp;&nbsp;<span class="cmt">（式 2，只对目标 token 监督速度预测）</span>
+    </div>
+
+    <h3 class="block-title c-orange">3.1 Background Token Dropping —— 序列级</h3>
+    <div class="grid2">
+      <div class="method-card hl">
+        <h4><span class="cls">① Sequence</span> 删掉背景，但保留 RoPE 索引</h4>
+        <div class="tagline">进 MM-DiT 之前一次性删除，之后所有层都直接跑在短序列上</div>
+        <p>
+          二值前景 mask 直接从渲染数据的 <strong>alpha 通道</strong>取，下采样到 <strong>1/16</strong> 分辨率对齐 latent token 网格，
+          再做<strong>轻微膨胀</strong>以保留物体边界细节。六个视图的 mask 同时作用于噪声目标和几何条件 token，
+          参考图用自己的前景 mask。每个保留下来的 token 携带<strong>原始的 RoPE 索引</strong>。
+        </p>
+        <div class="pros">→ 绝对空间坐标完整保留，多视图一致性所依赖的极线与几何先验不失。</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls">Probe</span> 支撑它的那个实验</h4>
+        <div class="tagline">为什么"不连续的残缺序列"还能被去噪</div>
+        <p>
+          用预训练 FLUX 推理管线：提供六视图前景 mask → 把位置编码注入初始噪声 → <strong>删掉全部背景 token</strong>。
+          结果（Fig. 4）依然产出空间合理的前景。结论是 DiT 依赖 <strong>RoPE 而非 1D 序列的连续性</strong>来理解空间布局。
+        </p>
+        <div class="pros">→ 这解释了为什么不需要任何 token 重要性预测模块：几何 mask 已经确定性给出了答案。</div>
+      </div>
+    </div>
+    <div class="eq">
+      ℒ<sup>fg</sup><sub>FM</sub>(θ) = 𝔼 ‖ v̂<sup>fg</sup><sub>θ</sub> − Gather<sub>M<sub>fg</sub></sub>( ε − z<sub>tgt</sub> ) ‖₂² &nbsp;&nbsp;<span class="cmt">（式 3，flow matching 目标被改写为"忽略空区域"）</span><br>
+      z<sup>(t<sub>prev</sub>)</sup><sub>i</sub> = z<sup>(t<sub>curr</sub>)</sup><sub>i</sub> + (t<sub>prev</sub> − t<sub>curr</sub>) · v̂<sub>θ,i</sub> ,  ∀ i ∈ M<sub>fg</sub> &nbsp;&nbsp;<span class="cmt">（式 4，推理时 Euler 更新只在前景位置稀疏执行）</span>
+    </div>
+    <div class="callout warn">
+      <b>式 4 埋下的雷：</b>背景位置从头到尾<b>不更新</b>，于是采样结束时它们仍处在<b>初始高斯噪声状态</b>。
+      这就是 3.3 要解决的问题——不要急着跳过那一节。
+    </div>
+
+    <h3 class="block-title c-indigo">3.2 Block-Sparse Attention —— 注意力级</h3>
+    <div class="method-card">
+      <h4><span class="cls">② Attention</span> 在压缩后的前景序列上做 top-k 块选择，ρ = 20%</h4>
+      <div class="tagline">块级打分用 mean-pool，注意力本身仍在被选中的块内做全注意力</div>
+      <p>
+        动机来自 Fig. 5：训练一个带 BTD 的低分辨率全注意力模型后可视化其注意力图，
+        <strong>double-stream 与 single-stream 块都呈现稀疏模式</strong>——多数前景—前景交互对局部纹理合成没有贡献。
+        于是把 Q、K、V 切成块（Q<sub>i</sub> ∈ ℝ<sup>b<sub>q</sub>×d</sup>，K<sub>j</sub>, V<sub>j</sub> ∈ ℝ<sup>b<sub>kv</sub>×d</sup>）：
+      </p>
+      <div class="eq" style="margin-top:10px">
+        S<sub>c</sub> = pool(Q) · pool(K)<sup>⊤</sup> ∈ ℝ<sup>N<sub>q</sub>×N<sub>k</sub></sup> &nbsp;&nbsp;<span class="cmt">（式 6，块内 mean pooling 估计块级相关性，开销极低）</span><br>
+        M<sub>c</sub>[i, j] = 1 ⟺ j ∈ TopK( S<sub>c</sub>[i, :], K<sub>ρ</sub> ),  K<sub>ρ</sub> = ⌊ρ · N<sub>k</sub>⌋ &nbsp;&nbsp;<span class="cmt">（式 7，逐 query 块做行内 top-k）</span><br>
+        O<sub>i</sub> = Softmax( Q<sub>i</sub> K<sub>S<sub>i</sub></sub><sup>⊤</sup> / √d ) · V<sub>S<sub>i</sub></sub> &nbsp;&nbsp;<span class="cmt">（式 8，用未池化的原始 Q/K/V 计算）</span>
+      </div>
+      <div class="pros">→ 压缩分数只用于决定稀疏布局；被选中的块内部仍是完整 token 级注意力，所以保真度损失可控。</div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="summary-box">
+        <b>ρ 怎么定的？</b> 在一个带 BTD 的低分辨率全注意力模型上做验证实验，权衡效率与质量：ρ 越小越快，但会丢掉重要交互导致纹理损失。
+        最终取 <b>ρ = 20%</b>——再往下压收益有限，质量风险却明显上升。
+      </div>
+      <div class="summary-box">
+        <b>与 token pruning 系工作的区别（§2.4）：</b>现有 token reduction 多用<b>学习出来的重要性预测器 / 注意力分数</b>在 Transformer 层内动态剪枝；
+        UltraTex 用<b>显式几何 mask 确定性</b>识别无效 token，不引入任何新模块，且<b>只删一次</b>（进 MM-DiT 之前）。
+      </div>
+    </div>
+
+    <h3 class="block-title c-green">3.3 Foreground-Aware VAE Decoding —— 解码级</h3>
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls">③ Decoding</span> 问题：纯噪声背景会毁掉前景</h4>
+        <div class="tagline">为保住推理加速，不能去噪背景——那就别让解码器看见它</div>
+        <p>
+          若把"干净前景 + 纯噪声背景"的复合 latent 直接丢进标准 VAE 解码器，重建出的前景<strong>质量明显下降</strong>。
+          实测（Table 2）：PSNR 从全图重建的 47.65 dB 掉到 <strong>29.66 dB</strong>，LPIPS 从 0.0023 涨到 0.0263（<strong>11 倍</strong>）。
+        </p>
+        <div class="cons">→ 这说明噪声 latent 根本不是解码器的合法输入分布。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">Fix</span> 两步：换合法背景 + 前景受限微调</h4>
+        <div class="tagline">不重新去噪背景，所以加速一分不丢</div>
+        <p>
+          ① 用<strong>冻结的 VAE encoder 编码一张纯黑 RGB 图</strong>得到 z<sub>bg</sub>，平铺覆盖整个 2×3 网格，
+          按式 9 组装复合 latent；② 冻结 encoder，只对 decoder 做轻量微调，
+          损失<strong>只在前台像素上</strong>计算（式 10），3,000 steps / batch 64 / lr 1e-5。
+        </p>
+        <div class="pros">→ 最终 PSNR 50.26 dB，比"全图重建"基线还高 2.6 dB（因为监督只压在前景上）。</div>
+      </div>
+    </div>
+    <div class="eq">
+      z<sup>mix</sup><sub>i</sub> = z<sup>fg</sup><sub>0,i</sub> (i ∈ M<sub>fg</sub>) ;  z<sub>bg,i</sub> (otherwise) &nbsp;&nbsp;<span class="cmt">（式 9）</span><br>
+      ℒ<sub>dec</sub> = (1 / |M<sup>px</sup><sub>fg</sub>|) · Σ<sub>i ∈ M<sup>px</sup><sub>fg</sub></sub> ‖ D(z<sup>mix</sup>)<sub>i</sub> − x<sup>gt</sup><sub>i</sub> ‖₂² &nbsp;&nbsp;<span class="cmt">（式 10，M<sup>px</sup><sub>fg</sub> 为全像素分辨率下的前景 mask）</span>
+    </div>
+
+    <div class="callout">
+      <b>额外收益（§4.7）：</b>前景专用去噪天然支持一个推理时的旋钮——<b>Test-Time Foreground Scaling</b>。
+      放宽 BTD 的保留范围，就能在生成时把更多 token 分配给物体前景，多视图观测里的有效纹理证据变多，
+      给后续重投影更多素材。这是一个不用重训就能调质量/成本权衡的开关。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ④ 训练配方 ================= -->
+<section id="recipe">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 04 · Training Recipe</div>
+      <h2>训练配方：三阶段渐进，合计 18 天</h2>
+      <p>64 张 H200、per-GPU batch size 1、LoRA rank 64。这条时间线对想复现的人最有参考价值。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>阶段</th><th>分辨率</th><th>注意力</th><th>学习率</th><th>步数区间</th><th>耗时</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>Stage 1</b></td><td>512 × 512</td><td>全注意力</td><td>1 × 10⁻⁴</td><td>0 → 22 K</td><td>1 天</td><td>先在低分辨率把 in-context 条件范式训稳</td></tr>
+          <tr><td><b>Stage 2</b></td><td>1024 × 1024</td><td>全注意力</td><td>1 × 10⁻⁵</td><td>22 K → 70 K</td><td>8 天</td><td>分辨率翻倍，仍用全注意力过渡</td></tr>
+          <tr class="ours"><td><b>Stage 3</b></td><td>2048 × 2048</td><td>Block-Sparse (ρ = 0.2)</td><td>2 × 10⁻⁵</td><td>70 K → 97 K</td><td>9 天</td><td>切到块稀疏注意力，最终 2K 阶段</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid3" style="margin-top:18px">
+      <div class="card">
+        <h3 class="block-title c-teal" style="margin-top:0">按前景 token 数分桶</h3>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          训练样本按<strong>有效前景 token 数</strong> bucket，保证一个 data-parallel batch 内各 GPU 处理长度相近的序列，
+          降低负载不均。<span style="color:var(--ink3)">这是 BTD 的连带好处：序列长度不再由画布尺寸决定，而由物体本身决定，分桶才有意义。</span>
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-purple" style="margin-top:0">显存与并行</h3>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          <strong>DeepSpeed ZeRO-2</strong> + <strong>gradient checkpointing</strong>。
+          论文明确点出：即便如此，<strong>前景占比超过 80% 时序列仍会超过 192 K token，所有配置全部 OOM</strong>——
+          这反过来证明了"缩短序列"必须是第一步，只做注意力稀疏化救不了场。
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-orange" style="margin-top:0">训练数据的取用口径</h3>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          G-buffer TexVerse 里<strong>只用 normal map 作为几何条件</strong>，
+          所有渲染视图统一 resize 到 <strong>2048 × 2048</strong>。
+          数据集原生最高 4096²（源纹理 ≥2048 时），训练阶段并不吃满。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑤ 数据集 ================= -->
+<section id="dataset">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 05 · G-buffer TexVerse</div>
+      <h2>G-buffer TexVerse：858 K 原始资产筛到 268 K</h2>
+      <p>建立在 TexVerse 之上，Blender Cycles 渲染。发布的桶与训练用的子集不是一回事，别搞混。</p>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 980 150" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif">
+        <defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8494a9"/></marker></defs>
+        <g>
+          <rect x="8" y="34" width="150" height="76" rx="9" fill="#eef2fb" stroke="#c7d7f5"/>
+          <text x="83" y="62" font-size="19" font-weight="700" fill="#1a2332" text-anchor="middle">858 K</text>
+          <text x="83" y="82" font-size="11" fill="#4b5a6e" text-anchor="middle">TexVerse 原始</text>
+          <text x="83" y="98" font-size="10" fill="#8494a9" text-anchor="middle">raw assets</text>
+        </g>
+        <line x1="162" y1="72" x2="186" y2="72" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar2)"/>
+        <g>
+          <rect x="190" y="34" width="150" height="76" rx="9" fill="#eef2fb" stroke="#c7d7f5"/>
+          <text x="265" y="62" font-size="19" font-weight="700" fill="#1a2332" text-anchor="middle">402 K</text>
+          <text x="265" y="82" font-size="11" fill="#4b5a6e" text-anchor="middle">视觉质量筛选</text>
+          <text x="265" y="98" font-size="10" fill="#8494a9" text-anchor="middle">GPT-5 打分</text>
+        </g>
+        <line x1="344" y1="72" x2="368" y2="72" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar2)"/>
+        <g>
+          <rect x="372" y="34" width="150" height="76" rx="9" fill="#fff6ec" stroke="#ea8a3c" stroke-width="1.6"/>
+          <text x="447" y="62" font-size="19" font-weight="700" fill="#b45309" text-anchor="middle">351,847</text>
+          <text x="447" y="82" font-size="11" fill="#4b5a6e" text-anchor="middle">非 BSDF 剔除后</text>
+          <text x="447" y="98" font-size="10" fill="#8494a9" text-anchor="middle">← 公开发布的池</text>
+        </g>
+        <line x1="526" y1="72" x2="550" y2="72" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar2)"/>
+        <g>
+          <rect x="554" y="34" width="150" height="76" rx="9" fill="#eef2fb" stroke="#c7d7f5"/>
+          <text x="629" y="62" font-size="19" font-weight="700" fill="#1a2332" text-anchor="middle">297 K</text>
+          <text x="629" y="82" font-size="11" fill="#4b5a6e" text-anchor="middle">albedo 熵过滤</text>
+          <text x="629" y="98" font-size="10" fill="#8494a9" text-anchor="middle">掉 bucket 0–3</text>
+        </g>
+        <line x1="708" y1="72" x2="732" y2="72" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar2)"/>
+        <g>
+          <rect x="736" y="34" width="150" height="76" rx="9" fill="#eefaf2" stroke="#16a34a" stroke-width="1.6"/>
+          <text x="811" y="62" font-size="19" font-weight="700" fill="#15803d" text-anchor="middle">268,365</text>
+          <text x="811" y="82" font-size="11" fill="#4b5a6e" text-anchor="middle">AI 内容移除</text>
+          <text x="811" y="98" font-size="10" fill="#8494a9" text-anchor="middle">← UltraTex 训练用</text>
+        </g>
+        <text x="490" y="132" font-size="11.5" fill="#8494a9" text-anchor="middle">橙色框 = 公开发布范围（25.3 TB）｜绿色框 = UltraTex 实际训练子集（需要自己再跑后两道过滤）</text>
+      </svg>
+      <div class="svg-cap">图 2 · 资产筛选漏斗。官网漏斗数字为约数（348 K 处），发布桶实测为 351,847，以实测为准。</div>
+    </div>
+
+    <div class="grid2" style="margin-top:20px">
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">两套相机配置，覆盖同一批 asset</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>配置</th><th>视角</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr class="ours"><td><b>Canonical</b></td><td>6</td><td>方位 0°/90°/180°/270° + 顶 + 底，仰角 0。<b>UltraTex 训练与评测用</b>，另含 3 组各 4 张训练参考图</td></tr>
+              <tr><td><b>Sphere</b></td><td>36</td><td>12 方位（每 30°）× 3 仰角（−40°/−20°/+30°）。<b>UltraTex 不用</b>，为密集覆盖类任务（新视角合成、稀疏视角重建）发布</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13px;color:var(--ink3);margin-top:10px">
+          两者共享相机内参、物体归一化、随长宽比自适应的距离与采样光照，<b>只差视角</b>。
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-teal" style="margin-top:0">每视角输出（G-buffer 全通道）</h3>
+        <ul class="tight">
+          <li><b>几何：</b>bump_normal_camera / bump_normal_world、position（canonical 坐标图）</li>
+          <li><b>材质：</b>albedo；部分资产带 roughness_metallic</li>
+          <li><b>光照：</b>render_0/1/2，从 862 张 Poly Haven HDRI 池里为每个资产采样 3 张</li>
+          <li><b>相机：</b>pose/*.npy（3×4 外参）、intrinsics.npy、env_indices.txt</li>
+          <li><b>渲染器：</b>Blender Cycles，所有输出均带 alpha 通道 ← BTD 的 mask 就来自这里</li>
+          <li><b>分辨率：</b>2048²（源纹理 1024）或 4096²（源 ≥2048）</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>发布范围 ≠ 训练子集。</b>HF 上放的是 <b>351,847</b> 的 BSDF 池（canonical 4.25 TB + sphere 21.09 TB），
+      而 UltraTex 训练用的是经 albedo 熵与 AI 内容两道过滤后的 <b>268,365</b>。
+      后两道过滤的产物<b>没有单独发布</b>，要复现训练得自己再筛一遍。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑥ 实验 ================= -->
+<section id="exp">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 06 · Experiments</div>
+      <h2>定量结果：三条赛道分开评，不然不公平</h2>
+      <p>held-out TexVerse 测试集 100 个未见物体，32 个视点与真值对比。</p>
+    </div>
+
+    <div class="grid3" style="margin-bottom:18px">
+      <div class="card" style="border-top:3px solid var(--blue)">
+        <b style="font-size:14.5px">Unshaded</b>
+        <p style="font-size:13px;color:var(--ink2);margin-top:4px">
+          评测显式产出免光照 albedo 的方法。对带 baked lighting 的纹理-only baseline，
+          <b>不报 albedo 指标</b>以避免不公平比较——所以 Step1X-3D 与 UniTEX 在这一列是空的。
+        </p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--orange)">
+        <b style="font-size:14.5px">Shaded</b>
+        <p style="font-size:13px;color:var(--ink2);margin-top:4px">
+          把每种方法的最终带纹理网格放在<b>统一渲染管线</b>下，使用与输入参考图相同的光照。
+        </p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--purple)">
+        <b style="font-size:14.5px">Relighting</b>
+        <p style="font-size:13px;color:var(--ink2);margin-top:4px">
+          同样统一管线，但换成<b>随机采样的环境贴图</b>。无 PBR 通道的方法与 UltraTex 一律用
+          roughness/metallic = 1/0 的固定材质设置。
+        </p>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2">Method</th>
+            <th colspan="5" style="text-align:center;border-left:2px solid var(--line)">Unshaded</th>
+            <th colspan="5" style="text-align:center;border-left:2px solid var(--line)">Shaded</th>
+            <th colspan="5" style="text-align:center;border-left:2px solid var(--line)">Relighting</th>
+          </tr>
+          <tr>
+            <th style="border-left:2px solid var(--line)">FID↓</th><th>CLIP-FID↓</th><th>CMMD↓</th><th>CLIP-I↑</th><th>LPIPS↓</th>
+            <th style="border-left:2px solid var(--line)">FID↓</th><th>CLIP-FID↓</th><th>CMMD↓</th><th>CLIP-I↑</th><th>LPIPS↓</th>
+            <th style="border-left:2px solid var(--line)">FID↓</th><th>CLIP-FID↓</th><th>CMMD↓</th><th>CLIP-I↑</th><th>LPIPS↓</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="dim"><td>Step1X-3D</td>
+            <td style="border-left:2px solid var(--line)">–</td><td>–</td><td>–</td><td>–</td><td>–</td>
+            <td style="border-left:2px solid var(--line)">160.3</td><td>19.265</td><td>0.613</td><td>0.900</td><td>0.154</td>
+            <td style="border-left:2px solid var(--line)">160.7</td><td>19.189</td><td>0.600</td><td>0.901</td><td>0.154</td></tr>
+          <tr class="dim"><td>UniTEX</td>
+            <td style="border-left:2px solid var(--line)">–</td><td>–</td><td>–</td><td>–</td><td>–</td>
+            <td style="border-left:2px solid var(--line)">133.8</td><td>16.750</td><td>0.524</td><td>0.918</td><td>0.116</td>
+            <td style="border-left:2px solid var(--line)">133.4</td><td>15.697</td><td>0.458</td><td>0.923</td><td>0.113</td></tr>
+          <tr><td>Hunyuan3D 2.1</td>
+            <td style="border-left:2px solid var(--line)">153.48</td><td>18.995</td><td>1.150</td><td>0.908</td><td>0.136</td>
+            <td style="border-left:2px solid var(--line)">123.1</td><td>14.354</td><td>0.432</td><td>0.929</td><td>0.119</td>
+            <td style="border-left:2px solid var(--line)">126.0</td><td>14.117</td><td>0.409</td><td>0.930</td><td>0.117</td></tr>
+          <tr><td>LumiTex</td>
+            <td style="border-left:2px solid var(--line)">147.31</td><td>18.251</td><td>1.223</td><td>0.914</td><td>0.138</td>
+            <td style="border-left:2px solid var(--line)">110.6</td><td>12.265</td><td>0.351</td><td>0.939</td><td>0.107</td>
+            <td style="border-left:2px solid var(--line)">114.5</td><td>11.982</td><td>0.316</td><td>0.941</td><td>0.105</td></tr>
+          <tr class="ours"><td>UltraTex (Ours)</td>
+            <td style="border-left:2px solid var(--line)">125.13</td><td>15.180</td><td>0.810</td><td>0.929</td><td>0.082</td>
+            <td style="border-left:2px solid var(--line)">97.6</td><td>12.239</td><td>0.368</td><td>0.941</td><td>0.064</td>
+            <td style="border-left:2px solid var(--line)">96.4</td><td>11.583</td><td>0.333</td><td>0.944</td><td>0.062</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="chart-note">Table 1（论文 Table 1，原表数值照录）。↓ 越低越好，↑ 越高越好。</div>
+
+    <div class="grid2" style="margin-top:20px">
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">FID：三条赛道全胜</h3>
+        <div class="chart-box"><canvas id="c-fid"></canvas></div>
+        <div class="chart-note">同一批 100 个测试物体、32 视点。Unshaded 列缺 Step1X-3D / UniTEX（见左侧说明）。</div>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-green" style="margin-top:0">LPIPS：差距最大在这里</h3>
+        <div class="chart-box"><canvas id="c-lpips"></canvas></div>
+        <div class="chart-note">LPIPS 是感知相似度，越低越接近真值。UltraTex 在 Shaded / Relighting 上比最强 baseline 低约 40%——这是 2K 分辨率带来的高频细节。</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>一处需要如实指出的落后：</b>CMMD 在 Shaded（0.368 vs LumiTex 0.351）与 Relighting（0.333 vs 0.316）两条赛道上，
+      UltraTex <b>略逊于 LumiTex</b>。CMMD 衡量的是生成细节的<b>分布多样性</b>，不是保真度。
+      结合 LPIPS 大幅领先一起看，合理的解读是：UltraTex 的产出更"贴近真值"、但多样性略窄。
+      论文没有讨论这一点。
+    </div>
+
+    <h3 class="block-title c-green">VAE 解码消融：为什么非要这一步</h3>
+    <div class="grid2">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>解码设置</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+          <tbody>
+            <tr><td>FLUX VAE（全图重建）</td><td>47.65</td><td>0.9937</td><td>0.0023</td></tr>
+            <tr class="dim"><td>FLUX VAE（噪声背景）</td><td>29.66</td><td>0.9555</td><td>0.0263</td></tr>
+            <tr><td>Ours（w/o finetune）</td><td>37.81</td><td>0.9818</td><td>0.0084</td></tr>
+            <tr class="ours"><td>Ours（w/ finetune）</td><td>50.26</td><td>0.9956</td><td>0.0038</td></tr>
+          </tbody>
+        </table>
+        <div class="chart-note">Table 2（论文 Table 2）。第一行是"干净全图"的上限参考，不是前景-only 设置。</div>
+      </div>
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">怎么读这张表</h3>
+        <ul class="tight">
+          <li><b>29.66 dB</b> 是"什么都不做"的结果：噪声背景 latent 直接进解码器，前景被污染，PSNR 掉了近 18 dB。</li>
+          <li><b>37.81 dB</b> 是只换合法背景 latent（纯黑图编码平铺）：一块就补回 8 dB，证明问题出在<b>输入分布不合法</b>。</li>
+          <li><b>50.26 dB</b> 是再叠前景受限微调：比"全图重建"的 47.65 dB 还高——因为监督全压在前景上，解码器不必兼顾背景。</li>
+          <li>注意 <b>LPIPS 0.0038 vs 全图 0.0023</b>：PSNR 赢了但感知指标略输，与第一行"<b>干净输入</b>"相比仍有小差距，只是已经完全够用。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑦ 效率 ================= -->
+<section id="efficiency">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 07 · Efficiency</div>
+      <h2>效率：两级组件的贡献分解</h2>
+      <p>单张 H200，2048 分辨率。两个组件的加速是乘性叠加的，但各自的主场不同。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card" style="border-top:3px solid var(--orange)">
+        <h3 class="block-title c-orange" style="margin-top:0">① BTD 单独</h3>
+        <div style="display:flex;gap:14px;margin-top:8px">
+          <div style="flex:1;background:#fff6ec;border-radius:10px;padding:14px">
+            <div style="font-size:22px;font-weight:700;color:#c2410c">1.4×–53.0×</div>
+            <div style="font-size:12.5px;color:var(--ink2)">训练加速</div>
+          </div>
+          <div style="flex:1;background:#fff6ec;border-radius:10px;padding:14px">
+            <div style="font-size:22px;font-weight:700;color:#c2410c">1.0×–48.1×</div>
+            <div style="font-size:12.5px;color:var(--ink2)">推理加速</div>
+          </div>
+        </div>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:10px">
+          <b>主场是前景占比低的时候。</b>此时背景 token 就是序列的大头，删掉它们收益最大；
+          前景占比高时（例如 80%+）能删的很少，加速趋近 1.0×。
+        </p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--indigo)">
+        <h3 class="block-title c-indigo" style="margin-top:0">② BSA 叠在 BTD 之上</h3>
+        <div style="display:flex;gap:14px;margin-top:8px">
+          <div style="flex:1;background:#eef0ff;border-radius:10px;padding:14px">
+            <div style="font-size:22px;font-weight:700;color:#4338ca">1.7×–2.9×</div>
+            <div style="font-size:12.5px;color:var(--ink2)">训练加速</div>
+          </div>
+          <div style="flex:1;background:#eef0ff;border-radius:10px;padding:14px">
+            <div style="font-size:22px;font-weight:700;color:#4338ca">1.6×–4.1×</div>
+            <div style="font-size:12.5px;color:var(--ink2)">推理加速</div>
+          </div>
+        </div>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:10px">
+          <b>主场是前景占比高的时候。</b>序列越长，稀疏化能省的越多；
+          前景少时序列已经被 BTD 砍短，BSA 的余量就小了。
+        </p>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <b>互补关系：</b>BTD 在"背景多"时强、BSA 在"前景多"时强，两者叠加后在整个前景占比区间都拿得到可观的加速。
+      在数据集典型区间（10%–30%）取 ρ = 20%，合计 <b>20.6×–91.1× 训练 / 22.3×–74.6× 端到端推理</b>。
+    </div>
+
+    <div class="callout warn">
+      <b>硬边界：</b>前景占比超过 <b>80%</b> 时序列超过 192 K token，<b>所有配置全部 OOM</b>。
+      这不是参数没调好，而是说明——在高分辨率多视图扩散里，<b>缩短序列是使能步骤，注意力稀疏化只是放大器</b>。
+      顺序反了就不成立。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑧ 局限 ================= -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 08 · Limitations</div>
+      <h2>局限：作者自己列了三条</h2>
+      <p>其中两条都指向同一个根因——FLUX 这个基座本身。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="concl c-orange">
+        <span class="n">局限 01</span>
+        <h4>高度重复的纹理图案会失败</h4>
+        <p>论文给了专门的失败案例（Fig. 11）：对重复性强的图案，生成会出问题。这一点没有给出量化范围。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">局限 02</span>
+        <h4>VAE latent 压缩率封住了细节上限</h4>
+        <p>
+          虽然做了前景感知的解码器微调，整条链路仍然跑在<b>压缩后的 latent 空间</b>里。
+          对高分辨率渲染真值，encode–decode 本身就会糊掉一部分高频细节。
+          <b>微调解码器救不回编码器丢掉的信息。</b>
+        </p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">局限 03</span>
+        <h4>再往上走到 4K/8K 需要换地基</h4>
+        <p>
+          FLUX 的有效工作区间与约 1K–2K 最匹配，4K 输入已大幅超出预训练适配的分辨率范围。
+          作者明确说：要端到端做到 4K 甚至 8K，可能得<b>重新设计原生支持超高分辨率输入的 DiT–VAE 基础模型</b>。
+        </p>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <b>本站补充观察：</b>三条局限里有两条指向 latent 空间，这其实暗示了下一个可做的方向——
+      UltraTex 证明了<b>token 层面的稀疏化</b>能撑到 2K，但再往上瓶颈会转移到<b>表示层面</b>（VAE 压缩率与 DiT 的分辨率适配）。
+      另外，论文全程只用 normal map 作几何条件、输出 albedo，<b>没有产出 roughness/metallic</b>；
+      评测时 UltraTex 与无 PBR 通道的方法一样用 1/0 固定材质——所以它不是一篇 PBR 材质生成工作，
+      与本站 <a href="../luce/index.html">Luce</a> 那条路线并不冲突，是互补的。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑨ 数据示例导航 ================= -->
+<section id="sample">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 09 · Dataset Sample</div>
+      <h2>配套数据示例：已下好一个完整资产</h2>
+      <p>不用下 25 TB。单个 asset 只有 2 MB / 14 MB，可以逐桶 range-read 出来。</p>
+    </div>
+
+    <div class="nav-hero">
+      <div class="l">
+        <h3>🎁 G-buffer TexVerse 示例浏览器</h3>
+        <p class="d">
+          资产 <code>0000ecca9a234cae994be239f6fec552_1024</code>（一个监听音箱，源纹理 1024 → 渲染 2048²）。
+          两个 split 都拉全了：canonical 6 视角 + 3 组参考图（83 个文件），sphere 36 视角（326 个文件），共 <b>409 个数据文件 / 19 MB</b>。
+        </p>
+        <ul>
+          <li><b>切 split：</b>canonical（6 视角）↔ sphere（36 视角转台）</li>
+          <li><b>切通道：</b>albedo、bump_normal_camera、bump_normal_world、position、roughness_metallic、render_0/1/2</li>
+          <li><b>实测字段口径：</b>intrinsics.npy = <code>[[fx,fy],[cx,cy],[W,H]]</code> = [[3200,3200],[1024,1024],[2048,2048]]，水平 FOV ≈ 35.5°；pose/*.npy 为 3×4 外参；图像 2048² RGBA，alpha 即前景 mask（BTD 用的就是它）</li>
+          <li><b>env_indices.txt</b> = [728, 130, 559]，与 render_ref_{0,1,2}/env_id.txt 逐项一致</li>
+        </ul>
+        <a class="btn" href="./sample/index.html">打开示例浏览器 →</a>
+        <a class="btn ghost" href="./sample/SAMPLE_NOTES.md">结构说明</a>
+      </div>
+      <div class="r">
+        <b style="font-size:13.5px;color:var(--ink2)">预览图</b>
+        <div class="thumbs">
+          <figure><img src="./sample/preview_canonical.png" alt="canonical 8 通道 × 6 视角"><figcaption>canonical · 8 通道 × 6 视角</figcaption></figure>
+          <figure><img src="./sample/preview_sphere.png" alt="sphere 36 视角"><figcaption>sphere · 36 视角转台</figcaption></figure>
+        </div>
+        <p style="font-size:12.5px;color:var(--ink3);margin-top:12px">
+          换任意 asset：把 remotezip 代码里的 id 换掉，桶号取 id 前两位 hex 即可。
+          <b>注意 sphere 单桶 82 GB，别用 snapshot_download 整桶拉。</b>
+        </p>
+      </div>
+    </div>
+
+    <div class="grid3" style="margin-top:18px">
+      <div class="card">
+        <h3 class="block-title c-teal" style="margin-top:0">完整性已核验</h3>
+        <p style="font-size:13.3px;color:var(--ink2)">
+          512 个桶全部在线可读；canonical / sphere 各 <b>351,847</b> 个 item zip，与声明值逐项吻合；
+          源分辨率分布 1024:102,254 / 2048:147,261 / 4096:79,198 / 8192:23,134 完全对上；
+          两个 split 逐桶 asset id 一致；全库 id 唯一、无重复、分片前缀正确。
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-orange" style="margin-top:0">两处无关紧要的瑕疵</h3>
+        <p style="font-size:13.3px;color:var(--ink2)">
+          <code>canonical/00.manifest.jsonl</code> 有 4 条重复行（唯一 id 仍为 1388）；
+          2/1388 资产的 manifest <code>files</code> 字段写成 104 而实际是 77（元数据笔误，占比 0.14%）。
+          均不影响数据本身。
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">许可与规模</h3>
+        <p style="font-size:13.3px;color:var(--ink2)">
+          <b>CC0</b>，无 gate。canonical 4.25 TB（单桶 15.2–18.1 GB）+ sphere 21.09 TB（单桶 74.7–90.1 GB），
+          合计 <b>25.3 TB</b>。做 UltraTex 风格训练只需要 canonical。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 资源 ================= -->
+<section id="links">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 10 · Resources</div>
+      <h2>资源链接</h2>
+    </div>
+    <div class="grid4">
+      <a class="card" style="display:block" href="https://arxiv.org/abs/2609.23169" target="_blank" rel="noopener">
+        <b>📄 arXiv:2609.23169</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">论文原文 · 14 页 · 2026-09-19</p>
+      </a>
+      <a class="card" style="display:block" href="https://yiboz2001.github.io/UltraTex/" target="_blank" rel="noopener">
+        <b>🌐 项目主页</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">yiboz2001.github.io/UltraTex</p>
+      </a>
+      <a class="card" style="display:block" href="https://huggingface.co/datasets/YiboZhang2001/G-buffer-TexVerse" target="_blank" rel="noopener">
+        <b>💾 G-buffer TexVerse</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">HF 数据集 · 25.3 TB · CC0</p>
+      </a>
+      <a class="card" style="display:block" href="https://doi.org/10.1145/3829340.3842299" target="_blank" rel="noopener">
+        <b>🏛 SIGGRAPH Asia 2026</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">DOI 10.1145/3829340.3842299</p>
+      </a>
+    </div>
+
+    <h3 class="block-title">BibTeX</h3>
+    <div class="eq" style="font-family:Consolas,Monaco,monospace;font-size:12.5px;line-height:1.7">
+      @inproceedings{zhang2026ultratex,<br>
+      &nbsp;&nbsp;author&nbsp;&nbsp;&nbsp;&nbsp;= {Zhang, Yibo and Yuan, Ze and Cao, Nan and Zhang, Li and Cao, Yan-Pei and Guo, Yuan-Chen and Ma, Rui},<br>
+      &nbsp;&nbsp;title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {UltraTex: Unleashing 2K Multi-View Diffusion for 3D Texturing},<br>
+      &nbsp;&nbsp;year&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {2026},<br>
+      &nbsp;&nbsp;booktitle = {Proceedings of the SIGGRAPH Asia 2026 Conference Papers},<br>
+      &nbsp;&nbsp;series&nbsp;&nbsp;&nbsp;&nbsp;= {SA Conference Papers '26},<br>
+      &nbsp;&nbsp;publisher = {Association for Computing Machinery},<br>
+      &nbsp;&nbsp;address&nbsp;&nbsp;&nbsp;= {Kuala Lumpur, Malaysia},<br>
+      &nbsp;&nbsp;doi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {10.1145/3829340.3842299}<br>
+      }
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>UltraTex: Unleashing 2K Multi-View Diffusion for 3D Texturing</b> ·
+      Yibo Zhang（吉林大学 / 上海创智学院）, Ze Yuan（香港大学）, Nan Cao（同济大学 / 上海创智学院）,
+      Li Zhang（复旦大学 / 上海创智学院）, Yan-Pei Cao, Yuan-Chen Guo（VAST）, Rui Ma（吉林大学，通讯作者）
+      · arXiv:2609.23169v1 [cs.CV] · 2026-09-19 · SIGGRAPH Asia 2026
+    </p>
+    <p style="margin-top:8px">
+      本页所有数值均取自论文正文（Table 1–2、§4.1 实现细节）与项目主页，未做二次加工。
+      数据集规模与完整性为本站实测（远程读取 512 个桶的 zip 中央目录，2026-10-09）。
+      解读与判断为本站观点。
+    </p>
+    <p style="margin-top:12px">
+      <a href="../index.html">← 返回首页</a> ·
+      <a href="./sample/index.html">G-buffer TexVerse 数据示例</a> ·
+      <a href="../luce/index.html">Luce 深度解读</a> ·
+      <a href="../pbr-materials/index.html">PBR 材质生成专题梳理</a> ·
+      <a href="../3d-generation-2026/index.html">2026 年 3D 生成论文合集</a> ·
+      <a href="../line-primitives/index.html">Line Primitives IR</a> ·
+      <a href="https://arxiv.org/abs/2609.23169" target="_blank" rel="noopener">arXiv 原文 ↗</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  if (typeof Chart === "undefined") {
+    document.querySelectorAll(".chart-box").forEach(function (b) {
+      b.innerHTML = '<p style="font-size:13px;color:#8494a9;padding:40px 0;text-align:center">' +
+        '图表需要加载 Chart.js（CDN 不可达时自动降级为表格，上方表格数据完整）</p>';
+    });
+    return;
+  }
+  var FONT = '"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = "#4b5a6e";
+
+  var LABELS = ["Step1X-3D", "UniTEX", "Hunyuan3D 2.1", "LumiTex", "UltraTex"];
+  var COLORS = {
+    unshaded: "#2563eb", shaded: "#ea8a3c", relighting: "#8b5cf6"
+  };
+
+  function mk(id, data, title, yLabel) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: LABELS,
+        datasets: [
+          { label: "Unshaded", data: data[0], backgroundColor: COLORS.unshaded, borderRadius: 4 },
+          { label: "Shaded", data: data[1], backgroundColor: COLORS.shaded, borderRadius: 4 },
+          { label: "Relighting", data: data[2], backgroundColor: COLORS.relighting, borderRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "top", labels: { boxWidth: 12, padding: 14 } },
+          title: { display: true, text: title, font: { size: 13.5, weight: "600" }, color: "#1a2332", padding: { bottom: 10 } },
+          tooltip: { callbacks: { label: function (c) { return c.dataset.label + ": " + (c.parsed.y === null ? "不适用" : c.parsed.y); } } }
+        },
+        scales: {
+          y: { beginAtZero: false, title: { display: true, text: yLabel }, grid: { color: "#eef2f8" } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // FID: [Unshaded, Shaded, Relighting]
+  mk("c-fid", [
+    [null, null, 153.48, 147.31, 125.13],
+    [160.3, 133.8, 123.1, 110.6, 97.6],
+    [160.7, 133.4, 126.0, 114.5, 96.4]
+  ], "FID ↓（越低越好）", "FID");
+
+  // LPIPS
+  mk("c-lpips", [
+    [null, null, 0.136, 0.138, 0.082],
+    [0.154, 0.116, 0.119, 0.107, 0.064],
+    [0.154, 0.113, 0.117, 0.105, 0.062]
+  ], "LPIPS ↓（越低越好）", "LPIPS");
+})();
+</script>
+</body>
+</html>

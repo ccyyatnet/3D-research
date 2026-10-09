@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G-buffer TexVerse 示例资产浏览器 · UltraTex 配套数据 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<style>
+  :root{--bg:#f5f7fb;--card:#fff;--ink:#1a2332;--ink2:#4b5a6e;--ink3:#8494a9;--line:#e3e9f2;--blue:#2563eb}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.6;padding:24px}
+  .wrap{max-width:1240px;margin:0 auto}
+  h1{font-size:22px;font-weight:600;letter-spacing:-.3px}
+  .sub{color:var(--ink2);font-size:13.5px;margin-top:6px}
+  code{background:#eef2fb;padding:1px 6px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 14px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  button{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:7px 15px;font-size:13.5px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit}
+  button:hover{border-color:#c3d3ee}
+  button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+  .meta div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+  .meta b{display:block;font-size:19px;color:var(--blue)}
+  .meta span{font-size:12.5px;color:var(--ink3)}
+  .grid{display:grid;gap:8px}
+  .grid.g6{grid-template-columns:repeat(6,1fr)}
+  .cell{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative}
+  .cell img{display:block;width:100%;aspect-ratio:1;object-fit:cover;image-rendering:auto}
+  .cell i{position:absolute;left:6px;top:5px;font-style:normal;font-size:11px;color:#fff;background:rgba(30,45,70,.62);padding:1px 6px;border-radius:5px}
+  .sec{margin-top:26px}
+  .sec h2{font-size:15px;font-weight:600;margin-bottom:4px}
+  .sec p{font-size:12.5px;color:var(--ink3);margin-bottom:10px}
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
+  nav{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin-bottom:16px;font-size:13px}
+  nav .brand{font-weight:700}
+  nav .brand span{color:var(--blue)}
+  nav a{color:var(--ink2);font-weight:500}
+  nav a:hover{color:var(--blue);text-decoration:none}
+  nav a.hi{color:var(--blue);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="brand">3D<span>-Research</span></div>
+    <a class="hi" href="../index.html">← UltraTex 深度解读</a>
+    <a href="../../index.html">站点首页</a>
+    <a href="https://huggingface.co/datasets/YiboZhang2001/G-buffer-TexVerse" target="_blank" rel="noopener">HF 数据集 ↗</a>
+    <a href="https://arxiv.org/abs/2609.23169" target="_blank" rel="noopener">arXiv:2609.23169 ↗</a>
+  </nav>
+  <h1>G-buffer TexVerse · 示例资产</h1>
+  <p class="sub">asset id <code>0000ecca9a234cae994be239f6fec552_1024</code>（README 同名示例）· 源纹理 1024 → 渲染 2048² · 全部图像带 alpha 通道</p>
+
+  <div class="meta">
+    <div><b>409</b><span>本示例文件数</span></div>
+    <div><b>2048²</b><span>单张渲染分辨率</span></div>
+    <div><b>6 / 36</b><span>canonical / sphere 视角数</span></div>
+    <div><b>[728,130,559]</b><span>env_indices 环境光 id</span></div>
+  </div>
+
+  <div class="bar">
+    <button id="bCanon" class="on">canonical · 6 视角</button>
+    <button id="bSphere">sphere · 36 视角</button>
+  </div>
+
+  <div class="tabs" id="chTabs"></div>
+  <div class="grid g6" id="grid"></div>
+
+  <div class="sec" id="refSec">
+    <h2>训练参考图（仅 canonical）</h2>
+    <p>每个 HDR 环境光下随机采样 4 张正面视角，配 <code>render_ref_i_poses/*.npy</code></p>
+    <div class="grid g6" id="refGrid"></div>
+  </div>
+
+  <footer>
+    数据来源：huggingface.co/datasets/YiboZhang2001/G-buffer-TexVerse（CC0）· 本页仅索引本地已解包的示例文件，不联网。
+  </footer>
+</div>
+
+<script>
+const AID = "0000ecca9a234cae994be239f6fec552_1024";
+const CH = [
+  ["albedo", "反照率"],
+  ["bump_normal_camera", "法向 · 相机空间"],
+  ["bump_normal_world", "法向 · 世界空间"],
+  ["position", "规范空间坐标"],
+  ["roughness_metallic", "粗糙度 / 金属度"],
+  ["render_0", "渲染 · HDRI 728"],
+  ["render_1", "渲染 · HDRI 130"],
+  ["render_2", "渲染 · HDRI 559"]
+];
+const BASE = { canonical: "canonical", sphere: "sphere" };
+const VIEWS = { canonical: 6, sphere: 36 };
+let split = "canonical", ch = "albedo";
+
+const p = (s, c, i) => `${BASE[s]}/${AID}/${AID}/${c}/${String(i).padStart(3, "0")}.webp`;
+
+function renderTabs() {
+  const box = document.getElementById("chTabs");
+  box.innerHTML = "";
+  CH.forEach(([k, label]) => {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.className = k === ch ? "on" : "";
+    b.onclick = () => { ch = k; render(); };
+    box.appendChild(b);
+  });
+}
+
+function render() {
+  renderTabs();
+  const n = VIEWS[split];
+  const g = document.getElementById("grid");
+  g.innerHTML = "";
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement("div");
+    d.className = "cell";
+    const im = document.createElement("img");
+    im.src = p(split, ch, i);
+    im.loading = "lazy";
+    im.alt = `${split} ${ch} view ${i}`;
+    const tag = document.createElement("i");
+    tag.textContent = String(i).padStart(3, "0");
+    d.appendChild(im); d.appendChild(tag); g.appendChild(d);
+  }
+  const sec = document.getElementById("refSec");
+  sec.style.display = split === "canonical" ? "" : "none";
+  const rg = document.getElementById("refGrid");
+  rg.innerHTML = "";
+  if (split === "canonical") {
+    for (let r = 0; r < 3; r++) for (let i = 0; i < 4; i++) {
+      const d = document.createElement("div");
+      d.className = "cell";
+      const im = document.createElement("img");
+      im.src = `canonical/${AID}/${AID}/render_ref_${r}/${String(i).padStart(3, "0")}.webp`;
+      im.loading = "lazy";
+      im.alt = `ref ${r} view ${i}`;
+      const tag = document.createElement("i");
+      tag.textContent = `ref_${r} / ${i}`;
+      d.appendChild(im); d.appendChild(tag); rg.appendChild(d);
+    }
+  }
+}
+
+document.getElementById("bCanon").onclick = () => {
+  split = "canonical";
+  document.getElementById("bCanon").classList.add("on");
+  document.getElementById("bSphere").classList.remove("on");
+  render();
+};
+document.getElementById("bSphere").onclick = () => {
+  split = "sphere";
+  document.getElementById("bSphere").classList.add("on");
+  document.getElementById("bCanon").classList.remove("on");
+  render();
+};
+render();
+</script>
+</body>
+</html>

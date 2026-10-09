@@ -178,6 +178,18 @@
         <div class="p-go">进入解读 →</div>
       </a>
 
+      <a class="p-card" href="./ultratex/index.html">
+        <div class="p-badges"><span class="p-badge b-survey">🔬 深度解读</span><span class="p-badge b-date">2026-10-09 上线</span></div>
+        <h3>UltraTex：把多视图扩散纹理生成推到 2048</h3>
+        <p class="p-desc">SIGGRAPH Asia 2026 · arXiv:2609.23169 —— 六视图 in-context 扩散在 2048 下是 <b>212,992 token</b> 的序列。先按几何 mask 删掉背景 token（保留原始 RoPE 索引，故多视图先验不失），再在剩余前景上做 top-k 块稀疏注意力，最后用前景感知 VAE 解码补回「只去噪前景」留下的坑。训练提速 20.6×–91.1×、推理 22.3×–74.6×。配套 G-buffer TexVerse（351,847 资产 / 25.3 TB），页内可直接浏览已下好的完整示例资产。</p>
+        <div class="p-meta">
+          <div><b>2048²</b>多视图分辨率</div>
+          <div><b>−40%</b>Shaded LPIPS</div>
+          <div><b>351,847</b>数据集资产</div>
+        </div>
+        <div class="p-go">进入解读 →</div>
+      </a>
+
       <div class="p-card soon">
         <div class="big">🚧</div>
         <div>更多论文解读筹备中<br>敬请期待</div>
