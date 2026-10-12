@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hunyuan3D Studio 深度解读 · Game-Ready 3D 资产端到端产线 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:32px;line-height:1.3;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:920px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:320px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#f0f6ff;font-weight:600}
+  tr.ours:hover td{background:#e6efff}
+  tr.dim td{color:var(--ink3)}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .mod-step{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;box-shadow:var(--shadow)}
+  .mod-step .no{flex:0 0 auto;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+  .mod-step h4{font-size:14.5px}
+  .mod-step p{font-size:13px;color:var(--ink2);margin-top:3px}
+  .mod-step .dep{font-size:11.5px;color:var(--ink3);margin-top:5px}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#pipeline">② 七模块</a>
+      <a href="#concept">③ 概念</a>
+      <a href="#geometry">④ 几何</a>
+      <a href="#part">⑤ 部件</a>
+      <a href="#polygen">⑥ 重拓扑</a>
+      <a href="#uv">⑦ 语义 UV</a>
+      <a href="#texture">⑧ 纹理</a>
+      <a href="#rig">⑨ 动画</a>
+      <a href="#boundary">⑩ 报告边界</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 技术报告解读 · 2026-10-12 · arXiv:2509.12815 · Tencent Hunyuan3D</span>
+    <h1><em>Hunyuan3D Studio</em>：七个模块串成一条<br>直接进游戏引擎的资产产线</h1>
+    <p class="sub">
+      这篇不是单一算法论文，而是一份<b>系统集成报告</b>。作者的判断很明确：3D 生成的单点能力（几何生成）已经很强，
+      但业界缺的是把这些能力串成<b>能进 Unity / Unreal 的成品</b>——低模拓扑、语义 UV、PBR 材质、骨骼绑定缺一不可。
+      Hunyuan3D Studio 把七个子模块（可控图像生成、高保真几何、部件级生成、PolyGen 重拓扑、语义 UV、纹理生成与编辑、动画）
+      用统一的 asset graph 串起来，从一张概念图或一段文字直出 game-ready 资产。
+      报告的每个模块背后基本都有一篇独立论文（P³-SAM、X-Part、Mesh-RFT/BPT、SeamGPT、Romantex、MaterialMVP），
+      所以这份报告的价值在于<b>接口设计与工程取舍</b>，而不在于某个新 loss。
+    </p>
+    <div class="meta">
+      <span class="pill">Tencent Hunyuan3D · 100+ 位作者 · 技术报告</span>
+      <span class="pill">arXiv:2509.12815v1 [cs.CV] · 2025-09-16</span>
+      <span class="pill">27 页 · 7 模块 · 6 张量化表</span>
+      <span class="pill">基座：Hunyuan3D 2.1 / 2.5 · FLUX.1-dev · Qwen-Image-Edit</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>7</b><span>核心模块，用统一 asset graph 编排</span></div>
+      <div class="stat"><b>3.7 M</b><span>P³-SAM 自动部件标注网格数</span></div>
+      <div class="stat"><b>80 k</b><span>PBR 纹理资产（多视图 HDR 渲染 + VLM 标注）</span></div>
+      <div class="stat"><b>20 位</b><span>参与 UV 用户研究的专业 3D 艺术家</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= ① 结论先行 ================= -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 01 · Bottom Line</div>
+      <h2>结论先行</h2>
+      <p>如果只有三分钟，看这四张卡。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl">
+        <span class="n">结论 01</span>
+        <h4>它解决的是"最后一公里"，不是"生成质量"</h4>
+        <p>
+          引言里把问题说得很直白：现有方案只解决管线的孤立片段——"生成了几何却不具备游戏优化的拓扑，
+          或生成了纹理却缺乏材质精度"，把整合与精修的活留给美术。Hunyuan3D Studio 的目标函数不是 FID / CLIP-score，
+          而是<b>资产能否直接进引擎</b>：面数、边流、UV 语义、PBR 通道、骨骼层级。
+        </p>
+      </div>
+
+      <div class="concl c-orange">
+        <span class="n">结论 02</span>
+        <h4>三个模块在"对抗生成模型的固有缺陷"</h4>
+        <p>
+          生成模型产出的是<b>高模、乱拓扑、无语义</b>的网格。报告里三个模块是专门为擦这个屁股设计的：
+          <b>PolyGen</b> 用自回归模型逐面生成低模（取代传统重拓扑）、
+          <b>P³-SAM + X-Part</b> 把整体拆成可编辑部件、
+          <b>SeamGPT</b> 生成"美术风格"的切割缝（取代 xatlas 那类几何最优但无语义的展开）。
+        </p>
+      </div>
+
+      <div class="concl c-purple">
+        <span class="n">结论 03</span>
+        <h4>设计上最巧妙的一处：用强化后训练修拓扑</h4>
+        <p>
+          PolyGen 的第二阶段不是 SFT，而是<b>Masked DPO</b>：对同一个点云用预训练模型采样 8 个候选网格，
+          用 BER（边界边比例）/ TS（拓扑分）/ HD（Hausdorff 距离）三个指标两两排序构造偏好对，
+          再用质量掩码 ϕ(M) <b>只在低质量区域反向更新</b>——好区域不被破坏。
+          这是把"拓扑质量"这种不可微目标塞进自回归模型的实用做法。
+        </p>
+      </div>
+
+      <div class="concl c-green">
+        <span class="n">结论 04</span>
+        <h4>它站在 HKTex 的对立面</h4>
+        <p>
+          同一时期，<a href="../hktex/index.html">HKTex</a>（ECCV 2026 最佳论文）主张<b>彻底取消 UV</b>，
+          而本报告用一整个模块（SeamGPT）<b>把 UV 做得更语义化</b>。
+          两条路线目标一致（消除接缝 / 畸变 / 浪费），手段完全相反。
+          这是本站纹理专题里最值得对照的一组对立，详见 ⑩。
+        </p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>一句话版本：</b>把"3D 生成"从<b>出一张好看的图</b>推进到<b>出一个能用的资产</b>。
+      七模块里真正新的算法各有独立论文，这份报告的贡献是<b>把它们编排成可回退、可参数级联的生产管线</b>——
+      asset graph 传递元数据，上级改动能级联下发，局部修改不必全流程重算。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ② 管线总览 ================= -->
+<section id="pipeline">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 02 · Pipeline</div>
+      <h2>七个模块：一条串行但可回退的产线</h2>
+      <p>每个阶段处理资产并为下一阶段补充元数据，通过统一 asset graph 编排。</p>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 980 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif">
+        <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#8494a9"/></marker></defs>
+        <!-- row 1 -->
+        <rect x="8" y="20" width="214" height="86" rx="10" fill="#f6f0ff" stroke="#8b5cf6" stroke-width="1.4"/>
+        <text x="115" y="44" font-size="12.5" font-weight="700" fill="#7c3aed" text-anchor="middle">① 可控图像生成</text>
+        <text x="115" y="62" font-size="10.5" fill="#4b5a6e" text-anchor="middle">Qwen-Image-Edit + LoRA 风格化</text>
+        <text x="115" y="78" font-size="10.5" fill="#4b5a6e" text-anchor="middle">FLUX.1-dev 做 A-Pose 标准化</text>
+        <text x="115" y="94" font-size="10.5" fill="#8494a9" text-anchor="middle">文生图 / 图生多视图</text>
+        <line x1="222" y1="63" x2="252" y2="63" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar)"/>
+
+        <rect x="256" y="20" width="214" height="86" rx="10" fill="#eef5ff" stroke="#2563eb" stroke-width="1.4"/>
+        <text x="363" y="44" font-size="12.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">② 高保真几何生成</text>
+        <text x="363" y="62" font-size="10.5" fill="#4b5a6e" text-anchor="middle">Hunyuan3D 2.1 / 2.5</text>
+        <text x="363" y="78" font-size="10.5" fill="#4b5a6e" text-anchor="middle">ShapeVAE + DiT（21 层 + MoE）</text>
+        <text x="363" y="94" font-size="10.5" fill="#8494a9" text-anchor="middle">条件：DINOv2 + bbox + 多视图</text>
+        <line x1="470" y1="63" x2="500" y2="63" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar)"/>
+
+        <rect x="504" y="20" width="214" height="86" rx="10" fill="#fff6ec" stroke="#ea8a3c" stroke-width="1.4"/>
+        <text x="611" y="44" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">③ 部件级生成</text>
+        <text x="611" y="62" font-size="10.5" fill="#4b5a6e" text-anchor="middle">P³-SAM 分割（3.7M 标注数据）</text>
+        <text x="611" y="78" font-size="10.5" fill="#4b5a6e" text-anchor="middle">X-Part 分解（bbox 提示 + 语义特征）</text>
+        <text x="611" y="94" font-size="10.5" fill="#8494a9" text-anchor="middle">可独立编辑 / 动画</text>
+        <line x1="718" y1="63" x2="748" y2="63" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar)"/>
+
+        <rect x="752" y="20" width="220" height="86" rx="10" fill="#eefaf2" stroke="#16a34a" stroke-width="1.4"/>
+        <text x="862" y="44" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">④ PolyGen 重拓扑</text>
+        <text x="862" y="62" font-size="10.5" fill="#4b5a6e" text-anchor="middle">BPT 分词 + Hourglass 自回归</text>
+        <text x="862" y="78" font-size="10.5" fill="#4b5a6e" text-anchor="middle">逐面生成低模（非传统重拓扑）</text>
+        <text x="862" y="94" font-size="10.5" fill="#8494a9" text-anchor="middle">+ Masked DPO 强化后训练</text>
+
+        <line x1="862" y1="106" x2="862" y2="140" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar)"/>
+        <rect x="640" y="144" width="332" height="86" rx="10" fill="#f6f9ff" stroke="#b9cbe8" stroke-width="1.4"/>
+        <text x="806" y="168" font-size="12.5" font-weight="700" fill="#1a2332" text-anchor="middle">⑤ 语义 UV（SeamGPT）</text>
+        <text x="806" y="186" font-size="10.5" fill="#4b5a6e" text-anchor="middle">把切缝建模为有序 3D 线段序列，自回归生成</text>
+        <text x="806" y="202" font-size="10.5" fill="#4b5a6e" text-anchor="middle">1024 级坐标量化 · yzx 排序 · 长度嵌入控粒度</text>
+        <text x="806" y="218" font-size="10.5" fill="#8494a9" text-anchor="middle">接 Blender Minimum Stretch 展平</text>
+        <line x1="640" y1="187" x2="610" y2="187" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar)"/>
+
+        <rect x="286" y="144" width="320" height="86" rx="10" fill="#eef0ff" stroke="#6366f1" stroke-width="1.4"/>
+        <text x="446" y="168" font-size="12.5" font-weight="700" fill="#4338ca" text-anchor="middle">⑥ 纹理生成与编辑</text>
+        <text x="446" y="186" font-size="10.5" fill="#4b5a6e" text-anchor="middle">多视图 PBR 扩散（Romantex / MaterialMVP）</text>
+        <text x="446" y="202" font-size="10.5" fill="#4b5a6e" text-anchor="middle">文本 / 图像双模态编辑（Flux Kontext）</text>
+        <text x="446" y="218" font-size="10.5" fill="#4b5a6e" text-anchor="middle">4K material ball（PBR-VAE + 3D DiT）</text>
+        <line x1="286" y1="187" x2="256" y2="187" stroke="#8494a9" stroke-width="1.5" marker-end="url(#ar)"/>
+
+        <rect x="8" y="144" width="244" height="86" rx="10" fill="#fff1f0" stroke="#dc4c4c" stroke-width="1.4"/>
+        <text x="130" y="168" font-size="12.5" font-weight="700" fill="#b91c1c" text-anchor="middle">⑦ 动画模块</text>
+        <text x="130" y="186" font-size="10.5" fill="#4b5a6e" text-anchor="middle">人形：22 关节模板 + T-pose + 重定向</text>
+        <text x="130" y="202" font-size="10.5" fill="#4b5a6e" text-anchor="middle">通用：自回归骨架（OPT-350M）</text>
+        <text x="130" y="218" font-size="10.5" fill="#4b5a6e" text-anchor="middle">+ 拓扑感知 skinning</text>
+
+        <rect x="8" y="252" width="964" height="38" rx="9" fill="#f6f9ff" stroke="#dbe4f2"/>
+        <text x="490" y="275" font-size="11.5" fill="#4b5a6e" text-anchor="middle">统一 asset graph：每级输出向下游传递元数据 → 支持参数化控制（高层改动级联下发）与可逆性（局部更新不必全流程重算）→ 导出 Unity / Unreal 配置</text>
+      </svg>
+      <div class="svg-cap">图 1 · Hunyuan3D Studio 七模块管线（对应报告 Fig. 2）。</div>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="mod-step">
+        <div class="no" style="background:#8b5cf6">1</div>
+        <div><h4>可控图像生成（概念设计）</h4>
+          <p>多模态输入处理，文生图与图生多视图。A-Pose 标准化保证角色骨骼朝向一致，神经风格迁移适配目标美术风格。</p>
+          <div class="dep">依赖：Qwen-Image-Edit + LoRA、FLUX.1-dev + LoRA、Flux-Kontext</div>
+        </div>
+      </div>
+      <div class="mod-step">
+        <div class="no" style="background:#2563eb">2</div>
+        <div><h4>高保真几何生成</h4>
+          <p>从单图或多视图生成 high-poly 网格，保证与输入参考的几何对齐并保留表面细节。</p>
+          <div class="dep">依赖：Hunyuan3D 2.1 / 2.5（ShapeVAE + DiT）、DINOv2</div>
+        </div>
+      </div>
+      <div class="mod-step">
+        <div class="no" style="background:#ea8a3c">3</div>
+        <div><h4>部件级 3D 生成</h4>
+          <p>连通性分析 + 语义分割把复杂模型拆成逻辑部件（如枪的弹匣、枪管、枪托），支持独立编辑与动画。</p>
+          <div class="dep">依赖：P³-SAM（Ma et al. 2025）、X-Part（Yan et al. 2025）</div>
+        </div>
+      </div>
+      <div class="mod-step">
+        <div class="no" style="background:#16a34a">4</div>
+        <div><h4>PolyGen 多边形生成</h4>
+          <p><b>抛弃传统图形学重拓扑</b>，改用自回归模型逐面生成，从点云直接产出低顶点数、边流规整的 game-ready 资产。</p>
+          <div class="dep">依赖：BPT 分词（Weng et al. 2025）、Hourglass Transformer、Masked DPO</div>
+        </div>
+      </div>
+      <div class="mod-step">
+        <div class="no" style="background:#0d9488">5</div>
+        <div><h4>语义 UV 展开</h4>
+          <p>上下文感知的 UV 分割，按材质类型与 texel 密度需求分组曲面，最小化接缝并保证纹理空间利用率。</p>
+          <div class="dep">依赖：SeamGPT（自回归切缝生成）</div>
+        </div>
+      </div>
+      <div class="mod-step">
+        <div class="no" style="background:#6366f1">6</div>
+        <div><h4>纹理合成与编辑</h4>
+          <p>从文本或图像生成物理准确的 PBR 纹理集，并提供<b>非破坏性编辑层</b>，可用自然语言指令精修。</p>
+          <div class="dep">依赖：Romantex、MaterialMVP、Flux Kontext、3D VAE → PBR-VAE</div>
+        </div>
+      </div>
+    </div>
+    <div class="mod-step" style="margin-top:18px">
+      <div class="no" style="background:#dc4c4c">7</div>
+      <div><h4>动画模块</h4>
+        <p>推断关节位置与骨骼层级，计算顶点权重，产出可直接动画、已按标准游戏引擎配置的资产。检测模块先分流：人形走模板分支，其余走通用分支。</p>
+        <div class="dep">依赖：Michelangelo 网格编码器、OPT-350M 自回归骨架、Make-It-Animatable 系 rigging</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ③ 概念设计 ================= -->
+<section id="concept">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 03 · Concept Design</div>
+      <h2>① 可控图像生成：先把"输入"标准化</h2>
+      <p>这一模块不产出 3D，但它决定了下游几何生成的上限——输入不一致，后面全都白搭。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls">3.1</span> 图像风格化</h4>
+        <div class="tagline">Qwen-Image-Edit + LoRA，多风格图生图</div>
+        <p>
+          支持 Chibi、蒸汽朋克、体素、未来主义、手绘、低多边形等预定义游戏美术风格，
+          在 3D 生成<b>之前</b>作为可配置选项执行。指令模板是
+          <code>Change the style to {style type} 3D model. White Background.</code>
+        </p>
+        <p style="margin-top:8px">
+          训练数据构造成三元组 <b>{输入参考图, 风格类型, 风格化 3D 设计图}</b>，
+          建立写实主体图与其风格化对应物的精确配对。<b>纯文生图场景没有参考图</b>——
+          先用内部通用文生图模型生成参考图，再走同一条图生图风格化通路。
+        </p>
+        <div class="pros">→ 价值：把"美术风格"这个上游决策前移到 2D 阶段，避免 3D 生成后再返工。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">3.2</span> 姿态标准化（A-Pose）</h4>
+        <div class="tagline">FLUX.1-dev 注入参考图做条件</div>
+        <p>
+          从任意姿态的角色参考图标准化到 A-pose，要同时做到<b>精确姿态控制 + 严格角色一致性</b>，
+          还要<b>移除背景与道具</b>（手持武器、基座等）。做法是拿任意姿态/视角的角色图作参考，注入 FLUX.1-dev DiT 引导生成。
+        </p>
+        <ul class="tight" style="margin-top:8px">
+          <li><b>数据构造：</b>先按 [任意姿态角色图 → 同角色标准 A-pose 正视图] 建对；含道具的渲染数据用 <b>Flux-Kontext</b> 去掉道具与背景；最后人工筛选入库</li>
+          <li><b>渐进训练：</b>512×512 → 768×768，让模型学到更精细特征（面部细节、复杂衣物纹理）</li>
+          <li><b>泛化：</b>同一角色不同场景的参考图随机选一张作条件注入，避免过拟合到单张</li>
+          <li><b>后训练：</b>针对半身像、非人人形、拟人角色等困难类别另建高质量数据集，做 <b>SFT + DPO</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <b>为什么 A-Pose 标准化必须单独做一个模块？</b>
+      因为下游的<b>部件分割、重拓扑、UV、绑定</b>全都隐含"规范姿态"假设。
+      T pose / A-pose 下四肢分离、部件不互相遮挡，分割与绑骨才可靠；
+      报告后面动画模块还专门做了一次 <b>T-pose 标准化</b>再送进运动重定向——同一类需求在管线里出现了两次。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ④ 几何生成 ================= -->
+<section id="geometry">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 04 · Geometry</div>
+      <h2>② 高保真几何：在 DiT 上加两个额外控制信号</h2>
+      <p>基座是 Hunyuan3D 2.1 / 2.5，本节的增量是 bbox 条件与生成式多视图条件。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">基座架构</h3>
+        <ul class="tight">
+          <li><b>ShapeVAE：</b>变分编码器-解码器 transformer。编码器把带法线的点云 {x<sub>i</sub> = (P<sub>i</sub>, N<sub>i</sub>)} 压成紧凑 shape latent z（Vector-Set Transformer + importance sampling）；解码器用 z 查询均匀网格上的 3D 神经场 F<sub>g</sub>，映射为 SDF 值</li>
+          <li><b>Hunyuan3D-DiT：</b>在 ShapeVAE 的 latent 空间里做 flow-based 扩散，<b>21 层 Transformer，每层带 MoE 子层</b>，flow matching 目标把高斯噪声映射为 shape latent</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-orange" style="margin-top:0">控制信号 1：3D 包围盒</h3>
+        <p style="font-size:13.3px;color:var(--ink2)">
+          输入图先 resize 到 518×518、去背景、用<b>冻结的 DINOv2</b> 编码成图像 latent c<sub>I</sub>，经 cross attention 注入。
+          包围盒则把长宽高用<b>两层 MLP</b> 编成单个 shape latent c<sub>B</sub>，沿序列维度与 c<sub>I</sub> 拼接。
+        </p>
+        <div class="callout warn" style="margin-top:10px;font-size:13px">
+          <b>训练上有个关键设计：</b>故意<b>在图像与点云之间制造比例失配</b>（对任一模态做轻微形变），
+          逼迫网络<b>必须依赖 bbox 信号</b>而不是从图像里猜比例。这是防 shortcut 的标准做法。
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="block-title c-purple" style="margin-top:0">控制信号 2：生成式多视图</h3>
+        <p style="font-size:13.3px;color:var(--ink2)">
+          在预训练文生图基座上训练 <b>LoRA</b> 做图生多视图：单视图的无噪 latent 与多视图的带噪 latent 拼接提供结构引导，
+          再用 <b>SigLIP</b> 从输入图提语义条件向量，flow matching loss 优化。
+        </p>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:6px">
+          注入时把 {org, front, left, back, right} 五个视图分别编码，<b>非原始视图用固定索引的正弦位置嵌入标记</b>，
+          再与原始图 latent 拼接。
+        </p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>两个信号的分工：</b>bbox 是"最简 3D 控制"——用户想控制比例时最直接；
+      多视图则是借图像生成模型的能力补单视角的歧义（尤其是角色）。
+      报告明确说 bbox 在<b>纯图像几何生成失败时也能产出高质量几何</b>，属于兜底控制。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑤ 部件级 ================= -->
+<section id="part">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 05 · Part-Level</div>
+      <h2>③ 部件级生成：先分割（P³-SAM），再分解（X-Part）</h2>
+      <p>两步走：先用 Hunyuan3D 2.5 拿到整体形状，再由 P³-SAM 出语义特征与部件框，最后由 X-Part 拆成部件几何。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="method-card hl">
+        <h4><span class="cls">5.1</span> P³-SAM：原生 3D 部件分割</h4>
+        <div class="tagline">PointTransformerV3 + 三分割头 + IoU 预测头</div>
+        <p>
+          相对 SAM 做了<b>简化</b>：不用复杂的分割解码器与多类型提示，<b>只接受一个正点提示</b>。
+          自动分割时用 <b>FPS 采样点提示</b>，再用 <b>NMS 合并冗余 mask</b>，最后把点级 mask 投影到网格面。
+        </p>
+        <p style="margin-top:8px">
+          <b>最关键的一点：刻意摆脱 2D SAM 的影响</b>，只用原生 3D 部件监督训练。
+          为解决数据稀缺，作者开发了<b>艺术家网格的自动部件标注流水线</b>，
+          产出 <b>370 万个</b>带高质量部件级 mask 的网格。
+        </p>
+        <div class="pros">→ 3.7 M 这个规模是它能 robust 的根本原因，不是架构多精巧。</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls">5.2</span> X-Part：结构连贯的形状分解</h4>
+        <div class="tagline">用 bbox 而不是分割结果做提示</div>
+        <p>
+          两个设计选择值得注意：
+          ① <b>用包围盒而非精细分割做提示</b>——粗粒度引导能<b>减轻对输入的过拟合</b>，
+          且为部分可见的部件提供体积尺度信息；
+          ② <b>引入逐点语义特征</b>并做精心设计的特征扰动——因为高维逐点语义特征<b>没经过聚类算法或预测头的信息压缩</b>，语义表示更准确，对分割误差更鲁棒。
+        </p>
+        <div class="pros">→ 主流方法（HoloPart / PartCrafter / PartPacker）对分割精度高度敏感，这是 X-Part 的主要差异点。</div>
+      </div>
+    </div>
+
+    <h3 class="block-title">P³-SAM 部件分割：PartObj-Tiny 上的对比</h3>
+    <div class="grid2">
+      <div class="card">
+        <div class="chart-box"><canvas id="c-part"></canvas></div>
+        <div class="chart-note">Table 1 · class-agnostic 全分割（无连通性）的 AVG mIoU。P³-SAM 59.88 为全场最高。</div>
+      </div>
+      <div class="card">
+        <h3 class="block-title" style="margin-top:0">三档任务，Ours 都是第一</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>任务设置</th><th>方法</th><th>AVG</th></tr></thead>
+            <tbody>
+              <tr class="dim"><td>全分割 w/o 连通性</td><td>Find3D</td><td>21.28</td></tr>
+              <tr class="dim"><td>全分割 w/o 连通性</td><td>SAMPart3D</td><td>53.47</td></tr>
+              <tr class="dim"><td>全分割 w/o 连通性</td><td>SAMesh</td><td>56.86</td></tr>
+              <tr class="dim"><td>全分割 w/o 连通性</td><td>PartField</td><td>53.93</td></tr>
+              <tr class="ours"><td>全分割 w/o 连通性</td><td><b>Ours</b></td><td><b>59.88</b></td></tr>
+              <tr><td>全分割 w/ 连通性</td><td>PartField</td><td>79.18</td></tr>
+              <tr class="ours"><td>全分割 w/ 连通性</td><td><b>Ours</b></td><td><b>81.14</b></td></tr>
+              <tr><td>交互式分割</td><td>Point-SAM</td><td>13.00</td></tr>
+              <tr class="ours"><td>交互式分割</td><td><b>Ours</b></td><td><b>51.23</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:12.8px;color:var(--ink3);margin-top:8px">
+          评测集：PartObj-Tiny（Objarvse 子集，200 样本 / 8 类，人工标注）、
+          PartObj-Tiny-WT（水密版 189 个）、PartNetE（1,906 形状 / 45 类，点云形式）。
+          水密版上 Ours 全分割 55.35、交互式 49.11（Point-SAM 仅 13.11）；
+          PartNetE 上交互式 <b>63.48</b> vs Point-SAM 15.06。
+        </p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-green">X-Part 形状分解：ObjaversePart-Tiny（200 样本）</h3>
+    <div class="grid2">
+      <div class="card">
+        <div class="chart-box"><canvas id="c-xpart"></canvas></div>
+        <div class="chart-note">Table 3 · 柱 = Chamfer Distance（越低越好，左轴）；线 = F-Score（越高越好，右轴）。物体归一化到 [−1,1]，旋转 0/90/180/270 取最好成绩。</div>
+      </div>
+      <div class="card">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Method</th><th>CD↓</th><th>F-Score@0.1↑</th><th>F-Score@0.5↑</th></tr></thead>
+            <tbody>
+              <tr class="dim"><td>SAMPart3D</td><td>–（未报）</td><td>–</td><td>–</td></tr>
+              <tr><td>PartField</td><td>0.17</td><td>0.68</td><td>0.57</td></tr>
+              <tr><td>HoloPart</td><td>0.26</td><td>0.59</td><td>0.43</td></tr>
+              <tr><td>OmniPart</td><td>0.23</td><td>0.63</td><td>0.46</td></tr>
+              <tr class="ours"><td><b>Ours</b></td><td><b>0.11</b></td><td><b>0.80</b></td><td><b>0.71</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="summary-box">
+          <b>CD 0.11 相对第二好的 PartField（0.17）低 35%</b>，F-Score@0.5 0.71 vs 0.57。
+          F-Score 取 0.1 / 0.5 两个阈值是为了同时看粗粒度与细粒度几何对齐。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑥ PolyGen ================= -->
+<section id="polygen">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 06 · PolyGen</div>
+      <h2>④ 重拓扑：不用图形学算法，用自回归逐面生成</h2>
+      <p>前一节的网格面数巨大且拓扑混乱，直接做 UV 分割和绑骨都不行。这一节把它变成 game-ready 低模。</p>
+    </div>
+
+    <div class="callout ok" style="margin-bottom:18px">
+      <b>路线选择上的关键判断：</b>报告明确写 "abandons traditional graphics-based retopology methods"——
+      不做即时场/四边形主导的传统重拓扑，而是<b>把网格当成一种序列来生成</b>。
+      好处是能直接学到"美术会怎么布线"（边流规整、四边形为主、变形友好），而不是优化某个几何能量。
+    </div>
+
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls">6.1</span> BPT 分词 + Hourglass 解码器</h4>
+        <div class="tagline">先把网格压成 1D 序列，再做 next-token-prediction</div>
+        <p>
+          <b>Blocked and Patchified Tokenization（BPT）</b> 两个机制：
+          ① <b>分块索引</b>——把 3D 坐标划成离散空间块，笛卡尔坐标转成块内偏移索引，利用空间局部性；
+          ② <b>patch 聚合</b>——选高阶顶点作 patch 中心，把相邻面聚成统一 patch，
+          每个 patch 编码为"中心顶点 + 外围顶点"，<b>减少顶点重复</b>并增强空间连贯性。
+        </p>
+        <p style="margin-top:8px">
+          架构：点云编码器（Michelangelo / Hunyuan3D 系，<b>Perceiver</b> 架构）产出条件 token c<sub>p</sub>，
+          <b>Hourglass Transformer</b> 作网格解码器，通过 cross attention 条件化。
+          训练用 <b>truncated training</b>（每次随机取固定面数的序列切片，如 4k 面），
+          推理用 <b>rolling cache</b> 缩小训练/推理差距。
+        </p>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">6.2</span> Masked DPO 强化后训练</h4>
+        <div class="tagline">只在低质量区域更新，好区域不动</div>
+        <p>
+          <b>偏好数据构造：</b>对每个输入点云用预训练模型采样 <b>8 个候选网格</b>，
+          用三个指标评估——<b>BER</b>（Boundary Edge Ratio，边界边比例，拓扑质量）、
+          <b>TS</b>（Topology Score，拓扑质量）、<b>HD</b>（Hausdorff 距离，几何一致性）。
+          偏好关系 M<sup>i</sup> ≻ M<sup>j</sup> 当且仅当 <b>BER 更低 ∧ TS 更高 ∧ HD 更低</b> 三者同时成立。
+        </p>
+        <p style="margin-top:8px">
+          <b>Masked DPO：</b>定义二值掩码 ϕ(M) 按逐面质量区分高/低质量区域
+          （一个子序列只有在<b>所有面的 quad ratio 超阈值且平均拓扑分超阈值</b>时才算高质量）。
+          正样本只在 ϕ=1 区域算 log-ratio，负样本只在 ϕ=0 区域算——
+          <b>实现对低质量区域的定向精修，同时保住已经满意的部分</b>。
+        </p>
+        <div class="pros">→ 报告说后训练阶段"至关重要"：提升网格完整性与连通性、减少破碎面。</div>
+      </div>
+    </div>
+
+    <div class="eq">
+      ℒ<sub>M-DPO</sub>(π<sub>ψ</sub>; π<sub>ref</sub>) = − 𝔼<sub>(P, M⁺, M⁻)</sub> [ log σ( β·L⁺(P, M⁺) − β·L⁻(P, M⁻) ) ] &nbsp;&nbsp;<span class="cmt">（式 3）</span><br>
+      L⁺ = log ‖ π<sub>ψ</sub>(M⁺|P) ⊙ ϕ(M⁺) ‖₁ / ‖ π<sub>ref</sub>(M⁺|P) ⊙ ϕ(M⁺) ‖₁ , &nbsp;
+      L⁻ = log ‖ π<sub>ψ</sub>(M⁻|P) ⊙ (1 − ϕ(M⁻)) ‖₁ / ‖ π<sub>ref</sub>(M⁻|P) ⊙ (1 − ϕ(M⁻)) ‖₁ &nbsp;&nbsp;<span class="cmt">（式 4）</span>
+    </div>
+
+    <div class="summary-box">
+      <b>额外的实用特性：part-aware 重拓扑。</b>
+      如果输入已被切成若干部件，模型可以<b>不微调</b>就对每个部件的点云分别生成网格——
+      复杂网格的拓扑生成被拆成若干简单子问题。这是第 ③ 步（部件级）在本模块的直接收益，
+      也解释了为什么部件分割值得单独做一个模块。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑦ 语义 UV ================= -->
+<section id="uv">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 07 · Semantic UV</div>
+      <h2>⑤ SeamGPT：把"切缝"当成序列来生成</h2>
+      <p>传统 UV 展开缺少语义意义，直接影响下游纹理质量与资源利用率。本节的思路是把切割建模为序列预测。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="method-card">
+        <h4><span class="cls">7.1</span> 切缝表示与排序</h4>
+        <div class="tagline">切缝 = 有序 3D 线段序列</div>
+        <p>
+          每个线段 s<sub>i</sub> = (p<sub>i</sub><sup>h</sup>, p<sub>i</sub><sup>t</sup>) 由头尾两个顶点定义，
+          整条序列可分解到三个层级：段级 → 点级 → 坐标级（式 5）。
+        </p>
+        <ul class="tight" style="margin-top:8px">
+          <li><b>排序：</b>顶点按 <b>yzx 序</b>排序，边内两顶点按字典序（yzx 小的在前），边之间再按顶点值升序——保证自回归需要的一致顺序</li>
+          <li><b>量化：</b>顶点坐标量化到 <b>1024 级</b>离散 bin，平衡精度与可处理性</li>
+          <li><b>粒度控制：</b>把<b>长度嵌入</b>拼到 shape embedding 上，直接调节切割粒度</li>
+        </ul>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">7.2</span> 结构点采样与 Hourglass 解码</h4>
+        <div class="tagline">只在顶点和边上采样，而不是均匀采表面</div>
+        <p>
+          <b>关键设计：</b>为了让切缝对齐网格原有的顶点与边（这样沿线切开<b>不会额外产生面</b>），
+          点云不是均匀采样，而是<b>只采顶点和边上的结构点</b>：共 61,440 点，顶点 30,720 + 边上 30,720 对半分；
+          顶点不足 30,720 时重复过采样，边上的点按边长决定采样数 K。
+        </p>
+        <p style="margin-top:8px">
+          点云编码器（cross + self attention）压成 <b>长度 3072、维度 1024</b> 的 latent shape embedding。
+          解码器是三级 Hourglass（坐标 → 顶点 → 边），坐标级缩短 3 倍、顶点级再缩短 2 倍，
+          缩短与上采样层都<b>保持因果性</b>。
+        </p>
+      </div>
+    </div>
+
+    <h3 class="block-title">量化结果：两个 benchmark 的面畸变（越低越好）</h3>
+    <div class="grid2">
+      <div class="card">
+        <div class="chart-box"><canvas id="c-seam"></canvas></div>
+        <div class="chart-note">Table 4 / 5 · 指标是所有三角面的平均共形能量（face distortion）。FAM benchmark 含低模、CAD、扫描网格；Toys4K 是<b>非流形</b>的美术网格。</div>
+      </div>
+      <div class="card">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Method</th><th>FAM Avg↓</th><th>Toys4K Avg↓</th></tr></thead>
+            <tbody>
+              <tr><td>XAtlas</td><td>18.37</td><td>1.98</td></tr>
+              <tr class="dim"><td>Nuvo</td><td>52.95</td><td>12.63</td></tr>
+              <tr class="dim"><td>FAM</td><td>86.95</td><td>8.52</td></tr>
+              <tr><td>Edge-CLS（自研 baseline）</td><td>19.37</td><td>–</td></tr>
+              <tr class="ours"><td><b>SeamGPT</b></td><td><b>13.04</b></td><td><b>1.95</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warn" style="margin-top:12px;font-size:13px">
+          <b>要如实指出的一点：</b>Toys4K 上 SeamGPT 1.95 与 XAtlas 1.98 <b>几乎打平</b>（差 1.5%）。
+          真正的差距在 FAM benchmark（13.04 vs 18.37，低 29%）。
+          另外 FAM 方法在 FAM benchmark 的 Dragon 上畸变高达 904.89，属于个别案例崩溃。
+        </div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">用户研究：20 位专业 3D 艺术家，5 分制</h3>
+    <div class="grid2">
+      <div class="card">
+        <div class="chart-box"><canvas id="c-user"></canvas></div>
+        <div class="chart-note">Table 6 · Boundary（UV 图是否碎）与 Editability（是否支持外观编辑）两项的平均分。</div>
+      </div>
+      <div class="card">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Method</th><th>Fandisk<br>边界/可编辑</th><th>Cow<br>边界/可编辑</th><th>Nefertiti<br>边界/可编辑</th><th>Avg<br>边界/可编辑</th></tr></thead>
+            <tbody>
+              <tr><td>XAtlas</td><td><b>4.42 / 4.42</b></td><td>2.68 / 2.37</td><td>2.79 / 2.47</td><td>3.30 / 3.09</td></tr>
+              <tr class="dim"><td>Nuvo</td><td>1.32 / 1.32</td><td>1.16 / 1.21</td><td>1.42 / 1.42</td><td>1.30 / 1.32</td></tr>
+              <tr class="dim"><td>FAM</td><td>1.74 / 1.53</td><td>1.84 / 1.53</td><td>2.05 / 1.84</td><td>1.88 / 1.63</td></tr>
+              <tr><td>Edge-CLS</td><td>3.89 / 3.84</td><td>2.79 / 2.32</td><td>2.58 / 2.16</td><td>3.09 / 2.77</td></tr>
+              <tr class="ours"><td><b>SeamGPT</b></td><td>3.47 / 3.58</td><td><b>4.16 / 4.16</b></td><td><b>3.47 / 3.58</b></td><td><b>4.00 / 4.02</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warn" style="margin-top:12px;font-size:13px">
+          <b>另一个要如实指出的一点：</b><b>Fandisk 上 XAtlas（4.42/4.42）明显高于 SeamGPT（3.47/3.58）</b>。
+          Fandisk 是典型的<b>尖锐特征机械模型</b>，这类形状上几何驱动的切割反而更符合艺术家预期——
+          报告未讨论这一点。SeamGPT 的优势在 Cow、Nefertiti 这类<b>光滑 / 无特征区域</b>上。
+        </div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">消融：三个决策各自为什么成立</h3>
+    <div class="grid3">
+      <div class="card">
+        <h4>点云怎么采样</h4>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:4px">
+          均匀采表面 → 切缝逻辑成立但<b>不精确对齐网格顶点与边</b>，会额外产生很多面。
+          采顶点 + 边 → 切缝自然贴合拓扑，且<b>显著加快收敛</b>（transformer 获得了切割坐标的显式位置感知）。
+        </p>
+      </div>
+      <div class="card">
+        <h4>点云编码器 vs 网格编码器</h4>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:4px">
+          网格编码器（图卷积 + 全 self-attention）产顶点级 token，
+          但<b>计算代价随顶点数增长很差</b>，且常抓不准原始顶点位置导致切缝与网格明显错位。点云编码器胜出。
+        </p>
+      </div>
+      <div class="card">
+        <h4>Pointer Network 不行</h4>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:4px">
+          切缝是网格边的子集，所以也可以让模型<b>自回归地"指"向边</b>（PolyGen 的做法）。
+          实测 pointer network <b>难以生成连贯切缝，常产生不连续的切割</b>——
+          这解释了为什么必须直接生成坐标而不是指边。
+        </p>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <b>粒度控制的可解释性：</b>定义 R = 切缝段数 / 网格顶点数，
+      经验上合法切割落在 <b>[0.1, 0.35]</b>——超出会过度切割，低于则切不够。
+      调节 R 即可控制粒度；又因为自回归 transformer 本身非确定性，
+      <b>同一长度控制下能生成多样且都合法的切缝</b>。这个性质对"让美术挑一个"的工作流很实用。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑧ 纹理 ================= -->
+<section id="texture">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 08 · Texture</div>
+      <h2>⑥ 纹理：从"生成 PBR"扩展到"编辑 PBR"</h2>
+      <p>基础是 Hunyuan3D 系列的多视图 PBR 生成（Romantex / MaterialMVP），本节增量是三项能力。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card" style="border-top:3px solid var(--indigo)">
+        <h3 class="block-title c-indigo" style="margin-top:0">8.1 多模态纹理编辑</h3>
+        <p style="font-size:13.3px;color:var(--ink2)">
+          在 <b>8 万个高质量 PBR 资产</b>上训练：渲染成多视图 HDR 图，
+          用 <b>VLM 生成纹理描述与编辑指令</b>，再借 <b>Flux Kontext</b> 跨视角构造图像编辑对，
+          最后由纹理基座模型推断一致的多视图纹理，合成大规模<b>文本–纹理对</b>。
+        </p>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:6px">
+          从基座纹理模型出发，用 <b>30,000 对文本–纹理</b>端到端精调，
+          得到同时支持文本与视觉引导的统一模型。
+        </p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--orange)">
+        <h3 class="block-title c-orange" style="margin-top:0">自适应图像条件注入</h3>
+        <p style="font-size:13.3px;color:var(--ink2)">
+          图像引导的关键问题是"输入图与目标的几何是否对得上"。
+          做法：算几何渲染视图与输入图的 <b>CLIP 相似度</b>——
+          <b>相似度高</b>（几何对应好）→ 用 <b>VAE 编码器</b>注入图像特征；
+          <b>相似度低</b> → 改用 <b>CLIP 图像嵌入</b>（类似 IP-Adapter）。
+        </p>
+        <div class="summary-box" style="font-size:12.8px">
+          配合 <b>MoE</b> 架构处理多样图像输入。这是一个很实用的工程判断：
+          几何对得上就要像素级对应，对不上就只能要语义级风格。
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--purple)">
+        <h3 class="block-title c-purple" style="margin-top:0">8.2 4K Material Ball</h3>
+        <p style="font-size:13.3px;color:var(--ink2)">
+          把<b>原本为连续视频帧设计的 3D VAE</b> 改用来压缩多域材质数据
+          （渲染图、base color、bump、roughness、metallic 等）到统一 latent——
+          在带纹理的 3D 资产上微调得到 <b>PBR-VAE</b>，再用 material ball 数据集微调 <b>3D DiT</b>。
+        </p>
+        <p style="font-size:13.3px;color:var(--ink2);margin-top:6px">
+          产出 4K 可平铺材质球：Base Color / Metallic / Roughness / Normal 全套。
+        </p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>还提到的一项能力：材质驱动的 3D 分割。</b>
+      从<b>仅含几何的网格</b>直接生成逐部件材质分割图，从而支持<b>局部纹理编辑</b>
+      （例如"把斧刃改成生苔的铁、斧柄改成木质"）。
+      报告把它与多模态编辑、4K 材质球并列为三大扩展，但没给出该分割模块的量化结果。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑨ 动画 ================= -->
+<section id="rig">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 09 · Animation</div>
+      <h2>⑦ 动画：先分流，人形走模板、其余走自回归</h2>
+      <p>输入先过检测模块——人形走一条分支，其余走另一条。两条分支的技术路线完全不同。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card" style="border-top:3px solid var(--red)">
+        <h3 class="block-title c-red" style="margin-top:0">人形分支</h3>
+        <ul class="tight">
+          <li><b>模板骨架：</b>为平衡准确性与易用性，采用 <b>22 个身体关节</b>的模板骨架</li>
+          <li><b>rigging + skinning：</b>沿用 Guo et al. 2025b（Make-It-Animatable），但做了改进——
+            原方法在预测 skinning 时<b>不引入 rig 相关信息</b>，本系统<b>同时整合骨骼与顶点特征</b></li>
+          <li><b>T-pose 标准化：</b>把任意姿态的用户模型转成规范 T-pose，再送进运动重定向，结果更可靠</li>
+        </ul>
+        <div class="summary-box" style="font-size:12.8px">
+          训练：约 <b>10,000 个人形样本</b>，batch 6 × <b>8 张 H20</b> × 3 天，训练时用基于运动的数据增强。
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--teal)">
+        <h3 class="block-title c-teal" style="margin-top:0">通用分支</h3>
+        <ul class="tight">
+          <li><b>自回归骨架生成：</b>通用角色的骨骼拓扑与关节数都可变，所以主流做法是自回归（OPT-350M 作 transformer 骨干）</li>
+          <li><b>拓扑感知 skinning：</b>既有算法通常只把网格顶点与骨骼关节当输入特征，
+              <b>忽略它们之间的拓扑关系</b>；本模块<b>显式纳入拓扑关系</b>，结果更鲁棒稳定</li>
+        </ul>
+        <div class="summary-box" style="font-size:12.8px">
+          数据：约 <b>80,000 个通用角色样本</b>（内部采购 + 人工标注）。
+          rigging：batch 16 × <b>24 张 H20</b> × 2 天；skinning：batch 16 × 8 GPU × 2 天。
+          所有模块用 Michelangelo 作网格编码器。
+        </div>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <b>"拓扑感知"是这一节反复出现的关键词。</b>skinning 不只是"每个顶点离哪根骨头近"，
+      还要考虑网格的连通结构——否则关节处的权重会出现跨越不连通区域的错误扩散。
+      这与第 ⑥ 节 PolyGen 强调"边流规整、变形友好"是同一个目标的两端：<b>拓扑质量决定动画质量</b>。
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑩ 边界 ================= -->
+<section id="boundary">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 10 · Reading Guide</div>
+      <h2>读这份报告要注意的四件事</h2>
+      <p>技术报告与会议论文的写法不同，先看清楚它的边界再用它的结论。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl c-orange">
+        <span class="n">注意 01</span>
+        <h4>七个模块基本都有各自的独立论文</h4>
+        <p>
+          报告自己就写了 "For more details of P³-SAM, please refer to the paper Ma et al. (2025)"、
+          X-Part 同理（Yan et al. 2025）。BPT 分词出自 Weng et al. 2025，
+          纹理出自 Romantex（Feng et al. 2025）与 MaterialMVP（He et al. 2025），
+          几何出自 Hunyuan3D 2.1 / 2.5。<b>这份报告是系统集成，不是七项新算法的合集。</b>
+        </p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">注意 02</span>
+        <h4>没有端到端的量化对比</h4>
+        <p>
+          所有表格都是<b>各子模块在自己的 benchmark 上刷榜</b>（部件分割、形状分解、UV 畸变、用户研究），
+          没有"输入一张图 → 最终资产"的整体评测，也没有与商业管线（Rodin、Meshy、Tripo 等）的 A/B。
+          端到端的收益只用"显著减少迭代时间"这类定性表述。
+        </p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">注意 03</span>
+        <h4>声明要讨论 limitations，但正文基本没有</h4>
+        <p>
+          引言写明 "Section 10 discusses conclusions, limitations, and future work"，
+          但第 10 节只有两段总结性文字，<b>没有列出任何具体局限</b>（失败案例、面数上限、非流形处理、耗时等均未给出）。
+          第 11 节就直接进贡献者名单了。这是技术报告的常见取舍，但读者要自己补这一课。
+        </p>
+      </div>
+      <div class="concl c-green">
+        <span class="n">注意 04</span>
+        <h4>UV 路线上它与 HKTex 正面相反</h4>
+        <p>
+          本站 <a href="../hktex/index.html">HKTex</a>（ECCV 2026 最佳论文）主张<b>彻底取消 UV</b>——
+          用流形上的各向异性热核表示纹理，接缝/畸变/顶点复制在构造上不存在。
+          本报告的 SeamGPT 则主张<b>把 UV 做得更语义化</b>——让切割线像美术那样走。
+          两者都要解决"传统 UV 无语义"的问题，但一个绕开参数化、一个改进参数化。
+          <b>短期看 SeamGPT 更兼容现有引擎生态，长期看 HKTex 的存储与无畸变优势更根本。</b>
+        </p>
+      </div>
+    </div>
+
+    <div class="table-scroll" style="margin-top:20px">
+      <table>
+        <thead><tr><th>模块</th><th>对应独立工作</th><th>报告内的量化证据</th><th>强度</th></tr></thead>
+        <tbody>
+          <tr><td>① 可控图像生成</td><td>Qwen-Image-Edit / FLUX.1-dev / Flux-Kontext</td><td>仅可视化（Fig. 3 / 5）</td><td><span class="badge-tag tag-mid">无量化</span></td></tr>
+          <tr><td>② 高保真几何</td><td>Hunyuan3D 2.1 / 2.5</td><td>仅可视化（Fig. 7 / 8）</td><td><span class="badge-tag tag-mid">无量化</span></td></tr>
+          <tr class="ours"><td>③ 部件级（P³-SAM / X-Part）</td><td>Ma et al. 2025 / Yan et al. 2025</td><td>Table 1 / 2 / 3</td><td><span class="badge-tag tag-good">充分</span></td></tr>
+          <tr><td>④ PolyGen 重拓扑</td><td>BPT（Weng et al. 2025）+ M-DPO</td><td>仅可视化（Fig. 16 / 17 / 18）</td><td><span class="badge-tag tag-mid">无量化</span></td></tr>
+          <tr class="ours"><td>⑤ 语义 UV（SeamGPT）</td><td>本报告提出</td><td>Table 4 / 5 / 6 + 消融</td><td><span class="badge-tag tag-good">最充分</span></td></tr>
+          <tr><td>⑥ 纹理生成与编辑</td><td>Romantex / MaterialMVP</td><td>仅可视化（Fig. 24 / 25）</td><td><span class="badge-tag tag-mid">无量化</span></td></tr>
+          <tr><td>⑦ 动画</td><td>Make-It-Animatable 系</td><td>仅可视化（Fig. 26）</td><td><span class="badge-tag tag-mid">无量化</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="chart-note">七模块中只有 ③ 和 ⑤ 给出了量化表格，⑤ 还带消融与 20 人用户研究——这两节是这份报告信息密度最高的部分。</div>
+  </div>
+</section>
+
+<!-- ================= 资源 ================= -->
+<section id="links">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Section 11 · Resources</div>
+      <h2>资源链接</h2>
+    </div>
+    <div class="grid4">
+      <a class="card" style="display:block" href="https://arxiv.org/abs/2509.12815" target="_blank" rel="noopener">
+        <b>📄 arXiv:2509.12815</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">技术报告 · 27 页 · 2025-09-16</p>
+      </a>
+      <a class="card" style="display:block" href="https://3d.hunyuan.tencent.com" target="_blank" rel="noopener">
+        <b>🌐 官方产品页</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">3d.hunyuan.tencent.com</p>
+      </a>
+      <a class="card" style="display:block" href="https://github.com/Tencent-Hunyuan/Hunyuan3D-2" target="_blank" rel="noopener">
+        <b>💻 Hunyuan3D 开源</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">几何 / 纹理基座权重</p>
+      </a>
+      <a class="card" style="display:block" href="../buffalo/index.html">
+        <b>🔗 站内相关</b>
+        <p style="font-size:12.8px;color:var(--ink2);margin-top:4px">Hunyuan3D-Buffalo 1.0 解读</p>
+      </a>
+    </div>
+
+    <h3 class="block-title">BibTeX</h3>
+    <div class="eq" style="font-family:Consolas,Monaco,monospace;font-size:12.5px;line-height:1.7">
+      @article{lei2025hunyuand,<br>
+      &nbsp;&nbsp;title&nbsp;&nbsp;= {Hunyuan3D Studio: End-to-End AI Pipeline for Game-Ready 3D Asset Generation},<br>
+      &nbsp;&nbsp;author&nbsp;= {Lei, Biwen and Li, Yang and Liu, Xinhai and Yang, Shuhui and Xu, Lixin and<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Huang, Jingwei and Tang, Ruining and Weng, Haohan and others},<br>
+      &nbsp;&nbsp;year&nbsp;&nbsp;&nbsp;= {2025},<br>
+      &nbsp;&nbsp;eprint = {2509.12815},<br>
+      &nbsp;&nbsp;archivePrefix = {arXiv},<br>
+      &nbsp;&nbsp;primaryClass = {cs.CV}<br>
+      }
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>Hunyuan3D Studio: End-to-End AI Pipeline for Game-Ready 3D Asset Generation</b> ·
+      Tencent Hunyuan3D（100+ 位作者；Project Sponsors: Jie Jiang, Linus, Yuhong Liu, Di Wang, Tian Liu, Peng Chen；
+      Project Leaders: Chunchao Guo, Zhuo Chen）
+      · arXiv:2509.12815v1 [cs.CV] · 2025-09-16 · 27 页技术报告
+    </p>
+    <p style="margin-top:8px">
+      本页所有数值均取自报告正文表格（Table 1–6）与章节描述，未做二次加工。
+      模块与独立论文的对应关系依据报告中的引用标注。
+      解读与判断（尤其是 ⑩ 节的边界提示）为本站观点。
+    </p>
+    <p style="margin-top:12px">
+      <a href="../index.html">← 返回首页</a> ·
+      <a href="../buffalo/index.html">Hunyuan3D-Buffalo 1.0</a> ·
+      <a href="../hktex/index.html">HKTex 深度解读</a> ·
+      <a href="../ultratex/index.html">UltraTex 深度解读</a> ·
+      <a href="../pbr-materials/index.html">PBR 材质生成专题梳理</a> ·
+      <a href="../3d-generation-2026/index.html">2026 年 3D 生成论文合集</a> ·
+      <a href="https://arxiv.org/abs/2509.12815" target="_blank" rel="noopener">arXiv 原文 ↗</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  if (typeof Chart === "undefined") {
+    document.querySelectorAll(".chart-box").forEach(function (b) {
+      b.innerHTML = '<p style="font-size:13px;color:#8494a9;padding:40px 0;text-align:center">' +
+        '图表需要加载 Chart.js（CDN 不可达时自动降级为表格，上方表格数据完整）</p>';
+    });
+    return;
+  }
+  var FONT = '"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = "#4b5a6e";
+  var BASE = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: "top", labels: { boxWidth: 12, padding: 12 } } }
+  };
+
+  function bar(id, labels, data, label, color, opt) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var cfg = JSON.parse(JSON.stringify(BASE));
+    cfg.type = "bar";
+    cfg.data = { labels: labels, datasets: [{ label: label, data: data, backgroundColor: color, borderRadius: 4 }] };
+    cfg.options = {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: label }, grid: { color: "#eef2f8" } },
+        x: { grid: { display: false }, ticks: { maxRotation: 40, minRotation: 20 } }
+      }
+    };
+    if (opt) { for (var k in opt) cfg.options.scales.y[k] = opt[k]; }
+    new Chart(el.getContext("2d"), cfg);
+  }
+
+  function grouped(id, labels, ds, yTitle, yOpt) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var sc = { beginAtZero: true, title: { display: true, text: yTitle }, grid: { color: "#eef2f8" } };
+    if (yOpt) { for (var k in yOpt) sc[k] = yOpt[k]; }
+    new Chart(el.getContext("2d"), {
+      type: "bar",
+      data: { labels: labels, datasets: ds },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "top", labels: { boxWidth: 12, padding: 12 } } },
+        scales: { y: sc, x: { grid: { display: false }, ticks: { maxRotation: 40, minRotation: 20 } } }
+      }
+    });
+  }
+
+  // ① P3-SAM: PartObj-Tiny 全分割 w/o 连通性
+  bar("c-part",
+    ["Find3D", "SAMPart3D", "SAMesh", "PartField", "Ours"],
+    [21.28, 53.47, 56.86, 53.93, 59.88],
+    "AVG mIoU ↑", ["#c7d3e8", "#c7d3e8", "#c7d3e8", "#c7d3e8", "#16a34a"]);
+
+  // ② X-Part: CD 柱 + 两个 F-Score 线
+  (function () {
+    var el = document.getElementById("c-xpart");
+    if (!el) return;
+    new Chart(el.getContext("2d"), {
+      data: {
+        labels: ["PartField", "HoloPart", "OmniPart", "Ours"],
+        datasets: [
+          { type: "bar", label: "Chamfer Distance ↓", data: [0.17, 0.26, 0.23, 0.11],
+            backgroundColor: ["#c7d3e8", "#c7d3e8", "#c7d3e8", "#16a34a"], borderRadius: 4, yAxisID: "y", order: 3 },
+          { type: "line", label: "F-Score@0.1 ↑", data: [0.68, 0.59, 0.63, 0.80],
+            borderColor: "#2563eb", backgroundColor: "#2563eb", borderWidth: 2, pointRadius: 3, yAxisID: "y1", order: 1 },
+          { type: "line", label: "F-Score@0.5 ↑", data: [0.57, 0.43, 0.46, 0.71],
+            borderColor: "#ea8a3c", backgroundColor: "#ea8a3c", borderWidth: 2, pointRadius: 3, yAxisID: "y1", order: 2 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "top", labels: { boxWidth: 12, padding: 12 } } },
+        scales: {
+          y: { position: "left", beginAtZero: true, title: { display: true, text: "Chamfer Distance ↓" }, grid: { color: "#eef2f8" } },
+          y1: { position: "right", beginAtZero: true, max: 1, grid: { display: false }, title: { display: true, text: "F-Score ↑" } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  })();
+
+  // ③ SeamGPT: 两个 benchmark 的 face distortion
+  grouped("c-seam",
+    ["XAtlas", "Nuvo", "FAM", "Edge-CLS", "SeamGPT"],
+    [
+      { label: "FAM benchmark ↓", data: [18.37, 52.95, 86.95, 19.37, 13.04], backgroundColor: "#9dbaf5", borderRadius: 4 },
+      { label: "Toys4K ↓", data: [1.98, 12.63, 8.52, null, 1.95], backgroundColor: "#0d9488", borderRadius: 4 }
+    ],
+    "Face distortion ↓（越低越好）");
+
+  // ④ 用户研究
+  grouped("c-user",
+    ["XAtlas", "Nuvo", "FAM", "Edge-CLS", "SeamGPT"],
+    [
+      { label: "Boundary ↑", data: [3.30, 1.30, 1.88, 3.09, 4.00], backgroundColor: "#9dbaf5", borderRadius: 4 },
+      { label: "Editability ↑", data: [3.09, 1.32, 1.63, 2.77, 4.02], backgroundColor: "#8b5cf6", borderRadius: 4 }
+    ],
+    "5 分制评分 ↑", { max: 5 });
+})();
+</script>
+</body>
+</html>
