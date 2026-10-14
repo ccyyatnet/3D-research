@@ -110,6 +110,7 @@
       <a href="#pipeline">② 管线分层</a>
       <a href="#routes">③ 三条路线</a>
       <a href="#gltf">④ glTF 覆盖</a>
+      <a href="#sheen" style="color:#8b5cf6;font-weight:600">· Sheen</a>
       <a href="#papers">⑤ 逐篇</a>
       <a href="#gaps">⑥ 空白</a>
       <a href="../luce/index.html" style="font-weight:700;color:#16a34a">Luce 深度解读 →</a>
@@ -345,6 +346,97 @@
       </table>
     </div>
     <div class="callout">⚠️ <b>这张表就是机会点：</b>glTF 已标准化的 9 个材质通道里，合集覆盖了 3 个（baseColor 部分、metallicRoughness 1 篇、specular 1 篇），<b>透明相关的 3 个（transmission / ior / volume）零覆盖</b>。</div>
+
+    <h3 class="block-title c-purple" id="sheen">附：Sheen —— 上表中"零覆盖"的织物绒毛层到底是什么</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:15.5px;margin-bottom:6px">一句话定义</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">Sheen 是<b>布料 / 天鹅绒类材质表面"绒毛感"的那一层光泽</b>。物理上：织物表面竖起的<b>细微纤维</b>在<b>掠射角</b>产生的背散射；视觉上：物体<b>轮廓边缘</b>一圈柔和绒光，<b>不是</b>中心的高光点。</p>
+        <div class="sub-h"><span class="t">物理模型</span>微纤维森林 + Charlie 分布</div>
+        <p style="font-size:13.5px;color:var(--ink2)">glTF 规范口径：织物表面被建模为一片从基底伸出的<b>细圆柱微纤维森林</b>（Westin et al. 1992），纤维主要沿法线方向排列；光打到纤维后<b>背散射</b>回观察者，在掠射角最强。分布用 <b>Charlie</b>（Sony Pictures Imageworks，Conty &amp; Kulla, SIGGRAPH 2017），取代此前游戏界通用的 Ashikhmin velvet BRDF。</p>
+        <div class="summary-box">
+          <b>Charlie 分布项</b>（峰值在低 NdotH 处，即掠射角）：<br>
+          <code>D = (2 + 1/α) · pow(sin²h, 0.5/α) / (2π)</code>，其中 <code>α = sheenRoughness²</code><br>
+          <code>f_sheen = sheenColor · F · G · D / (4·|N·L|·|N·V|)</code>
+        </div>
+      </div>
+      <div class="svg-card">
+        <svg viewBox="0 0 560 340" role="img" xmlns="http://www.w3.org/2000/svg">
+          <title>Sheen 物理本质示意图</title>
+          <desc>左侧球体轮廓边缘的柔光即 sheen；右侧放大显示织物表面的微纤维森林与背散射</desc>
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+          <circle cx="118" cy="182" r="66" fill="#f2f6fd" stroke="#c9d6ea" stroke-width="0.5"/>
+          <path d="M 184 182 A 66 66 0 0 1 118 116" fill="none" stroke="#ea8a3c" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
+          <path d="M 118 116 A 66 66 0 0 1 52 182" fill="none" stroke="#ea8a3c" stroke-width="4" stroke-linecap="round" opacity="0.45"/>
+          <text x="118" y="182" font-size="12" fill="#4b5a6e" text-anchor="middle" dominant-baseline="central">布料 / 天鹅绒表面</text>
+          <line x1="186" y1="136" x2="206" y2="118" stroke="#8494a9" stroke-width="0.5" stroke-dasharray="3 3"/>
+          <text x="210" y="116" font-size="11.5" fill="#b45309">轮廓边缘的柔光 = sheen</text>
+          <text x="210" y="132" font-size="11.5" fill="#4b5a6e">掠射角最强（视线越平越亮）</text>
+
+          <rect x="310" y="78" width="230" height="196" rx="10" fill="#fffaf3" stroke="#f2c49b" stroke-width="0.5"/>
+          <text x="322" y="94" font-size="11" fill="#4b5a6e">表面放大：微纤维森林</text>
+          <rect x="318" y="248" width="214" height="14" rx="3" fill="#e3e9f2" stroke="#c9d6ea" stroke-width="0.5"/>
+          <text x="425" y="272" font-size="11" fill="#4b5a6e" text-anchor="middle" dominant-baseline="central">织物基底（fabric base）</text>
+
+          <line x1="332" y1="248" x2="334" y2="168" stroke="#b45309" stroke-width="1"/>
+          <line x1="356" y1="248" x2="353" y2="156" stroke="#b45309" stroke-width="1"/>
+          <line x1="380" y1="248" x2="384" y2="150" stroke="#b45309" stroke-width="1"/>
+          <line x1="404" y1="248" x2="401" y2="160" stroke="#b45309" stroke-width="1"/>
+          <line x1="428" y1="248" x2="432" y2="152" stroke="#b45309" stroke-width="1"/>
+          <line x1="452" y1="248" x2="449" y2="164" stroke="#b45309" stroke-width="1"/>
+          <line x1="476" y1="248" x2="480" y2="154" stroke="#b45309" stroke-width="1"/>
+          <line x1="500" y1="248" x2="497" y2="162" stroke="#b45309" stroke-width="1"/>
+
+          <line x1="326" y1="112" x2="360" y2="140" stroke="#2563eb" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="322" y="104" font-size="11" fill="#2563eb">入射光</text>
+          <line x1="368" y1="146" x2="396" y2="116" stroke="#dc4c4c" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="368" y1="146" x2="350" y2="108" stroke="#dc4c4c" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="368" y1="146" x2="372" y2="104" stroke="#dc4c4c" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="400" y="112" font-size="11" fill="#dc4c4c">背散射</text>
+
+          <text x="330" y="300" font-size="11" fill="#4b5a6e">微纤维主要沿法线方向，</text>
+          <text x="330" y="316" font-size="11" fill="#4b5a6e">sheen roughness 决定其偏离程度</text>
+        </svg>
+        <div class="svg-cap">sheen 物理本质：微纤维在掠射角的背散射 → 轮廓边缘的柔和绒光</div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div>
+        <div class="sub-h"><span class="t">参数</span>三套体系的对应关系</div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>体系</th><th>参数</th><th>要点</th></tr></thead>
+            <tbody>
+              <tr><td>Disney / PxrDisneyBsdf</td><td><code>Sheen</code>、<code>Sheen Tint</code></td><td>定义为"掠射角 / 前向散射的额外漫反射组件，主要为布料设计"；Tint 控制向 base color 着色</td></tr>
+              <tr><td>Blender Principled BSDF</td><td><code>Sheen</code>、<code>Sheen Tint</code>、<code>Sheen Roughness</code></td><td>Sheen BSDF 节点仅 Cycles 可用</td></tr>
+              <tr><td>glTF <code>KHR_materials_sheen</code></td><td><code>sheenColorFactor/Texture</code>（RGB）、<code>sheenRoughnessFactor/Texture</code>（<b>A 通道</b>）</td><td>已 Ratified；<b>sheenColorFactor 默认 [0,0,0] = 整层禁用</b>，roughness 默认 0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13px;color:var(--ink2);margin-top:10px"><b>层叠与能量：</b>sheen 叠在金属-粗糙度基础层之上，<code>clearcoat</code> 再叠在 sheen 之上；并非所有光都被纤维反射，部分会打到基础层——实现（Filament / Sample Renderer）先用 <code>albedoSheenScaling</code> 衰减基础层再叠加 sheen。<b>sheen roughness 独立于材质 roughness</b>，所以能表达"表面粗糙但绒毛密集"的材质。</p>
+      </div>
+      <div>
+        <div class="sub-h"><span class="t orange">辨析</span>最容易混淆的三层</div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>概念</th><th>视觉表现</th><th>分布</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><b>Specular（GGX）</b></td><td>中心 / 正对光处的高光点</td><td>GGX 微表面</td><td>塑料、金属、玻璃</td></tr>
+              <tr><td><b>Sheen</b></td><td><b>轮廓边缘</b>一圈柔光</td><td>Charlie（峰值在掠射角）</td><td>天鹅绒、地毯、毛衣、桃皮、窗帘</td></tr>
+              <tr><td><b>Clearcoat</b></td><td>外挂一层光滑清漆的锐利反光</td><td>GGX（固定 IOR 1.5）</td><td>车漆、上釉、覆膜</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout" style="margin-top:14px">🎯 <b>一句话区分：</b>GGX 让"迎光面"亮，Sheen 让"边缘轮廓"亮，Clearcoat 是外挂的一层镜面膜。</div>
+      </div>
+    </div>
+
+    <div class="callout">💡 <b>回到覆盖表：</b><code>KHR_materials_sheen</code> 在这 25 篇里<b>零覆盖</b>——布料 / 织物的参数化生成（出 sheenColor + sheenRoughness 贴图）是一块<b>尚未被占用的空白位</b>，且它不像 transmission 那样依赖光追或体积追踪，实时可实现性更高。</div>
   </div>
 </section>
 
