@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flow Matching RL 深度解读 · DHO 与 Flow3D-Pro · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef3fd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dbe7ff;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:31px;line-height:1.32;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:940px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:340px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#f0f6ff;font-weight:600}
+  tr.ours:hover td{background:#e6efff}
+  tr.dim td{color:var(--ink3)}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--teal)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#d5f2ee;color:#0f766e;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .cmp div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .cmp .who{font-size:12px;font-weight:700;color:var(--ink3)}
+  .cmp .act{font-size:13.5px;font-weight:700;margin-top:4px}
+  .cmp .d{font-size:12.5px;color:var(--ink2);margin-top:4px}
+  .cmp div.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#why">② 为什么不灵</a>
+      <a href="#method">③ DHO</a>
+      <a href="#endpoint">④ 端点分析</a>
+      <a href="#system">⑤ Flow3D-Pro</a>
+      <a href="#exp">⑥ 实验</a>
+      <a href="#ablation">⑦ 消融</a>
+      <a href="#limits">⑧ 局限</a>
+      <a href="../3d-generation-2026/index.html" style="font-weight:700;color:#0d9488">前沿合集 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-10-30 · arXiv:2610.01233 · Tencent Hunyuan × 上海交大</span>
+    <h1><em>别只把负样本推开，告诉它该去哪</em><br>DHO：给 flow matching 的负样本分支一个「归航场」</h1>
+    <p class="sub">
+      3D 生成的 RL 后训练大多是从 2D 视觉生成<b>直接搬</b>过来的：DPO-style 压低负轨迹似然、GRPO-style 降低负优势样本概率、NFT-style 沿负梯度反转速度。
+      这篇论文指出它们的共同点——<b>都在把速度推离负轨迹方向，却从没说清楚应该朝哪去</b>。
+      DHO（Dynamic Homing Optimization）把这个洞补上：先用 <b>MAM</b>（最小代价一对一匹配）给每个负样本分配一个确定的正样本作为目的地，
+      再用 <b>TDC</b>（时间感知动态修正）构造一条「剩余时间感知」的修正速度把它牵过去。
+      它是在<b>前向过程插值</b>上做策略更新的 forward-process RL，采样器随便换、不用存整条采样轨迹。
+      落到系统上就是 <b>Flow3D-Pro</b>：两阶段图生 3D 网格（Stage I 取自 Hunyuan3D 2.1、Stage II 取自 LATTICE），
+      只对 Stage I 做 SFT → DHO 后训练，用 <b>Gemini 3.1 Pro</b> 当奖励模型、28 + 4 张卡做<b>异步在线</b>训练。
+    </p>
+    <div class="meta">
+      <span class="pill">📄 28 页 · cs.CV · 2026-10-01</span>
+      <span class="pill">👥 Zhen Zhou, Zhiwei Ning, Puhua Jiang, Sheng Zhang, Yifei Tang, Jie Yang, Xintong Han, Wei Liu, Chunchao Guo</span>
+      <span class="pill">🏢 Tencent Hunyuan / SJTU / 中国传媒大学</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2610.01233" target="_blank">arXiv:2610.01233</a></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>8.64</b><span>User Study（技术美术盲评排序；最强基线 Flow3D-OPD 7.04）</span></div>
+      <div class="stat"><b>4.02 → 4.26</b><span>Stage I 用户研究 → 再经 Stage II 精修后（DPO 3.02 / NFT 3.07）</span></div>
+      <div class="stat"><b>32 GPU</b><span>异步在线训练：28 张卡 rollout + 4 张卡更新，5K 步</span></div>
+      <div class="stat"><b>+2.76%</b><span>「动态 vs 静态」目标带来的 ULIP 增益（用户研究 0.31 → 0.69）</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ① 结论 -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 01 · TAKEAWAYS</div>
+      <h2>先把结论读完</h2>
+      <p>五条最值得记住的，其中第 4、5 条是本站读完全文（含附录）后的判断，不是论文原话。</p>
+    </div>
+    <div class="grid2">
+      <div class="takeaway">
+        <h4><span class="idx">1</span>负样本分支缺的不是「斥力」，是「目的地」</h4>
+        <p>DPO / GRPO / NFT 三类目标在负样本上做的事，本质上都是<b>让速度场别再生成这条负轨迹</b>，然后把「往哪走」这件事全交给正样本分支。
+        DHO 反过来：<b>给每个负样本显式指定一个正样本目标，并给出到达它的速度场</b>。</p>
+        <p class="why">为什么重要：3D 后训练受限于预训练模型能力、rollout 多样性和奖励分布复杂度，只靠「推开」的增益很有限——论文 Table 1 里 GRPO 的用户研究只到 3.02，DHO 到 4.02。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">2</span>两个组件缺一不可：MAM 配对 + TDC 牵引</h4>
+        <p><b>MAM</b> 用 Hungarian 算法做 batch 内最小代价一对一匹配（代价是 latent L2 距离，O(B³)），保证每个负样本拿到<b>不同的</b>正目标；
+        <b>TDC</b> 用 v = (x<sub>w*</sub> − x<sub>t</sub><sup>l</sup>)/(1−t) 把「剩余时间」算进来。</p>
+        <p class="why">为什么重要：只做配对不做时间感知（静态动作 x<sub>w*</sub> − x<sub>0</sub>）会累积 t(x<sub>l</sub> − x<sub>w*</sub>) 的终点误差；消融里动态比静态的用户研究 0.69 vs 0.31，翻倍。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">3</span>正样本分支是「退化情形」，与标准 rectified flow 自洽</h4>
+        <p>正样本集合自己做 MAM 会退化为恒等排列（对角代价为 0），于是目标就是它自己，时间感知场<b>恰好塌回</b>标准 rectified flow 动作 x<sub>w</sub> − x<sub>0</sub>（论文式 8）。
+        两个分支因此共用一个规则，不需要为负样本另写一套目标。</p>
+        <p class="why">为什么重要：这说明 DHO 不是「加了一个新 loss」，而是把负样本分支纳入了同一个速度回归框架，只是插值端点换了。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">4</span>自动指标几乎不动，主观排序拉开一大截</h4>
+        <p>Table 2 里 Flow3D-Pro-Base → Flow3D-Pro，ULIP 只从 <b>0.143 → 0.150</b>、Uni3D <b>0.350 → 0.360</b>，而用户研究 <b>5.64 → 8.64</b>。
+        论文也明确「以 User Study 为主指标」。</p>
+        <p class="why">本站判断：<b>ULIP / Uni3D 这类 CLIP 相似度对「几何好不好」分辨力很弱</b>，看这张表时不要被 ULIP 的小数点误导——真正的变化在主观排序里。反过来说，整篇论文的说服力高度依赖那套盲评流程（3 位专家 × 200 张图 × 方法匿名随机序）。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">5</span>Stage II 会放大 Stage I 的坏几何</h4>
+        <p>Table 1 里一个容易被忽略的细节：DPO-style 过了 Stage II 之后用户研究<b>不升反降</b>（2.36 → 2.32），NFT-style 也从 3.07 掉到 2.80，而 DHO 从 4.02 升到 4.26。</p>
+        <p class="why">本站判断：这恰好是「把后训练放在 Stage I、Stage II 冻结」这一设计选择的证据——<b>精修阶段修不好 lifting 阶段的结构错误，只会把它固化</b>。论文 Figure 5 的定性图（四根手指、火焰状额头、断掉的楼梯）也是这个意思。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">6</span>奖励模型是闭源的 Gemini，复现性要打折</h4>
+        <p>奖励由 Gemini 3.1 Pro 给出：每个 mesh 渲染 6 视图 + 参考图，从<b>重建保真度 / 几何合理性 / 朝向对齐</b>三个维度打 1–5 分。
+        异步框架之所以必要，是因为这个 API 的延迟高且抖动大。</p>
+        <p class="why">本站判断：工程上是对的（不然 28 张 rollout 卡会空转），但<b>奖励随模型版本漂移</b>，别人复现时拿不到同一个奖励分布；论文自己也把「奖励维度不够细」列为首要 limitation。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 为什么 2D 的 RL 目标搬到 3D 不灵 -->
+<section id="why" style="padding-top:8px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 02 · THE GAP</div>
+      <h2>现有 RL 目标在负样本上做了什么</h2>
+      <p>论文的诊断非常具体：三类目标机制不同，但在「如何对待负样本」上共享同一个缺陷。</p>
+    </div>
+
+    <div class="cmp">
+      <div>
+        <div class="who">DPO-style（Flow-DPO 等）</div>
+        <div class="act" style="color:#c2410c">隐式压低负轨迹似然</div>
+        <div class="d">通过成对偏好比对负样本降权，等价于把概率质量从负轨迹挪走，但没说挪到哪。</div>
+      </div>
+      <div>
+        <div class="who">GRPO-style（Flow-GRPO 等）</div>
+        <div class="act" style="color:#c2410c">降低负优势样本概率</div>
+        <div class="d">把生成当在线 RL，对低奖励 rollout 施加惩罚；优势 A&lt;0 就压，A&gt;0 就强化。</div>
+      </div>
+      <div>
+        <div class="who">NFT-style（DiffusionNFT 等）</div>
+        <div class="act" style="color:#c2410c">沿隐负策略反转梯度</div>
+        <div class="d">在前向过程上注入负速度空间梯度，把预测速度推离负轨迹目标方向。</div>
+      </div>
+      <div class="hl">
+        <div class="who" style="color:#b45309">DHO（本文）</div>
+        <div class="act" style="color:#15803d">给负样本一个归航场</div>
+        <div class="d">先配对一个正目标 x<sub>w*</sub>，再用剩余时间感知的速度把它牵过去——<b>目的地与到达方式都显式给出</b>。</div>
+      </div>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="四类负样本分支目标对比">
+        <defs>
+          <marker id="ah-red" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 z" fill="#dc4c4c"/>
+          </marker>
+          <marker id="ah-green" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 z" fill="#16a34a"/>
+          </marker>
+        </defs>
+        <text x="14" y="26" font-size="13" font-weight="700" fill="#1a2332">DPO / GRPO / NFT：只推开</text>
+        <text x="360" y="26" font-size="13" font-weight="700" fill="#1a2332">DHO：推开 + 归航</text>
+        <line x1="340" y1="14" x2="340" y2="236" stroke="#e3e9f2" stroke-width="1"/>
+
+        <!-- 左：推开 -->
+        <circle cx="50" cy="120" r="7" fill="#cbd5e1"/>
+        <text x="38" y="145" font-size="12" fill="#8494a9">x₀</text>
+        <circle cx="230" cy="120" r="8" fill="#dc4c4c"/>
+        <text x="222" y="147" font-size="12" fill="#dc4c4c">x_l（负）</text>
+        <circle cx="285" cy="70" r="8" fill="#16a34a"/>
+        <text x="277" y="60" font-size="12" fill="#16a34a">x_w（正）</text>
+        <line x1="58" y1="120" x2="222" y2="120" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="230" y1="128" x2="196" y2="168" stroke="#dc4c4c" stroke-width="2.5" marker-end="url(#ah-red)"/>
+        <text x="150" y="190" font-size="12.5" fill="#c2410c">负样本分支：把速度推离 x_l 方向</text>
+        <text x="150" y="210" font-size="12" fill="#8494a9">「往哪去」留给了正样本分支</text>
+        <text x="150" y="230" font-size="12" fill="#8494a9">（虚线：未指定）</text>
+        <line x1="230" y1="128" x2="270" y2="86" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="4 4"/>
+
+        <!-- 右：归航 -->
+        <circle cx="400" cy="120" r="7" fill="#cbd5e1"/>
+        <text x="388" y="145" font-size="12" fill="#8494a9">x₀</text>
+        <circle cx="505" cy="150" r="8" fill="#dc4c4c"/>
+        <text x="497" y="177" font-size="12" fill="#dc4c4c">x_t^l</text>
+        <circle cx="640" cy="80" r="8" fill="#16a34a"/>
+        <text x="600" y="70" font-size="12" fill="#16a34a">x_w*（配对目标）</text>
+        <line x1="408" y1="120" x2="497" y2="150" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="513" y1="144" x2="632" y2="88" stroke="#16a34a" stroke-width="2.8" marker-end="url(#ah-green)"/>
+        <text x="470" y="205" font-size="12.5" fill="#15803d">TDC：(1−t)·v = (x_w* − x_t^l)</text>
+        <text x="470" y="225" font-size="12" fill="#8494a9">剩余时间感知 → 终点误差为 0</text>
+        <circle cx="560" cy="118" r="3.2" fill="#93a5f5"/>
+        <text x="500" y="115" font-size="11.5" fill="#6366f1">MAM 一对一配对</text>
+        <line x1="562" y1="120" x2="632" y2="86" stroke="#c7d2fe" stroke-width="1.4" stroke-dasharray="3 3"/>
+      </svg>
+      <p class="svg-cap">图 1（依论文 Figure 2 / Figure 3 重绘）：左边是三类现有目标在负样本上的共同行为——只产生「离开 x_l」的方向；右边是 DHO——MAM 先配对目标，TDC 再给出到达它的速度。</p>
+    </div>
+
+    <div class="callout warn">
+      ⚠️ 论文的诊断前提值得单独强调：它<b>没有</b>声称 DPO/GRPO/NFT 在 2D 上不行，而是说在 3D 上「受限于预训练模型能力、rollout 多样性、奖励分布复杂度」这三者，照搬的增益有限。
+      Table 1 里 SFT 之后 GRPO/DPO/NFT 的用户研究只到 2.36–3.07，而 DHO 到 4.02——差距主要出现在主观几何质量上。
+    </div>
+  </div>
+</section>
+
+<!-- ③ DHO 方法 -->
+<section id="method">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 03 · METHOD</div>
+      <h2>DHO 的两个组件</h2>
+      <p>DHO 是一种 <b>forward-process RL</b>：策略更新发生在由 rollout 端点构造的前向插值上（噪声 → 负样本），采样器可换，也不需要把整条采样轨迹存下来。</p>
+    </div>
+
+    <h3 class="block-title c-indigo">① MAM：最小代价吸引匹配</h3>
+    <div class="grid2">
+      <div>
+        <p style="font-size:14px;color:var(--ink2)">
+          在每个 mini-batch 的 latent 特征空间里，把负样本集合 <b>Ñ</b> 与正样本集合 <b>P̂</b> 之间「谁去追谁」形式化成一个<b>最小代价一对一分配问题</b>：
+          代价就是两点的 L2 距离，求解用 Hungarian 算法，复杂度 O(B³)。
+        </p>
+        <div class="eq">
+          C<sub>i,j</sub> = ‖x<sub>i</sub><sup>l</sup> − x<sub>j</sub><sup>w</sup>‖<sub>2</sub><sup>2</sup>
+          <span class="cmt">（式 2 · 代价矩阵）</span><br>
+          π* = arg min<sub>π∈Π<sub>B</sub></sub> Σ<sub>i,j</sub> C<sub>i,j</sub> π<sub>i,j</sub>
+          <span class="cmt">（式 3 · 线性求和分配）</span><br>
+          x<sub>i</sub><sup>w*</sup> = x<sub>π*(i)</sub><sup>w</sup>
+          <span class="cmt">（式 4 · 每个负样本拿到唯一目标）</span>
+        </div>
+        <p style="font-size:13.5px;color:var(--ink2);margin-top:8px">
+          可以把它看成负/正 rollout 端点两个均匀经验分布之间的 <b>mini-batch 最优传输</b>。
+          一对一约束是关键：消融里 MAM 同时优于 random pairing、nearest-neighbor 和 soft attraction（对多个正样本做相似度加权聚合）。
+          论文给的解释是——soft 版本会保留一个弥散的多目标方向，而 MAM 给的是<b>确定、单一</b>的目的地。
+        </p>
+      </div>
+      <div>
+        <h4 class="sub-h"><span class="t">样本怎么分</span>组归一化优势</h4>
+        <div class="eq">
+          A<sub>i</sub> = (r<sub>i</sub> − r̄) / s<sub>r</sub>
+          <span class="cmt">（组均值 / 组标准差）</span>
+        </div>
+        <ul class="tight">
+          <li>A &gt; 0 → 正样本；A &lt; 0 → 负样本；<b>A = 0 直接丢掉</b>。</li>
+          <li>两边数量取小者 B 配平：正样本多就<b>保留优势最高的 B 个</b>（消融：0.56 vs 随机 0.44），负样本多就随机取 B 个。</li>
+          <li>正样本权重 ω<sub>i</sub><sup>w</sup> = A<sub>i</sub><sup>w</sup> / mean(A<sup>w</sup>)；<b>负样本继承它被分配到的那个正目标的权重</b>。</li>
+        </ul>
+        <h4 class="sub-h"><span class="t">自洽性</span>正样本分支为何不用另写</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          把 P̂ 对自身做式 (3)，由于对角代价 C<sub>i,i</sub> = 0，<b>恒等排列就是最优解</b>——正样本匹配到自己。
+          代入时间感知场后分子分母正好约掉，塌回标准 rectified flow 动作：
+        </p>
+        <div class="eq">
+          v<sub>target</sub> = (x<sub>w</sub> − x<sub>t</sub><sup>w</sup>) / (1−t) = (1−t)(x<sub>w</sub> − x<sub>0</sub>) / (1−t) = x<sub>w</sub> − x<sub>0</sub>
+          <span class="cmt">（式 8 · 退化）</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">② TDC：时间感知动态修正</h3>
+    <div class="grid2">
+      <div>
+        <p style="font-size:14px;color:var(--ink2)">
+          有了目标之后，最naive 的选择是静态动作 x<sub>w*</sub> − x<sub>0</sub>。但负样本的中间状态 x<sub>t</sub><sup>l</sup>
+          <b>本来就不在通往 x<sub>w*</sub> 的直线上</b>，积分一个常速度会累积正比于 t(x<sub>l</sub> − x<sub>w*</sub>) 的终点误差。
+          所以动作必须同时依赖<b>当前状态</b>和<b>剩余时间</b>：
+        </p>
+        <div class="eq">
+          v<sub>target</sub><sup>correction</sup>(x<sub>t</sub><sup>l</sup>, t, c) = (x<sub>w*</sub> − x<sub>t</sub><sup>l</sup>) / (1 − t)
+          <span class="cmt">（式 5 · 归航场）</span>
+        </div>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          问题是 1/(1−t) 在 t → 1 时发散。论文的处理很干净：<b>给残差乘上时间权重 w(t) = (1−t)²</b>，
+          这等价于让 (1−t)·v<sub>θ</sub> 去回归一个有界目标，奇异性正好被抵消：
+        </p>
+        <div class="eq">
+          (1−t)·v<sub>target</sub><sup>correction</sup> = x<sub>w*</sub> − x<sub>t</sub><sup>l</sup> = (x<sub>w*</sub> − x<sub>0</sub>) − t(x<sub>l</sub> − x<sub>0</sub>)
+          <span class="cmt">（式 6 · 全区间光滑）</span>
+        </div>
+        <div class="eq">
+          L<sub>neg</sub>(θ) = 𝔼 ‖ ω<sub>w*</sub>·[ (1−t)v<sub>θ</sub>(x<sub>t</sub><sup>l</sup>,t,c) − ((x<sub>w*</sub>−x<sub>0</sub>) − t(x<sub>l</sub>−x<sub>0</sub>)) ] ‖<sub>2</sub><sup>2</sup>
+          <span class="cmt">（式 7 · 负样本分支目标）</span>
+        </div>
+      </div>
+      <div>
+        <h4 class="sub-h"><span class="t">全套目标</span>式 11</h4>
+        <div class="eq" style="font-size:15px">
+          L<sub>DHO</sub>(θ) = η·L<sub>neg</sub> + (1−η)·L<sub>pos</sub> + β·L<sub>reg</sub>
+        </div>
+        <ul class="tight">
+          <li><b>L<sub>neg</sub></b>：负样本归航（式 7）</li>
+          <li><b>L<sub>pos</sub></b>：正样本锚定，退化为带优势权重的标准 rectified flow（式 9）</li>
+          <li><b>L<sub>reg</sub></b> = ‖v<sub>θ</sub> − v<sub>θ<sub>ref</sub></sub>‖<sub>2</sub><sup>2</sup>：向<b>冻结的参考策略</b>做似然无关的速度正则（式 10）</li>
+          <li>默认 <code>η = 0.1</code>、<code>β = 1.0</code></li>
+        </ul>
+        <div class="callout">
+          <b>η = 0 时</b>（关掉负样本归航，只剩正样本分支）用户研究从 1.92 掉到 1.13，说明增益确实来自归航本身；
+          但 η 加到 0.5 也会掉（1.27）——<b>归航强度要和正样本锚定配平</b>。
+          <b>β = 0</b>（去掉参考策略正则）最惨，掉到 0.30，论文说此时策略会偏离预训练速度场并产生退化几何。
+        </div>
+        <h4 class="sub-h"><span class="t">与 CFG 的关系</span>式 12</h4>
+        <p style="font-size:13.5px;color:var(--ink2)">
+          同一个 CFG scale（默认 <code>s = 3.0</code>）被<b>一致地</b>用在 rollout 生成、策略更新和推理三处——
+          保证策略优化发生在与探索/利用相同的动力学下。目标形式不变，只是把 v<sub>θ</sub> 换成引导后的 v̂<sub>θ</sub>。
+          消融显示 s = 3.0 优于 CFG-free（s = 1.0）与其他档位。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ④ 端点行为分析 -->
+<section id="endpoint" style="padding-top:8px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 04 · THEORY</div>
+      <h2>端点行为：收敛到哪、收敛多快</h2>
+      <p>论文给了两个命题（证明在附录），分别刻画收敛终点与训练动力学。这部分是 DHO 区别于「拍脑袋加个 loss」的地方。</p>
+    </div>
+    <div class="grid2">
+      <div class="concl c-green">
+        <span class="n">PROPOSITION 1 · 收敛终点</span>
+        <h4>原来生成 x<sub>l</sub> 的那个噪声，会被改道到 x<sub>w*</sub></h4>
+        <p>
+          设 x<sub>0</sub> 在参考策略 v<sub>θ<sub>ref</sub></sub> 下确定性映射到负样本 x<sub>l</sub>。
+          当策略收敛到最优归航场 v*(x<sub>t</sub>, t, c) = (x<sub>w*</sub> − x<sub>t</sub>)/(1−t) 时，
+          生成映射 F<sub>θ</sub> 的终点被重定向，使得 <b>F<sub>θ*</sub>(x<sub>0</sub>) = x<sub>w*</sub></b>。
+        </p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">PROPOSITION 2 · 训练动力学</span>
+        <h4>终点以几何速率闭合残差</h4>
+        <p>
+          在理想化的逐点收缩更新下，终端生成为
+          <b>x<sub>1</sub>(τ) = (1 − (1−α)<sup>τ</sup>)·x<sub>w*</sub> + (1−α)<sup>τ</sup>·x<sub>l</sub></b>，
+          因而 lim<sub>τ→∞</sub> x<sub>1</sub>(τ) = x<sub>w*</sub>——<b>以 (1−α)<sup>τ</sup> 的几何速率</b>把 x<sub>l</sub> 与 x<sub>w*</sub> 之间的差距补上。
+        </p>
+      </div>
+    </div>
+    <div class="summary-box">
+      <b>注意命题的条件性（论文自己也写明了）：</b>MAM 是<b>逐 mini-batch 重算</b>的，配对关系可能变。
+      所以两个命题是在「配对固定」的区间内成立——每个区间各自提供一次朝当前目标的构造性修正；
+      只有当配对<b>最终稳定</b>下来时，上述递推才预测收敛到那个目标。Figure 4 给了定性示例：一只猫头鹰在训练中逐步变得「正朝向」。
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ Flow3D-Pro -->
+<section id="system">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 05 · SYSTEM</div>
+      <h2>Flow3D-Pro：两阶段 + 异步在线 DHO</h2>
+      <p>方法落到系统上：Stage I 负责把 2D 参考图「抬」进 3D（全局形状、姿态、空间布局），Stage II 只做局部细节精修。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="method-card">
+        <h4><span class="cls">STAGE I</span>lifting</h4>
+        <div class="tagline">基于 Hunyuan3D 2.1 · <b>唯一做后训练的部分</b></div>
+        <p>先 SFT 再 DHO。之所以只训它：2D→3D 抬升阶段<b>输出多样性大</b>，给 RL 提供了更宽的探索空间。</p>
+        <div class="pros">✓ 全局几何与结构初始化，决定后续上限</div>
+        <div class="cons">✗ 此阶段的结构错误，Stage II 修不回来</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls">STAGE II</span>refinement</h4>
+        <div class="tagline">基于 LATTICE · <b>权重全程冻结</b></div>
+        <p>只在推理时用来增强局部表面细节。冻结的理由：它强条件于 Stage I 输出，rollout 多样性太低，不适合做策略优化。</p>
+        <div class="pros">✓ 5 步 ODE、81 s/sample（H20）</div>
+        <div class="cons">✗ 论文把它列为 limitation：希望未来增加其 rollout 多样性</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">REWARD</span>Gemini 3.1 Pro</h4>
+        <div class="tagline">6 视图 + 参考图 → 1–5 分</div>
+        <p>三个维度：① <b>重建保真度</b>（轮廓比例、表面外观与参考图一致）② <b>几何合理性</b>（整体形状有效且跨视图一致）③ <b>朝向对齐</b>（是否对齐坐标轴，利于学对称结构）。</p>
+        <div class="pros">✓ 消融：保真度贡献最大（0.63→1.46），再叠加合理性 1.85、朝向 2.06</div>
+        <div class="cons">✗ 闭源 API，延迟高且抖动 → 必须异步</div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">异步在线 DHO 的训练拓扑</h3>
+    <div class="svg-card">
+      <svg viewBox="0 0 680 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="异步在线 DHO 训练拓扑">
+        <rect x="12" y="30" width="150" height="66" rx="10" fill="#eef2fb" stroke="#c3d3ee"/>
+        <text x="30" y="56" font-size="13" font-weight="700" fill="#1d4ed8">Rollout × 28 GPU</text>
+        <text x="30" y="76" font-size="11.5" fill="#4b5a6e">每组 G = 8 个 mesh</text>
+        <text x="30" y="92" font-size="11.5" fill="#4b5a6e">持有最新策略快照</text>
+
+        <rect x="196" y="30" width="150" height="66" rx="10" fill="#fff4e0" stroke="#f2d9c0"/>
+        <text x="214" y="56" font-size="13" font-weight="700" fill="#b45309">Gemini 3.1 Pro</text>
+        <text x="214" y="76" font-size="11.5" fill="#4b5a6e">渲染 6 视图 + 参考图</text>
+        <text x="214" y="92" font-size="11.5" fill="#4b5a6e">1–5 分（三维度）</text>
+
+        <rect x="380" y="30" width="140" height="66" rx="10" fill="#eefaf2" stroke="#c9e9d6"/>
+        <text x="398" y="56" font-size="13" font-weight="700" fill="#15803d">Replay Buffer</text>
+        <text x="398" y="76" font-size="11.5" fill="#4b5a6e">已评分的 rollout 组</text>
+        <text x="398" y="92" font-size="11.5" fill="#4b5a6e">容量 C（样本数）</text>
+
+        <rect x="554" y="30" width="114" height="66" rx="10" fill="#f3e8ff" stroke="#ddc7f5"/>
+        <text x="572" y="56" font-size="13" font-weight="700" fill="#7c3aed">Trainer × 4 GPU</text>
+        <text x="572" y="76" font-size="11.5" fill="#4b5a6e">DHO 目标更新</text>
+        <text x="572" y="92" font-size="11.5" fill="#4b5a6e">b = 2 / 卡，bf16</text>
+
+        <line x1="162" y1="63" x2="196" y2="63" stroke="#8494a9" stroke-width="2" marker-end="url(#m)"/>
+        <line x1="346" y1="63" x2="380" y2="63" stroke="#8494a9" stroke-width="2" marker-end="url(#m)"/>
+        <line x1="520" y1="63" x2="554" y2="63" stroke="#8494a9" stroke-width="2" marker-end="url(#m)"/>
+        <defs><marker id="m" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8494a9"/></marker></defs>
+
+        <path d="M611 96 L611 150 L70 150 L70 96" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="5 4"/>
+        <text x="300" y="170" font-size="12" fill="#2563eb" text-anchor="middle">每 K = 16 步发布一次新策略快照；rollout 端取快照后开新组</text>
+
+        <rect x="12" y="185" width="656" height="34" rx="8" fill="#f6f9ff" stroke="#e2eafb"/>
+        <text x="26" y="207" font-size="12.5" fill="#4b5a6e">update-to-buffer 比约束：λ<sub>min</sub> ≤ K·M·b / C ≤ λ<sub>max</sub>（默认 4 与 8）—— 平衡「新奖励学不够」与「旧 rollout 复用过度」；过期策略版本产生的数据直接丢弃。</text>
+      </svg>
+      <p class="svg-cap">图 2（依论文 3.3.1 节重绘）：rollout 与奖励评估被从策略优化中解耦，两侧并行；用 update-to-buffer 比约束策略陈旧度。</p>
+    </div>
+
+    <div class="grid2" style="margin-top:16px">
+      <div class="card">
+        <h4 class="sub-h"><span class="t">训练配置</span></h4>
+        <dl class="kv">
+          <dt>优化步数</dt><dd>5K steps，AdamW，lr = 2.5×10⁻⁶</dd>
+          <dt>精度 / 批</dt><dd>bfloat16，per-GPU batch = 2</dd>
+          <dt>DHO 系数</dt><dd>η = 0.1，β = 1.0</dd>
+          <dt>Rollout</dt><dd>G = 8，CFG s = 3.0，SDE 采样 κ = 0.2</dd>
+          <dt>异步配比</dt><dd>N = 28（rollout）/ M = 4（更新），K = 16，λ ∈ [4, 8]</dd>
+          <dt>推理</dt><dd>50 步 ODE（Stage I，62 s）/ 5 步 ODE（Stage II，81 s），H20</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h4 class="sub-h"><span class="t">数据</span></h4>
+        <dl class="kv">
+          <dt>SFT</dt><dd>5K mesh（艺术家创作 + AI 生成），经筛选 → 水密化 → 点云采样与 SDF 抽取 → 人工精选（看全局形状与局部细节）</dd>
+          <dt>DHO</dt><dd>1K 张参考图：3D 卡通 / 2D 卡通 / 写实，覆盖人、动物、车辆、建筑、植物等</dd>
+          <dt>评测集</dt><dd><b>GenMesh-Test</b>（自建 200 张困难参考图，与训练不重叠）+ <b>LATTICE-Bench</b></dd>
+          <dt>指标</dt><dd>ULIP、Uni3D、User Study（3 位技术美术专家盲评，方法匿名、顺序随机，U 个方法排 U−1 → 0）</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ 实验 -->
+<section id="exp" style="padding-top:8px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 06 · EXPERIMENTS</div>
+      <h2>两个层面的对比</h2>
+      <p>第一层：RL 目标之间的受控对比（同 SFT 起点、同奖励模型、同 Stage II，3 个随机种子取均值）。第二层：与现有图生 3D 方法。</p>
+    </div>
+
+    <h3 class="block-title">Table 1 · RL 目标对比（Stage I，GenMesh-Test）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th>ULIP↑</th><th>Uni3D↑</th><th>User Study↑</th><th>+Stage II：ULIP</th><th>+Stage II：Uni3D</th><th>+Stage II：User Study</th></tr></thead>
+        <tbody>
+          <tr class="dim"><td>Base（无后训练）</td><td>0.143</td><td>0.347</td><td>0.60</td><td>0.143</td><td>0.350</td><td>0.71</td></tr>
+          <tr><td>SFT</td><td>0.144 (+0.70%)</td><td>0.351 (+1.15%)</td><td>1.93</td><td>0.143 (+0.00%)</td><td>0.352 (+0.57%)</td><td>1.91</td></tr>
+          <tr><td>GRPO-style</td><td>0.147 (+2.80%)</td><td>0.357 (+2.88%)</td><td>3.02</td><td>0.147 (+2.80%)</td><td>0.358 (+2.29%)</td><td>3.00</td></tr>
+          <tr><td>DPO-style</td><td>0.146 (+2.10%)</td><td>0.357 (+2.88%)</td><td>2.36</td><td>0.146 (+2.10%)</td><td>0.358 (+2.29%)</td><td>2.32 <span class="badge-tag tag-bad">↓</span></td></tr>
+          <tr><td>NFT-style</td><td>0.146 (+2.10%)</td><td>0.355 (+2.31%)</td><td>3.07</td><td>0.147 (+2.80%)</td><td>0.357 (+2.00%)</td><td>2.80 <span class="badge-tag tag-bad">↓</span></td></tr>
+          <tr class="ours"><td>DHO（本文）</td><td>0.149 (+4.20%)</td><td>0.359 (+3.46%)</td><td>4.02</td><td>0.150 (+4.90%)</td><td>0.360 (+2.86%)</td><td>4.26</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="chart-box" style="margin-top:18px"><canvas id="chartRL"></canvas></div>
+    <p class="chart-note">
+      柱状为用户研究（Stage I / 再经 Stage II），折线为 +Stage II 后的 ULIP（右轴）。
+      注意两处<b>反直觉</b>：SFT 过 Stage II 后 ULIP 从 0.144 回到 0.143（+0.00%），
+      而 DPO 与 NFT 过 Stage II 后用户研究<b>不升反降</b>——精修阶段放大了 lifting 阶段的结构缺陷。
+    </p>
+
+    <h3 class="block-title c-teal">Table 2 · 与现有图生 3D 方法对比（GenMesh-Test）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th>ULIP↑</th><th>Uni3D↑</th><th>User Study↑</th></tr></thead>
+        <tbody>
+          <tr class="dim"><td>Michelangelo</td><td>0.135</td><td>0.290</td><td>0.18</td></tr>
+          <tr><td>Craftsman 1.5</td><td>0.146</td><td>0.325</td><td>1.32</td></tr>
+          <tr><td>Hi3DGen</td><td>0.144</td><td>0.335</td><td>3.77</td></tr>
+          <tr><td>Direct3D-s2</td><td>0.141</td><td>0.345</td><td>3.27</td></tr>
+          <tr><td>Hunyuan3D 2.1</td><td>0.143</td><td>0.347</td><td>4.14</td></tr>
+          <tr><td>Trellis</td><td>0.145</td><td>0.351</td><td>4.27</td></tr>
+          <tr><td>Trellis2</td><td>0.145</td><td>0.353</td><td>6.73</td></tr>
+          <tr><td>Flow3D-OPD（同组前作）</td><td>0.146</td><td>0.354</td><td>7.04</td></tr>
+          <tr><td>Flow3D-Pro-Base（Stage I 未后训练）</td><td>0.143</td><td>0.350</td><td>5.64</td></tr>
+          <tr class="ours"><td>Flow3D-Pro</td><td>0.150</td><td>0.360</td><td>8.64</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="chart-box" style="margin-top:18px"><canvas id="chartSOTA"></canvas></div>
+    <p class="chart-note">
+      柱为用户研究，折线为 ULIP（右轴）。可以看到 <b>ULIP / Uni3D 挤在 0.14 / 0.35 附近几乎不动</b>，而用户研究从 5.64 拉到 8.64——
+      这也是论文把用户研究当主指标的原因。另：Flow3D-Pro-Base（5.64）已经高于 Trellis2（6.73 之外的多数方法），后训练在此基础上再 +3.0。
+    </p>
+
+    <div class="grid2" style="margin-top:20px">
+      <div class="card">
+        <h4 class="sub-h"><span class="t">LATTICE-Bench</span>Table 9</h4>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>方法</th><th>ULIP↑</th><th>Uni3D↑</th></tr></thead>
+            <tbody>
+              <tr class="dim"><td>Michelangelo</td><td>0.115</td><td>0.261</td></tr>
+              <tr><td>Trellis</td><td>0.126</td><td>0.311</td></tr>
+              <tr><td>Hunyuan3D 2.0 / LATTICE</td><td>0.130</td><td>0.315</td></tr>
+              <tr><td>Flow3D-OPD</td><td>0.138</td><td>0.321</td></tr>
+              <tr class="ours"><td>Flow3D-Pro</td><td>0.140</td><td>0.326</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13px;color:var(--ink2);margin-top:10px">跨数据集结论一致，但量级同样很小（ULIP +0.002）。该 bench 上没有用户研究。</p>
+      </div>
+      <div class="card">
+        <h4 class="sub-h"><span class="t">与其他后训练范式</span>Table 10</h4>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>方法</th><th>ULIP↑</th><th>Uni3D↑</th><th>User Study↑</th></tr></thead>
+            <tbody>
+              <tr><td>SFT</td><td>0.144</td><td>0.351</td><td>0.97</td></tr>
+              <tr><td>RFT（只用正样本）</td><td>0.145</td><td>0.355</td><td>1.39</td></tr>
+              <tr><td>PFM（辅助偏好流，冻结生成器）</td><td>0.147</td><td>0.356</td><td>1.70</td></tr>
+              <tr class="ours"><td>DHO</td><td>0.149</td><td>0.359</td><td>1.94</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13px;color:var(--ink2);margin-top:10px">
+          与 PFM 的对比最能说明 DHO 的立场：PFM 训一个<b>额外的</b>偏好流、在推理时对冻结基座的输出做修正（可能引入源分布不匹配）；
+          DHO 直接在噪声→负样本插值上更新原始生成场。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑦ 消融 -->
+<section id="ablation" style="padding-top:8px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 07 · ABLATIONS</div>
+      <h2>把每个组件单独拆出来看</h2>
+      <p>论文在 Stage I 上做了一系列消融，架构/流程/奖励模型/评测协议全部固定，只改被研究的因素。</p>
+    </div>
+
+    <div class="callout warn">
+      ⚠️ <b>读消融数字前必读：</b>论文明确说明——每次用户研究都是<b>在该比较组内部</b>产生的相对排序，
+      所以这些分数<b>只能在同表/同图内比较，不能跨表比</b>。
+      例如 Table 4 的「动态 0.69」与 Table 3 的「w=(1−t)² 0.55」不属于同一组，数值高低没有可比性。下面两张图画的是<b>同一表内</b>的序列。
+    </div>
+
+    <div class="grid2" style="margin-top:16px">
+      <div class="card">
+        <h4 class="sub-h"><span class="t">Table 6</span>归航强度 η（β 固定）</h4>
+        <div class="chart-box" style="height:290px"><canvas id="chartEta"></canvas></div>
+        <p class="chart-note">η = 0 即关掉负样本归航（只剩正样本分支）：1.13；η = 0.1 最优 1.92；继续加大反而掉（0.2 → 1.68，0.5 → 1.27）。</p>
+      </div>
+      <div class="card">
+        <h4 class="sub-h"><span class="t">Table 8</span>奖励维度累进</h4>
+        <div class="chart-box" style="height:290px"><canvas id="chartReward"></canvas></div>
+        <p class="chart-note">从同一 SFT 起点出发逐项打开：无 → 保真度 → +几何合理性 → +朝向对齐，用户研究 0.63 → 1.46 → 1.85 → 2.06。保真度贡献最大。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title">其余消融一览</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>消融项</th><th>对照</th><th>结果（ULIP / Uni3D / User Study）</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>时间加权 w(t)</td><td>w = 1 ↔ w = (1−t)²</td><td>0.146/0.354/0.45 ↔ <b>0.149/0.359/0.55</b></td><td>后者抵消 1/(1−t) 奇异性，全时间区间数值稳定（Table 3）</td></tr>
+          <tr><td>速度目标</td><td>静态 x<sub>w*</sub>−x<sub>0</sub> ↔ 动态</td><td>0.145/0.353/0.31 ↔ <b>0.149/0.359/0.69</b></td><td>最关键的一条：静态会累积终点误差（Table 4）</td></tr>
+          <tr><td>优势加权</td><td>无 ↔ 有</td><td>0.145/0.354/0.42 ↔ <b>0.149/0.359/0.58</b></td><td>高优势正目标应更用力（Table 5）</td></tr>
+          <tr><td>Rollout 采样器</td><td>ODE ↔ SDE (κ = 0.2)</td><td>0.145/0.353/0.33 ↔ <b>0.149/0.359/0.67</b></td><td>轨迹级随机性拓宽探索；Figure 12 显示两个分支增益都更大（Table 7）</td></tr>
+          <tr><td>参考正则 β</td><td>0.0 / 1.0 / 5.0</td><td>0.140/0.342/0.30 · <b>0.149/0.359/1.70</b> · 0.146/0.358/1.00</td><td>β = 0 时策略偏离预训练场、出现退化几何（Table 6 下块）</td></tr>
+          <tr><td>目标分配方式</td><td>random / nearest / soft ↔ MAM</td><td>MAM 三指标最高（无具体数值，Figure 8）</td><td>soft 版保留弥散多目标方向，MAM 给确定单一目的地</td></tr>
+          <tr><td>正样本挑选</td><td>随机 B 个 ↔ 优势最高 B 个</td><td>用户研究 0.44 ↔ <b>0.56</b>（Figure 9）</td><td>优先拿高优势正样本当归航目标</td></tr>
+          <tr><td>Rollout 组大小 G</td><td>2 → 8</td><td>用户研究 0.50 → <b>1.60</b>（单调递增，Figure 11）</td><td>候选集越大，探索越宽、相对偏好信号越可靠</td></tr>
+          <tr><td>CFG scale</td><td>1.0（CFG-free）↔ 3.0</td><td>s = 3.0 最优（Figure 10，无具体数值）</td><td>在 rollout 多样性与生成质量之间取得平衡</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="summary-box">
+      <b>读表结论：</b>最重要的三项是「<b>动态 vs 静态</b>目标」「<b>时间加权</b>」和「<b>SDE rollout</b>」——前两项证明「归航场」这个设计本身有效（而不只是多了一个 loss），
+      第三项说明 RL 的探索宽度在 3D 上比在 2D 上更稀缺。η/β 的扫描则说明：<b>归航要给，但不能给太猛，且必须贴着参考策略走</b>。
+    </div>
+  </div>
+</section>
+
+<!-- ⑧ 局限 -->
+<section id="limits" style="padding-top:8px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 08 · LIMITATIONS</div>
+      <h2>论文自己写的，和本站想补的</h2>
+    </div>
+    <div class="grid2">
+      <div class="concl c-red">
+        <span class="n">LIMITATION 1 · 论文原文</span>
+        <h4>奖励维度不够细</h4>
+        <p>「设计一个能全面刻画参考图引导的 3D mesh 几何质量的奖励仍然困难，当前维度不足以准确反映更高精度的几何属性。」
+        计划：进一步拆分奖励维度 + 收集更多专业艺术家反馈。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">LIMITATION 2 · 论文原文</span>
+        <h4>DHO 只用在 lifting 阶段</h4>
+        <p>Stage II 强条件于 Stage I 输出，rollout 多样性不足，因此保持冻结。计划：探索如何丰富 Stage II 的 rollout 多样性。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">本站补充 1 · 指标</span>
+        <h4>ULIP / Uni3D 基本不能分辨几何质量</h4>
+        <p>Table 2 里最好的方法（0.150 / 0.360）与第 5 名（0.145 / 0.351）差距在第三位小数上，而用户研究差了一倍多。
+        <b>这意味着整套结论的可信度几乎完全压在盲评流程上</b>；若换一批评审或换一批参考图，排序是否稳定，论文没有给置信区间或显著性检验（只说了 3 seed 取均值）。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">本站补充 2 · 复现性</span>
+        <h4>奖励是闭源 API</h4>
+        <p>用 Gemini 3.1 Pro 打分意味着奖励分布会随模型版本漂移，外部复现拿不到同一分布；
+        且 28 卡 rollout + API 调用的成本不低。论文没给出 API 调用量或单步 wall-clock，只给了推理侧的单样本耗时（Stage I 62 s + Stage II 81 s ≈ 143 s）。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">本站补充 3 · 适用范围</span>
+        <h4>没验证 2D</h4>
+        <p>论文明确说：2D 视觉生成在预训练先验与奖励分布上都与 3D 不同，DHO 在 2D 上的表现留待后续探索。
+        换句话说，这篇<b>不主张</b>「DHO 也该取代 2D 上的 GRPO/NFT」，它的改进证据全部来自 3D mesh 生成。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">本站补充 4 · 定位</span>
+        <h4>与 Flow3D-OPD 的关系</h4>
+        <p>Table 2 里排第二的是 Flow3D-OPD（7.04，Ning et al. 2026，同一批作者的前作）。
+        DHO 不是它的替代品而是正交方向：OPD 解决的是 3D 上 RL 的另一种适配问题，DHO 解决的是「负样本分支没有目标」。
+        两者叠加会怎样，论文没做。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑨ 资源 -->
+<section style="padding-top:8px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 09 · LINKS</div>
+      <h2>资源与相关页面</h2>
+    </div>
+    <div class="grid3">
+      <div class="card">
+        <h4 class="sub-h">📄 论文</h4>
+        <ul class="tight">
+          <li><a href="https://arxiv.org/abs/2610.01233" target="_blank">arXiv:2610.01233</a>（28 页，cs.CV，2026-10-01）</li>
+          <li>Flow Matching Reinforcement for 3D Mesh Generation via Dynamic Homing Optimization</li>
+          <li>Tencent Hunyuan × 上海交通大学 × 中国传媒大学</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 class="sub-h">🔗 论文里的关键引用</h4>
+        <ul class="tight">
+          <li>基线目标：Flow-DPO、Flow-GRPO、DiffusionNFT（NFT）</li>
+          <li>系统基座：Hunyuan3D 2.1（Stage I）、LATTICE（Stage II）</li>
+          <li>同组前作：Flow3D-OPD</li>
+          <li>灵感来源：Deng et al. 2026b「Generative modeling via drifting」的正样本吸引</li>
+          <li>对照方法：PFM（辅助偏好流）、RFT</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 class="sub-h">🧭 本站相关页</h4>
+        <ul class="tight">
+          <li><a href="../3d-generation-2026/index.html">2026 年 3D 生成论文合集（423 篇）</a></li>
+          <li><a href="../hunyuan3d-studio/index.html">Hunyuan3D Studio 深度解读</a>（同组工业管线）</li>
+          <li><a href="../buffalo/index.html">Hunyuan3D-Buffalo 解读</a></li>
+          <li><a href="../trellis2/index.html">TRELLIS 2 解读</a></li>
+          <li><a href="../ultratex/index.html">UltraTex 解读</a> · <a href="../hktex/index.html">HKTex 解读</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    3D-Research · 论文深度解读 · 更新于 2026-10-30 · 数据均取自 arXiv:2610.01233 正文与附录表格 ·
+    <a href="../index.html">返回首页</a> ·
+    <a href="../3d-generation-2026/index.html">前沿合集</a> ·
+    <a href="../hunyuan3d-studio/index.html">Hunyuan3D Studio 深度解读</a> ·
+    <a href="../buffalo/index.html">Hunyuan3D-Buffalo</a> ·
+    <a href="../trellis2/index.html">TRELLIS 2</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+if (typeof Chart === 'undefined') {
+  /* 降级：保留 canvas 容器，只在下方追加提示，不破坏页面结构与表格 */
+  document.querySelectorAll('.chart-box').forEach(function (b) {
+    var p = document.createElement('p');
+    p.style.cssText = 'font-size:13px;color:#8494a9;padding:14px 0 0';
+    p.textContent = '图表需加载 Chart.js（CDN 不可达时显示此提示），下方表格数据不受影响。';
+    b.appendChild(p);
+  });
+} else {
+  Chart.defaults.font = {family:"'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif", size:12};
+  Chart.defaults.color = '#4b5a6e';
+
+  new Chart(document.getElementById('chartRL'), {
+    data: {
+      labels: ['Base', 'SFT', 'GRPO-style', 'DPO-style', 'NFT-style', 'DHO'],
+      datasets: [
+        {type:'bar', label:'User Study（Stage I）', data:[0.60,1.93,3.02,2.36,3.07,4.02], backgroundColor:'#93a5f5', borderRadius:6, yAxisID:'y'},
+        {type:'bar', label:'User Study（+Stage II）', data:[0.71,1.91,3.00,2.32,2.80,4.26], backgroundColor:'#2563eb', borderRadius:6, yAxisID:'y'},
+        {type:'line', label:'ULIP（+Stage II）', data:[0.143,0.143,0.147,0.146,0.147,0.150], borderColor:'#ea8a3c', backgroundColor:'#ea8a3c', borderWidth:2.5, tension:.25, yAxisID:'y1', pointRadius:4}
+      ]
+    },
+    options: {maintainAspectRatio:false, plugins:{legend:{position:'top', labels:{boxWidth:14, padding:12}}},
+      scales:{y:{beginAtZero:true, title:{display:true, text:'User Study'}},
+              y1:{position:'right', beginAtZero:false, min:0.140, max:0.152, grid:{drawOnChartArea:false}, title:{display:true, text:'ULIP'}}}}
+  });
+
+  new Chart(document.getElementById('chartSOTA'), {
+    data: {
+      labels: ['Michelangelo','Craftsman 1.5','Hi3DGen','Direct3D-s2','Hunyuan3D 2.1','Trellis','Flow3D-Pro-Base','Trellis2','Flow3D-OPD','Flow3D-Pro'],
+      datasets: [
+        {type:'bar', label:'User Study', data:[0.18,1.32,3.77,3.27,4.14,4.27,5.64,6.73,7.04,8.64],
+         backgroundColor:['#cbd5e1','#cbd5e1','#cbd5e1','#cbd5e1','#cbd5e1','#cbd5e1','#93a5f5','#cbd5e1','#93a5f5','#2563eb'], borderRadius:6, yAxisID:'y'},
+        {type:'line', label:'ULIP', data:[0.135,0.146,0.144,0.141,0.143,0.145,0.143,0.145,0.146,0.150],
+         borderColor:'#ea8a3c', borderWidth:2.5, tension:.2, yAxisID:'y1', pointRadius:4}
+      ]
+    },
+    options: {maintainAspectRatio:false, plugins:{legend:{position:'top', labels:{boxWidth:14, padding:12}}},
+      scales:{y:{beginAtZero:true, title:{display:true, text:'User Study'}},
+              y1:{position:'right', beginAtZero:false, min:0.130, max:0.155, grid:{drawOnChartArea:false}, title:{display:true, text:'ULIP'}},
+              x:{ticks:{maxRotation:60, minRotation:40, font:{size:10.5}}}}}
+  });
+
+  new Chart(document.getElementById('chartEta'), {
+    type:'bar',
+    data:{labels:['η = 0（关闭归航）','η = 0.1','η = 0.2','η = 0.5'],
+      datasets:[{label:'User Study', data:[1.13,1.92,1.68,1.27], backgroundColor:['#cbd5e1','#2563eb','#93a5f5','#93a5f5'], borderRadius:6}]},
+    options:{maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true, title:{display:true, text:'User Study（表内相对）'}}}}
+  });
+
+  new Chart(document.getElementById('chartReward'), {
+    type:'bar',
+    data:{labels:['SFT（无）','+重建保真度','+几何合理性','+朝向对齐'],
+      datasets:[{label:'User Study', data:[0.63,1.46,1.85,2.06], backgroundColor:['#cbd5e1','#93a5f5','#6366f1','#2563eb'], borderRadius:6}]},
+    options:{maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true, title:{display:true, text:'User Study（表内相对）'}}}}
+  });
+}
+</script>
+</body>
+</html>
