@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Channel Match 深度解读 · 少步 3D 生成的 latent 分布漂移 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#fdf3e9 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#fbe3c9;color:#b45309;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:31px;line-height:1.32;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--orange)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:940px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--orange);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  section.alt{background:#fbfcfe;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:340px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#fef5ec;font-weight:600}
+  tr.ours:hover td{background:#fdece0}
+  tr.dim td{color:var(--ink3)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .callout.orc{background:linear-gradient(90deg,#fdf6ec,#fff9f2);border-color:#f2c49b}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl.c-indigo{border-left-color:var(--indigo)} .concl.c-indigo .n{color:var(--indigo)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--orange)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#fbe3c9;color:#b45309;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .cmp div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .cmp .who{font-size:12px;font-weight:700;color:var(--ink3)}
+  .cmp .act{font-size:13.5px;font-weight:700;margin-top:4px}
+  .cmp .d{font-size:12.5px;color:var(--ink2);margin-top:4px}
+  .cmp div.hl{border-color:#f2c49b;background:linear-gradient(180deg,#fff8f2,#fff)}
+  .quote{background:#f8fafc;border-left:3px solid var(--orange);border-radius:8px;padding:10px 16px;margin:10px 0;font-size:13.5px;color:var(--ink2)}
+  .quote .src{display:block;font-size:12px;color:var(--ink3);margin-top:4px}
+  .algo{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:Consolas,Monaco,"Segoe UI",system-ui,sans-serif;font-size:12.8px;color:var(--ink2);line-height:1.9;overflow-x:auto;white-space:pre}
+  .algo b{color:var(--ink)}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#pipeline">② 流水线</a>
+      <a href="#distill">③ 蒸馏框架</a>
+      <a href="#drift" style="font-weight:700;color:#b45309">④ 漂移 ★</a>
+      <a href="#cm" style="font-weight:700;color:#b45309">⑤ Channel Match ★</a>
+      <a href="#exp">⑥ 主结果</a>
+      <a href="#tex">⑦ 纹理改善</a>
+      <a href="#abl">⑧ 消融</a>
+      <a href="#limits">⑨ 局限</a>
+      <a href="../3d-generation-2026/index.html" style="font-weight:700;color:#0d9488">前沿合集 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-11-02 · arXiv:2610.15321 · William &amp; Mary × SparcAI</span>
+    <h1>几何全对，纹理却烂了<br><em>Channel Match</em>：少步 3D 生成里那个「看不见的」latent 分布漂移</h1>
+    <p class="sub">
+      这篇论文做了两件事：<b>把 TRELLIS.2 的 1024 shape flow 蒸馏到两步</b>（shape sampling 快 4.5×），以及——更重要的——<b>发现了这个蒸馏带来的一个此前没人报的失败模式</b>。
+      少步采样会让 shape latent 的<b>逐通道标准差坍缩</b>：几何<b>完全正确</b>，但 latent 已经偏离训练分布；
+      而冻结的 PBR 纹理阶段只在 in-distribution latent 上训练过，于是产出<b>错误材质</b>——在几何合法的资产上出现深色斑块。
+      论文对此的原话很准：<i>"texture artifacts that <b>resemble structural defects</b>"</i>——<b>这些瑕疵看起来像结构缺陷，但几何其实是好的</b>。
+      修法是 <b>Channel Match</b>：一个<b>免训练</b>的逐通道仿射校准，只用离线算一次的 (μ̂, σ̂)，插在 shape flow 与 texture flow 之间，<b>不修改任何一个模型</b>。
+    </p>
+    <div class="meta">
+      <span class="pill">📄 15 页 · cs.CV · 2026-10-11</span>
+      <span class="pill">👥 Di Yang¹, Zhihao Li², Yanhai Xiong¹, Yufei Wang²</span>
+      <span class="pill">🏢 ¹ College of William &amp; Mary · ² SparcAI Inc.（Sparc3D / Hi3D 1.0 团队）</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2610.15321" target="_blank">arXiv:2610.15321</a></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>4.5×</b><span>shape sampling 加速（5.29s → 1.18s）；端到端仅 1.5×</span></div>
+      <div class="stat"><b>0.0802 → 0.0742</b><span>配对 LPIPS 相对 12 步 teacher（越低越接近 teacher）</span></div>
+      <div class="stat"><b>88%</b><span>full match 把资产推向 teacher 的比例（SSIM 口径）</span></div>
+      <div class="stat"><b>10.9×</b><span>JVP 内核比 naive 快，且内存 O(N) 而非 O(N²)</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ① 结论 -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 01 · TAKEAWAYS</div>
+      <h2>先把结论读完</h2>
+      <p>八条，其中第 3–8 条是本站读完全文（含 Limitations）后的判断，不是论文原话。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl c-orange">
+        <span class="n">结论 01 · 诊断</span>
+        <h4>最值钱的是那个失败模式，不是加速方法</h4>
+        <p>"几何完全正确，但 latent 统计漂移导致冻结的纹理阶段产出错误材质，<b>瑕疵看起来像结构缺陷</b>"。这个坑极阴险——你会去查几何模型，实际病因在 latent 分布。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 02 · 工程相关性</span>
+        <h4>这<b>不是</b>实验室奇观，是真实部署会踩的坑</h4>
+        <p>「只蒸馏 shape flow、纹理模型冻结」恰恰是工业上最自然的做法（纹理模型贵、不想重训）。而这个漂移<b>会救 naive 少步采样</b>（teacher@2 FD 15.67→15.21），所以<b>不绑定蒸馏</b>——只要你把步数压下来就可能中招。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 03 · 机理</span>
+        <h4>漂移是<b>标准差的坍缩</b>，而且是单边的</h4>
+        <p>latent 逐通道标准化后 σ̂_c = 1，采样得到的通道 std <b>只会低于</b>训练值。所以坍缩分数 S = mean_c max(0, σ̂_c/σ^s_c − 1) 是个方向明确的标量，也解释了为什么不考虑 mean-only 变体——<b>漂移的形态就是 std 坍缩</b>。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">结论 04 · 数据细节（本站）</span>
+        <h4>Teacher@12 的 S 也有 0.150，不是零</h4>
+        <p>Table 6：12 步 teacher 的坍缩分数 0.150、16.8% 通道 std &lt; 0.8；两步学生 0.174 / 22.4%；一步 0.207 / 28.4%。<b>所以这不是「少步独有」的病，而是「少步会放大」的病。</b>论文表述为 few-step failure mode，数据上更准确的说法是加剧了一个本就存在的基础漂移。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 05 · 最易被误读的表</span>
+        <h4>Table 4：在简单资产上 <b>full match 比什么都不做还差</b></h4>
+        <p>全 Toys4K 上，student@2 的 FD-Incep：none 14.09 / <b>std-only 13.88</b> / full <b>14.16</b>。只有 std-only 是安全的。所以「Channel Match 一律开 full」是错的。<b>选择依据是坍缩严重程度</b>——而 S 门控只决定「开不开」，<b>没决定开哪种形式</b>，论文没给按 S 选形式的方案。这是个真实缺口。</p>
+      </div>
+      <div class="concl">
+        <span class="n">结论 06 · 数字口径</span>
+        <h4>「4.5×」是 shape sampling，<b>端到端只有 1.5×</b></h4>
+        <p>shape sampling 5.29→1.18 s（4.5×），但 image→shape 端到端 11.51→7.55 s（<b>1.5×</b>）——被冻结的 sparse-structure prefix 和纹理阶段限制住了。摘要里两个数字都有，但只报 4.5× 有标题党风险。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 07 · 泛化（本站）</span>
+        <h4>凡「前一阶段 latent 直接作为后一阶段条件」的流水线都有这个风险</h4>
+        <p>TRELLIS.2 的 texture flow 是以 shape latent 为条件的，所以 shape latent 一漂，纹理模型就见到 OOD 输入。<b>这不只 TRELLIS.2 的问题</b>——Hunyuan3D、Sparc3D 这类多阶段原生 3D 流水线同理。<b>把同样的校准扩到纹理阶段论文明确留开放（Sec. 6）。</b></p>
+      </div>
+      <div class="concl c-green">
+        <span class="n">结论 08 · ULIP 第三次失灵</span>
+        <h4>ULIP 跨 0.04，FD 跨 20——又一次印证自动指标分辨力弱</h4>
+        <p>Table 1：ULIP-I 从 teacher@12 的 38.45 到 ours@2 的 38.48 到 ours@4 的 38.49，<b>跨 0.04</b>；而 FD-DINOv2 从 106.66 到 127.44，<b>跨约 20</b>。这是本站第三次看到 ULIP 对这类差异不敏感（前两次是 DHO 与 GATOR）。<b>别拿 ULIP 做这类消融的主指标。</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 流水线 -->
+<section id="pipeline" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 02 · SETUP</div>
+      <h2>TRELLIS.2 三阶段流水线，与「只蒸馏 shape flow」的代价</h2>
+      <p>理解失败模式的前提：shape latent 不只是几何的编码，它<b>直接是纹理阶段的输入</b>。</p>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TRELLIS.2 流水线与 Channel Match 插入位置">
+        <defs>
+          <marker id="cm1" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#8494a9"/>
+          </marker>
+          <marker id="cm2" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#ea8a3c"/>
+          </marker>
+        </defs>
+
+        <text x="14" y="18" font-size="12" font-weight="700" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">输入：单张图像 c</text>
+
+        <rect x="14" y="28" width="118" height="44" rx="9" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="73" y="47" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">① Sparse structure</text>
+        <text x="73" y="63" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">❄ 冻结（预测 active voxel）</text>
+
+        <line x1="134" y1="50" x2="166" y2="50" stroke="#8494a9" marker-end="url(#cm1)"/>
+
+        <rect x="168" y="28" width="118" height="44" rx="9" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="227" y="47" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">② Shape flow @512</text>
+        <text x="227" y="63" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">❄ 冻结（坐标上采样到 1024）</text>
+
+        <line x1="288" y1="50" x2="320" y2="50" stroke="#8494a9" marker-end="url(#cm1)"/>
+
+        <rect x="322" y="24" width="120" height="52" rx="9" fill="#fdf3e9" stroke="#f2c49b" stroke-width="1.8"/>
+        <text x="382" y="45" font-size="11.5" text-anchor="middle" fill="#b45309" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">③ Shape flow @1024</text>
+        <text x="382" y="62" font-size="10.5" text-anchor="middle" fill="#b45309" font-family="Segoe UI,PingFang SC,sans-serif">🔥 唯一被蒸馏的部分</text>
+
+        <line x1="444" y1="50" x2="472" y2="50" stroke="#ea8a3c" marker-end="url(#cm2)"/>
+
+        <rect x="474" y="14" width="192" height="52" rx="9" fill="#fff" stroke="#ea8a3c" stroke-dasharray="4 3" stroke-width="1.6"/>
+        <text x="570" y="34" font-size="11.5" text-anchor="middle" fill="#b45309" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">★ Channel Match（免训练）</text>
+        <text x="570" y="52" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">逐通道仿射：x′ = μ̂ + (x − μˢ)(1 + s(σ̂/σˢ − 1))</text>
+        <text x="570" y="68" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">门控：仅当坍缩分数 S &gt; τ_S（默认 0.20）</text>
+
+        <line x1="570" y1="68" x2="570" y2="88" stroke="#ea8a3c" marker-end="url(#cm2)"/>
+
+        <rect x="474" y="90" width="192" height="44" rx="9" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="570" y="109" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">④ Texture flow（PBR）</text>
+        <text x="570" y="126" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">❄ 冻结 · <tspan font-weight="700" fill="#c2410c">以 shape latent 为条件</tspan></text>
+
+        <line x1="472" y1="112" x2="330" y2="112" stroke="#8494a9" stroke-dasharray="3 2"/>
+        <text x="400" y="106" font-size="10" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">shape latent</text>
+
+        <line x1="570" y1="136" x2="570" y2="156" stroke="#8494a9" marker-end="url(#cm1)"/>
+        <rect x="474" y="158" width="192" height="34" rx="9" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="570" y="180" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">Decoder D → 带纹理网格</text>
+
+        <!-- 问题标注 -->
+        <rect x="14" y="112" width="440" height="80" rx="10" fill="#fdf2f2" stroke="#f5c9c4"/>
+        <text x="28" y="134" font-size="12" font-weight="700" fill="#c2410c" font-family="Segoe UI,PingFang SC,sans-serif">问题所在：③ 被压到两步 → shape latent 逐通道 std 坍缩</text>
+        <text x="28" y="154" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">· 解码出的网格 <tspan font-weight="700" fill="#15803d">几何仍然正确</tspan>（geometrically complete）</text>
+        <text x="28" y="172" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">· 但 latent 偏离训练分布 → ④ 只在 in-distribution latent 上训练过</text>
+        <text x="28" y="188" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">· 结果：<tspan font-weight="700" fill="#c2410c">错误材质 / 深色斑块</tspan>，看起来像结构缺陷，实际几何是好的</text>
+
+        <rect x="14" y="204" width="652" height="34" rx="9" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="28" y="225" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">所有配置共享同一个冻结 prefix 与纹理阶段 → <tspan font-weight="700" fill="#1a2332">任何测到的变化都只来自 shape latent 本身</tspan>（这是本文实验设计最干净的一点）</text>
+      </svg>
+      <p class="svg-cap">图 1：TRELLIS.2 流水线与 Channel Match 的插入位置（对应 Algorithm 1 下半段）。❄ = 冻结。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="method-card">
+        <h4>为什么「结构化稀疏 latent」让蒸馏难做<span class="cls">难点 1</span></h4>
+        <p>现有连续时间蒸馏方法主要为<b>稠密固定维度</b>表示设计。原生 3D 依赖<b>稀疏、变长</b>的结构化 latent——这是扩到高分辨率的必要条件，但让一致性目标里<b>速度方向导数</b>的计算变困难。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>为什么 3D 比 2D 蒸馏更难<span class="cls">难点 2</span></h4>
+        <p>中间 latent 接口被多个阶段共享：<b>几何 latent 是下游外观合成（PBR 纹理）的输入</b>，而图像生成里 latent 直接解码成像素。所以<b>减少步数可能在保留几何结构的同时把 latent 统计推离下游生成器期望的分布</b>——这是一种<b>几何评测看不见</b>的质量退化。</p>
+      </div>
+      <div class="method-card">
+        <h4>为什么不用 2D 那套判别器<span class="cls">难点 3</span></h4>
+        <p>distribution-matching / 对抗蒸馏那一族依赖 2D 图像判别器，但<b>原生 3D latent 的质量评估需要不可微的渲染</b>，信号很难拿到。所以本文走<b>速度空间的连续时间自一致性 + 真值速度锚定</b>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ③ 蒸馏框架 -->
+<section id="distill">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 03 · DISTILLATION</div>
+      <h2>少步蒸馏：两个速度空间损失 + 自适应权重 + 一个 JVP 内核</h2>
+      <p>学生从教师初始化，只蒸馏 1024 shape flow。三个组件各自解决一个具体问题。</p>
+    </div>
+
+    <h3 class="block-title">3.1 真值速度回归（式 3）：锚定「数值」</h3>
+    <div class="eq">
+      L<sub>gt</sub> = E<sub>x₀,ε,t</sub> ‖ v<sub>θ</sub>(x<sub>t</sub>, t) − <big>[</big>(1 − σ<sub>min</sub>)ε − x₀<big>]</big> ‖²₂　<span class="cmt">← 目标就是式 2 的解析瞬时速度</span>
+    </div>
+    <p style="font-size:13.8px;color:var(--ink2)">它的最小值就是<b>真实的边缘场</b>，所以固定了学生应该取的数值。放在<b>速度空间</b>而非样本空间，避开了样本空间重建在小 t 处的加权病态。<b>单靠它得不到少步采样器</b>——它的作用是让下一个损失<b>不至于收敛到一个「一致但不正确」的传输场</b>。</p>
+
+    <h3 class="block-title c-orange">3.2 连续自一致性（式 4–7）：让场与步数无关</h3>
+    <div class="eq">
+      g(x<sub>t</sub>, t) = d/dt v<sub>θ</sub>(x<sub>t</sub>, t) = ∂<sub>t</sub>v<sub>θ</sub> + (∇<sub>x</sub>v<sub>θ</sub>) v̄<sub>φ</sub>(x<sub>t</sub>, t)　<span class="cmt">← 式 4：沿教师轨迹的全时间导数；传输方向是<b>教师速度</b></span><br>
+      r = ‖g‖ / (κ · med‖g‖)　，　ĝ = (tanh r / r) · g　<span class="cmt">← 式 5：平滑、保幅值的鲁棒 cap（κ = 4 × running median）</span><br>
+      v* = sg( ṽ<sub>θ</sub>(x<sub>t</sub>, t) − η ω<sub>t</sub> ĝ )　，　L<sub>scm</sub> = E ‖ v<sub>θ</sub> − v* ‖²₂　<span class="cmt">← 式 6–7：ṽ<sub>θ</sub> 是 EMA 学生</span>
+    </div>
+    <div class="grid2">
+      <div class="method-card hl">
+        <h4>三个容易踩的实现细节<span class="cls">工程</span></h4>
+        <ul class="tight" style="margin-top:6px">
+          <li><b>一次 forward-mode 拿两项</b>：latent 的 dual tangent 用 <b>v̄<sub>φ</sub></b> 播种得空间项；time 输入的 dual tangent 播种常数 <b>1000</b>（骨干消费 scaled time 1000t）得 ∂<sub>t</sub>v<sub>θ</sub>。<b>省略时间项、或空间项用非教师速度播种，都会使 tangent 有偏。</b></li>
+          <li><b>为什么用 tanh 而非 unit-norm</b>：r→0 时 scale→1（<b>保留小切线</b>，g→0 时修正自然消失）；r→∞ 时 token 范数饱和在 κ·med‖g‖ 附近。<b>unit-norm 归一化会把小的一致性信号一起抹掉。</b></li>
+          <li><b>锚点用 EMA 学生而非教师</b>：教师值同时当「目标」和「传输方向」会产生<b>有偏不动点</b>。</li>
+        </ul>
+      </div>
+      <div class="method-card hl">
+        <h4>自适应损失平衡（式 8）<span class="cls">免手调</span></h4>
+        <p>两个损失的尺度不同且随 t 变化。不手调 per-t schedule，改用 <b>uncertainty weighting</b>：对每样本损失 ℓ 与可学习标量 w(t)，加权项为 <code>ℓ·e<sup>−w(t)</sup> + w(t)</code>，其最优解 <b>w*(t) = log ℓ</b> 自动在时间上归一化。</p>
+        <p>w(·) 用一个小型 <b>Fourier-feature MLP</b> 实现并联合训练，两个项各用一套。</p>
+        <p class="pros">效果：省掉了「两个损失权重怎么调」这一步——这在双目标蒸馏里通常是最费时间的。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">3.3 JVP FlashAttention 内核：让连续目标在高分辨率上<b>装得下</b></h3>
+    <p style="font-size:13.8px;color:var(--ink2)">式 4 是 Jacobian-vector product，需要 forward-mode 穿过<b>每一层包括 attention</b>。Stock FlashAttention 只返回 primal 不返回 tangent，会丧失高分辨率稀疏 latent 上的内存优势。本文实现了一个 <b>fused Triton 内核</b>：给定 packed QKV 的 primal 与 tangent，单次 fused pass 返回 primal output + tangent，并 patch 骨干的变长 attention 入口。</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Method（A800-80GB, bf16, N=15,000）</th><th class="num">Latency (ms)↓</th><th class="num">VRAM (GB)↓</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr class="dim"><td>FlashAttn forward（no JVP）†</td><td class="num">4.8</td><td class="num">—</td><td>速度上界，<b>不是</b> JVP 基线</td></tr>
+          <tr><td>Naive forward</td><td class="num">114.4</td><td class="num">27.8</td><td>—</td></tr>
+          <tr><td>Naive forward + JVP（torch.func.jvp）</td><td class="num">454.4</td><td class="num">67.6</td><td>在 N=30,000 生产长度上 <b>OOM</b></td></tr>
+          <tr class="ours"><td>Triton JVP（ours）</td><td class="num">41.7</td><td class="num">~0.2</td><td><b>快 10.9×；内存 O(N) 而非 O(N²)</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">论文强调：<b>本质收益是内存不是延迟</b>——正是这个 O(N) 内存让连续目标能在高分辨率稀疏 latent 上跑起来。数值稳定性：58,952 个 token 上<b>无 NaN/Inf</b>；式 5 的 cap（κ=4）把最大 tangent 范数从 175.0 降到 <b>82.3</b>（约减半），中位数仍在 21 附近 → <b>稳定了目标但没有扭曲典型切线</b>。</p>
+
+    <div class="algo"><b>Algorithm 1 · 训练（一步）</b>
+输入：教师 v<sub>φ</sub>，学生 v<sub>θ</sub>，EMA 学生 ṽ<sub>θ</sub>，权重网 w；cap κ，步长 η，warm-up ω
+ 1  按 token 打包一个 micro-batch；载入 latent x₀、条件 c
+ 2  ε ~ N(0,I)，t ~ U(0,1)；按式 1 构造 x<sub>t</sub>
+ 3  v̄ ← v<sub>φ</sub>(x<sub>t</sub>, t, c)                      <span style="color:#8494a9">// 教师方向，无梯度</span>
+ 4  g ← ∂<sub>t</sub>v<sub>θ</sub> + (∇<sub>x</sub>v<sub>θ</sub>)v̄   通过 JVP（dual seeds: v̄, 1000）
+ 5  ĝ ← (tanh r / r)·g，r = ‖g‖ / (κ·med‖g‖)
+ 6  ṽ ← ṽ<sub>θ</sub>(x<sub>t</sub>, t, c)；v ← v<sub>θ</sub>(x<sub>t</sub>, t, c)
+ 7  v* ← sg(ṽ − η·ω<sub>t</sub>·ĝ)；v<sub>gt</sub> ← (1 − σ<sub>min</sub>)ε − x₀
+ 8  ℓ<sub>scm</sub> ← ‖v − v*‖²₂；ℓ<sub>gt</sub> ← ‖v − v<sub>gt</sub>‖²₂
+ 9  L ← uncertainty 加权和（式 8）；反传；更新 v<sub>θ</sub>、w；EMA 更新 ṽ<sub>θ</sub></div>
+  </div>
+</section>
+
+<!-- ④ 漂移 -->
+<section id="drift" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 04 · THE FAILURE MODE ★</div>
+      <h2>sampling-induced latent distribution drift</h2>
+      <p>这是本文最重要的贡献。加速只是手段，<b>发现并解释这个失败模式</b>才是。</p>
+    </div>
+
+    <div class="quote">
+      "…aggressive sampling reduction can introduce distribution shifts in the geometry latent that <b>preserve geometric completeness</b> but violate the latent interface with downstream appearance synthesis, <b>causing texture artifacts that resemble structural defects</b>."
+      <span class="src">—— 摘要「贡献」第一条</span>
+    </div>
+
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4>症状<span class="cls">看得见</span></h4>
+        <p>PBR 渲染上出现<b>深色 / 斑块状（dark / blotchy）瑕疵</b>，材质明显不对。</p>
+        <p class="cons">但把纹理剥掉看网格——<b>几何是完整的、正确的</b>。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>病因<span class="cls">看不见</span></h4>
+        <p>加速后的几何采样器产出<b>结构上有效</b>的 shape latent，但<b>逐通道统计量偏离训练分布</b>。</p>
+        <p class="cons">冻结的 PBR 纹理阶段只在 in-distribution latent 上训练过 → 见到 OOD 输入 → 合成错误材质。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>为什么阴险<span class="cls">诊断</span></h4>
+        <p>瑕疵<b>看起来像结构缺陷</b>，所以你会去查几何模型、查蒸馏损失、查步数——<b>但几何从头到尾都是对的</b>。</p>
+        <p class="pros">论文用「几何简单的样本」做受控实验（图 1），单独隔离出 latent 漂移的效应。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">漂移的形态：逐通道标准差的<b>单边坍缩</b></h3>
+    <div class="svg-card">
+      <svg viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="逐通道标准差坍缩与校准">
+        <text x="14" y="18" font-size="12.5" font-weight="700" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">同一个通道 c 上的 latent 值分布（latent 已逐通道标准化，故训练 σ̂ = 1）</text>
+
+        <!-- 训练分布 -->
+        <text x="30" y="48" font-size="11.5" fill="#15803d" font-weight="700" font-family="Segoe UI,sans-serif">训练分布</text>
+        <line x1="30" y1="150" x2="200" y2="150" stroke="#e3e9f2"/>
+        <path d="M40,148 C55,146 65,120 80,86 C95,52 105,44 115,44 C125,44 135,52 150,86 C165,120 175,146 190,148"
+              fill="none" stroke="#16a34a" stroke-width="2.6"/>
+        <line x1="115" y1="44" x2="115" y2="150" stroke="#16a34a" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="115" y="163" font-size="10.5" text-anchor="middle" fill="#15803d" font-family="Segoe UI,sans-serif">μ̂</text>
+        <text x="150" y="163" font-size="10.5" fill="#15803d" font-family="Segoe UI,sans-serif">σ̂ = 1</text>
+        <text x="30" y="182" font-size="10.5" fill="#8494a9" font-family="Segoe UI,sans-serif">纹理阶段<b>只见过这个</b></text>
+
+        <!-- 采样分布 -->
+        <text x="252" y="48" font-size="11.5" fill="#c2410c" font-weight="700" font-family="Segoe UI,sans-serif">少步采样得到</text>
+        <line x1="252" y1="150" x2="422" y2="150" stroke="#e3e9f2"/>
+        <path d="M262,148 C277,147 285,110 300,74 C315,38 325,32 335,32 C345,32 355,38 370,74 C385,110 393,147 408,148"
+              fill="none" stroke="#ea8a3c" stroke-width="2.6"/>
+        <line x1="335" y1="32" x2="335" y2="150" stroke="#ea8a3c" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="335" y="163" font-size="10.5" text-anchor="middle" fill="#c2410c" font-family="Segoe UI,sans-serif">μˢ</text>
+        <text x="362" y="163" font-size="10.5" fill="#c2410c" font-family="Segoe UI,sans-serif">σˢ &lt; σ̂　← 坍缩</text>
+        <text x="252" y="182" font-size="10.5" fill="#c2410c" font-weight="700" font-family="Segoe UI,sans-serif">几何仍正确，但 OOD</text>
+
+        <!-- 箭头 -->
+        <path d="M430,90 C450,70 470,70 492,90" fill="none" stroke="#0d9488" stroke-width="2" marker-end="url(#cm3)"/>
+        <defs>
+          <marker id="cm3" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d9488"/>
+          </marker>
+        </defs>
+        <text x="461" y="62" font-size="11" text-anchor="middle" fill="#0d9488" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">Channel</text>
+        <text x="461" y="76" font-size="11" text-anchor="middle" fill="#0d9488" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">Match</text>
+
+        <!-- 校准后 -->
+        <text x="502" y="48" font-size="11.5" fill="#0d9488" font-weight="700" font-family="Segoe UI,sans-serif">校准后</text>
+        <line x1="502" y1="150" x2="666" y2="150" stroke="#e3e9f2"/>
+        <path d="M512,148 C527,146 537,120 552,86 C567,52 577,44 587,44 C597,44 607,52 622,86 C637,120 647,146 662,148"
+              fill="none" stroke="#0d9488" stroke-width="2.6"/>
+        <path d="M522,148 C537,147 545,110 560,74 C575,38 585,32 595,32 C605,32 615,38 630,74 C645,110 653,147 668,148"
+              fill="none" stroke="#cbd5e5" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <text x="587" y="163" font-size="10.5" text-anchor="middle" fill="#0d9488" font-family="Segoe UI,sans-serif">回到训练分布</text>
+        <text x="502" y="182" font-size="10.5" fill="#15803d" font-weight="700" font-family="Segoe UI,sans-serif">纹理阶段正常</text>
+
+        <rect x="14" y="192" width="652" height="14" rx="5" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="28" y="203" font-size="10.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">坍缩分数 S = (1/C) Σ<sub>c</sub> max(0, σ̂<sub>c</sub>/σˢ<sub>c</sub> − 1)　← 漂移是<b>单边</b>的（σˢ 只会偏低），所以 S 是一个方向明确的标量度量</text>
+      </svg>
+      <p class="svg-cap">图 2：逐通道 std 坍缩与 Channel Match 的修正（对应式 9、式 10）。</p>
+    </div>
+
+    <h3 class="block-title">Table 6：漂移随步数单调加剧</h3>
+    <div class="grid2">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Config</th><th class="num">Steps</th><th class="num">Collapse S↓</th><th class="num">std &lt; 0.8 的通道占比↓</th></tr></thead>
+          <tbody>
+            <tr><td>Teacher</td><td class="num">12</td><td class="num">0.150</td><td class="num">16.8%</td></tr>
+            <tr><td>Student</td><td class="num">4</td><td class="num">0.146</td><td class="num">17.5%</td></tr>
+            <tr class="ours"><td>Student</td><td class="num">2</td><td class="num">0.174</td><td class="num">22.4%</td></tr>
+            <tr><td>Student</td><td class="num">1</td><td class="num">0.207</td><td class="num">28.4%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">坍缩分数 vs 步数</h4>
+        <div class="chart-box" style="height:270px"><canvas id="c3"></canvas></div>
+        <p class="chart-note">四步学生（0.146）已经<b>匹配</b>十二步教师（0.150）的水平——与它在 Table 1 里是最强的少步配置一致。</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>注意 Teacher@12 的 S = 0.150，不是零（16.8% 通道 std &lt; 0.8）。</b>
+      所以严格说这<b>不是「少步独有」的病，而是「少步会放大」的病</b>。论文把它表述为 few-step failure mode，但数据上更准确的说法是：
+      少步采样<b>加剧了一个本就存在的基础漂移</b>。图 1 的说明也印证了这点——few-step <b>teacher</b> 和 student 都中招，校准对两者都有效。
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ Channel Match -->
+<section id="cm">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 05 · CHANNEL MATCH ★</div>
+      <h2>修法：一个免训练的逐通道仿射映射</h2>
+      <p>核心卖点很朴素：<b>只用离线算一次的数据集级统计量，不修改任何一个模型</b>。</p>
+    </div>
+
+    <h3 class="block-title c-teal">式 9：校准公式</h3>
+    <div class="eq">
+      x′<sub>c</sub> = μ̂<sub>c</sub> + ( x<sub>c</sub> − μ<sup>s</sup><sub>c</sub> ) · <big>[</big> 1 + s <big>(</big> σ̂<sub>c</sub> / σ<sup>s</sup><sub>c</sub> − 1 <big>)</big> <big>]</big>
+      <span class="cmt">　← 对每个通道 c 独立做</span><br>
+      <span class="cmt">　(μ̂<sub>c</sub>, σ̂<sub>c</sub>)：训练集<b>所有 active token</b> 上通道 c 的均值与标准差，<b>离线算一次</b></span><br>
+      <span class="cmt">　(μ<sup>s</sup><sub>c</sub>, σ<sup>s</sup><sub>c</sub>)：当前生成 latent 的 active token 上同样的两个量</span>
+    </div>
+
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4>两种形式<span class="cls">s 的选择</span></h4>
+        <p><b>full（s = 1）</b>：同时对齐均值与标准差。</p>
+        <p><b>std-only</b>：只对齐标准差，<b>保留资产自身的均值</b>。</p>
+        <p class="cons"><b>不考虑 mean-only</b>——因为观测到的漂移形态就是<b>标准差的坍缩</b>（Table 6）。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>性质<span class="cls">为什么好用</span></h4>
+        <p><b>只用数据集级统计量</b> → <b>免训练（training-free）</b>，<b>不修改任何一个模型</b>。</p>
+        <p>是<b>逐通道仿射映射</b>，推理时就是一次 in-place 变换，成本几乎为零。</p>
+        <p class="cons">局限：<b>不建模通道间相关性</b>（论文 Sec. 6 自认，full-covariance 或 grouped 变体可解）。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>插入位置<span class="cls">Algorithm 1</span></h4>
+        <p>在<b>蒸馏后的 shape flow</b> 与<b>冻结的 texture flow</b> 之间，<b>单步 in-place</b>。</p>
+        <p>共享的 prefix 与纹理阶段<b>完全不变</b>。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">式 10：自适应门控（不需要 ground truth）</h3>
+    <div class="eq">
+      S = (1/C) Σ<sub>c</sub> max( 0, σ̂<sub>c</sub> / σ<sup>s</sup><sub>c</sub> − 1 )　，　<b>仅当 S &gt; τ<sub>S</sub> 时应用校准</b>（默认 τ<sub>S</sub> = 0.20）
+      <span class="cmt">　← S 只用采样出来的 latent 自己算，所以<b>推理时不需要 ground truth</b></span>
+    </div>
+    <p style="font-size:13.8px;color:var(--ink2)">漂移<b>依赖步数</b>，所以用坍缩分数门控。因为 latent 已逐通道标准化（σ̂<sub>c</sub> = 1），漂移是<b>单边的</b>，S 就是对「采样通道低于训练 std 的 deficit」的直接求和——<b>它同时是漂移的诊断量，也是门控信号</b>。这个设计很干净。</p>
+
+    <div class="algo"><b>Algorithm 1 · 生成（含 Channel Match）</b>
+输入：图像 c；冻结 prefix、texture flow、decoder D；蒸馏后的 v<sub>θ</sub>；统计量 (μ̂, σ̂)；阈值 τ<sub>S</sub>；步数 K
+ 1  S ← sparse structure(c)；上采样到 1024 坐标            <span style="color:#8494a9">// 共享 prefix</span>
+ 2  x ← 在这些坐标上从噪声出发做 v<sub>θ</sub> 的 K 步 Euler 积分
+ 3  计算坍缩分数 S ← (1/C) Σ<sub>c</sub> max(0, σ̂<sub>c</sub>/σˢ<sub>c</sub> − 1)              <span style="color:#8494a9">// 式 10</span>
+ 4  <b>if</b> S &gt; τ<sub>S</sub> <b>then</b>
+ 5      x ← ChannelMatch(x; μ̂, σ̂)                       <span style="color:#8494a9">// 式 9，in-place</span>
+ 6  <b>end if</b>
+ 7  y ← texture flow(x, c)；M ← D(x, y)；<b>return</b> M</div>
+
+    <h3 class="block-title">Table 5：门控阈值的敏感性（演示资产 n = 72，full match）</h3>
+    <div class="grid2">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="num">τ<sub>S</sub></th><th class="num">被校准的资产比例</th><th class="num">LPIPS↓</th><th class="num">SSIM↑</th><th class="num">PSNR↑</th></tr></thead>
+          <tbody>
+            <tr><td class="num">−∞（always）</td><td class="num">100%</td><td class="num">0.0747</td><td class="num">0.8885</td><td class="num">24.85</td></tr>
+            <tr class="ours"><td class="num">0.20（默认）</td><td class="num">77%</td><td class="num"><b>0.0742</b></td><td class="num">0.8884</td><td class="num"><b>24.89</b></td></tr>
+            <tr><td class="num">0.27</td><td class="num">50%</td><td class="num">0.0761</td><td class="num">0.8862</td><td class="num">24.72</td></tr>
+            <tr><td class="num">+∞（never）</td><td class="num">0%</td><td class="num">0.0802</td><td class="num">0.8819</td><td class="num">24.44</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">三个指标随 τ<sub>S</sub> 的变化</h4>
+        <div class="chart-box" style="height:270px"><canvas id="c5"></canvas></div>
+        <p class="chart-note">一旦至少给 <b>75%</b> 的资产应用校准，三个指标基本平了 → <b>结果对 τ<sub>S</sub> 不敏感</b>；<b>always-on 是安全的兜底</b>。</p>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <b>门控还有多少空间？</b> 论文给了一个 oracle 上界：per-asset 地保留「未校准 / 已校准中更接近 GT 的那个」，能把两步 Inception FD 从 <b>14.09 降到 13.53</b>，且<b>只校准了约一半资产</b>。
+      式 10 的可部署门控在无 GT 下近似它。论文明确说「缩小到这个 oracle 的剩余差距是开放方向」。
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ 主结果 -->
+<section id="exp" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 06 · MAIN RESULTS</div>
+      <h2>Table 1：Toys4K 全量 3,216 资产</h2>
+      <p>蒸馏用 Objaverse + Objaverse-XL 的 100K 子集；评测用 Toys4K <b>全部</b> 3,216 资产，单张渲染视图做条件。四视图协议（30° elevation，azimuth {0,90,180,270}）。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Method</th><th class="num">Steps</th><th class="num">Time (s)</th><th class="num">FD-Incep↓</th><th class="num">FD-DINOv2↓</th><th class="num">ULIP-I↑</th></tr></thead>
+        <tbody>
+          <tr class="dim"><td>LGM* <span style="font-size:11px">[各自协议，不可比]</span></td><td class="num">–</td><td class="num">5</td><td class="num">26.31</td><td class="num">322.71</td><td class="num">–</td></tr>
+          <tr class="dim"><td>3DTopia-XL*</td><td class="num">25</td><td class="num">5</td><td class="num">37.68</td><td class="num">437.37</td><td class="num">–</td></tr>
+          <tr class="dim"><td>Ln3Diff*</td><td class="num">250</td><td class="num">8</td><td class="num">26.61</td><td class="num">357.93</td><td class="num">–</td></tr>
+          <tr class="dim"><td>TRELLIS*</td><td class="num">25×2</td><td class="num">–</td><td class="num">9.35</td><td class="num">67.21</td><td class="num">–</td></tr>
+          <tr><td>Teacher @12（上界）</td><td class="num">12</td><td class="num">11.51</td><td class="num">12.56</td><td class="num">106.66</td><td class="num">38.45</td></tr>
+          <tr><td>Teacher @2（naive 少步）</td><td class="num">2</td><td class="num">–</td><td class="num">15.67</td><td class="num">155.40</td><td class="num">38.23</td></tr>
+          <tr><td>MDT [Zhou et al. 2026] @2（复现）</td><td class="num">2</td><td class="num">–</td><td class="num">15.98</td><td class="num">132.80</td><td class="num">38.04</td></tr>
+          <tr><td>SCM @2（本文去掉 L<sub>gt</sub>）</td><td class="num">2</td><td class="num">–</td><td class="num">14.76</td><td class="num">135.02</td><td class="num">38.43</td></tr>
+          <tr><td>Ours @1</td><td class="num">1</td><td class="num">–</td><td class="num">17.56</td><td class="num">152.58</td><td class="num">38.21</td></tr>
+          <tr class="ours"><td><b>Ours @2</b></td><td class="num">2</td><td class="num">7.55</td><td class="num"><b>14.09</b></td><td class="num"><b>127.44</b></td><td class="num"><b>38.48</b></td></tr>
+          <tr><td>Ours @4</td><td class="num">4</td><td class="num">–</td><td class="num"><b>13.40</b></td><td class="num"><b>113.56</b></td><td class="num"><b>38.49</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">ULIP-I 为 ×100。Fréchet 距离是 set-level。<b>星号行引自各方法自己的工作、用各自协议与子集，与下半块不可直接比较</b>——论文自己标注了。受控结论只从下半块（共享同一冻结 prefix、纹理阶段与渲染协议）得出。</p>
+
+    <div class="grid2" style="margin-top:22px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Fréchet 距离（下半块，可比）</h4>
+        <div class="chart-box"><canvas id="c1"></canvas></div>
+        <p class="chart-note">两步配置里本文学生两项 FD 都最好；四步进一步收窄剩余差距。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">ULIP-I：<b>几乎不动</b></h4>
+        <div class="chart-box"><canvas id="c2"></canvas></div>
+        <p class="chart-note">跨全部配置仅 <b>0.45</b>（38.04–38.49），而 FD-DINOv2 跨约 <b>49</b>。<b>ULIP 对这类差异分辨力很弱</b>——本站第三次观察到。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title">Table 2：延迟（单张 A800-80GB）</h3>
+    <div class="grid2">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Stage</th><th class="num">Teacher</th><th class="num">Ours @2</th><th class="num">加速比</th></tr></thead>
+          <tbody>
+            <tr><td>Shape sampling (s/asset)</td><td class="num">5.29</td><td class="num">1.18</td><td class="num"><b>4.5×</b></td></tr>
+            <tr><td>End-to-end image→shape (s/asset)</td><td class="num">11.51</td><td class="num">7.55</td><td class="num">1.5×</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">4.5× vs 1.5×</h4>
+        <div class="chart-box" style="height:220px"><canvas id="c6"></canvas></div>
+        <p class="chart-note">端到端倍数<b>被冻结的 sparse-structure prefix 与纹理阶段限制住</b>。论文 Sec. 6 明说：蒸馏纹理阶段是直接下一步。</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>损失消融（Sec. 5.6）。</b>去掉真值速度损失、只留自一致性（SCM 行）：两步 Inception FD 从 14.09 升到 <b>14.76</b>、DINOv2 FD 从 127.44 升到 <b>135.02</b>，ULIP 也降 → 两个损失<b>互补</b>（自一致性让场与步数无关，速度损失锚定数值）。
+      反过来去掉自一致性：留下一个<b>正确但不与步数无关</b>的场，在两步时急剧退化——这是不做蒸馏直接少步采样 flow 的标准失败。
+    </div>
+  </div>
+</section>
+
+<!-- ⑦ 纹理改善 -->
+<section id="tex">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 07 · TEXTURE GAIN ★</div>
+      <h2>Channel Match 到底把纹理救回来多少</h2>
+      <p>这里有个评测方法上的讲究：CM 是<b>局部</b>作用，set-level Fréchet 距离不是合适的工具。所以论文改用<b>配对指标</b>——拿 12 步 teacher 的渲染当参考，逐资产比 LPIPS / SSIM / PSNR。</p>
+    </div>
+
+    <h3 class="block-title c-teal">Table 3：配对渲染对比（TRELLIS.2 演示资产 n = 72，对照 12 步 teacher）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Calibration</th><th class="num">LPIPS↓</th><th class="num">SSIM↑</th><th class="num">PSNR↑</th></tr></thead>
+        <tbody>
+          <tr><td>None（两步学生）</td><td class="num">0.0802</td><td class="num">0.8819</td><td class="num">24.44</td></tr>
+          <tr><td>Std only</td><td class="num">0.0762</td><td class="num">0.8860</td><td class="num">24.72</td></tr>
+          <tr class="ours"><td><b>Full (mean + std)</b></td><td class="num"><b>0.0747</b></td><td class="num"><b>0.8885</b></td><td class="num"><b>24.85</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>被推向 teacher 的资产比例（↑）</th><th class="num">LPIPS</th><th class="num">SSIM</th><th class="num">PSNR</th></tr></thead>
+        <tbody>
+          <tr><td>Std only</td><td class="num">73%</td><td class="num">75%</td><td class="num">67%</td></tr>
+          <tr class="ours"><td>Full (mean + std)</td><td class="num">73%</td><td class="num"><b>88%</b></td><td class="num">73%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h4 style="font-size:14.5px;margin-bottom:8px">三种校准配置的配对指标</h4>
+      <div class="chart-box" style="height:300px"><canvas id="c4"></canvas></div>
+      <p class="chart-note">柱：LPIPS×1000 与 PSNR（左轴）；线：SSIM×1000（右轴）。</p>
+    </div>
+
+    <h3 class="block-title c-red">Table 4：校准形式的消融 —— 本文最诚实、也最容易被误读的一张表</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>配置</th><th>Calibration</th><th class="num">ULIP-I↑</th><th class="num">FD-Incep↓</th><th class="num">FD-DINOv2↓</th></tr></thead>
+        <tbody>
+          <tr><td><b>Student @2</b></td><td>None</td><td class="num">38.48</td><td class="num">14.09</td><td class="num">127.44</td></tr>
+          <tr class="ours"><td><b>Student @2</b></td><td><b>Std only</b></td><td class="num">38.46</td><td class="num"><b>13.88</b></td><td class="num"><b>126.88</b></td></tr>
+          <tr><td><b>Student @2</b></td><td>Full (mean + std)</td><td class="num">38.38</td><td class="num">14.16</td><td class="num">127.88</td></tr>
+          <tr><td><b>Teacher @2</b> <span style="font-size:11px;color:var(--ink3)">naive</span></td><td>None</td><td class="num">38.23</td><td class="num">15.67</td><td class="num">155.40</td></tr>
+          <tr class="ours"><td><b>Teacher @2</b> <span style="font-size:11px;color:var(--ink3)">naive</span></td><td><b>Std only</b></td><td class="num">38.28</td><td class="num"><b>15.21</b></td><td class="num"><b>153.12</b></td></tr>
+          <tr><td><b>Teacher @2</b> <span style="font-size:11px;color:var(--ink3)">naive</span></td><td>Full (mean + std)</td><td class="num">38.35</td><td class="num">15.66</td><td class="num">155.03</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="callout warn" style="margin-top:0">
+        <b>在简单资产上，full match 比什么都不做还差。</b>
+        全 Toys4K（几何简单、瑕疵罕见）上，student@2 的 FD-Incep：none <b>14.09</b> → std-only <b>13.88</b> → full <b>14.16</b>。
+        这与 Table 3（瑕疵密集的演示资产上 full 帮助最大）<b>相反</b>。
+      </div>
+      <div class="callout ok" style="margin-top:0">
+        <b>两条观察其实是一致的。</b>
+        <b>full match 在坍缩严重处帮助最大；std-only 在坍缩轻微处更安全。</b>
+        而且 std match <b>也降低了 naive 两步 teacher 的两个 Fréchet 距离</b> → 说明这个漂移是<b>分布性的</b>，不是蒸馏学生特有的。
+      </div>
+    </div>
+
+    <div class="callout orc">
+      <b>本站由此看出的一个真实缺口。</b> 选哪种形式的依据是<b>坍缩严重程度</b>，而式 10 的 S 门控<b>只决定「开不开」，没决定「开哪种形式」</b>。
+      论文没给「按 S 自动选 full 还是 std-only」的方案，默认配置在不同数据集上需要人工判断。
+      考虑到表 4 里 full 在简单资产上会<b>反向</b>变差，这个缺口在生产里是实打实的风险。
+    </div>
+  </div>
+</section>
+
+<!-- ⑧ 消融汇总 -->
+<section id="abl" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 08 · ABLATIONS</div>
+      <h2>消融汇总</h2>
+      <p>本文消融不多，但每一条都直接对应一个设计选择。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4>① 校准形式<span class="cls">Table 4</span></h4>
+        <p>std-only 在简单 Toys4K 上安全且略优；full 在瑕疵密集的演示资产上帮助最大。<b>取决于坍缩严重程度。</b></p>
+        <p class="cons">门控未覆盖「开哪种形式」。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>② 门控阈值<span class="cls">Table 5</span></h4>
+        <p>τ<sub>S</sub> 从 −∞ 到 0.27 扫过：一旦覆盖 ≥75% 资产，三个指标基本平。</p>
+        <p class="pros"><b>对 τ<sub>S</sub> 不敏感</b>；默认 0.20 给最好的 LPIPS 与 PSNR；<b>always-on 是安全兜底</b>。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>③ 两个损失<span class="cls">Sec. 5.6</span></h4>
+        <p>去掉 L<sub>gt</sub>：FD-Incep 14.09→14.76，FD-DINOv2 127.44→135.02。<br>去掉自一致性：场<b>正确但不与步数无关</b>，两步时急剧退化。</p>
+        <p class="pros">两个损失互补，缺一不可。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>④ JVP 内核<span class="cls">Table 7</span></h4>
+        <p>vs naive torch.func.jvp：<b>10.9×</b> 更快，内存 O(N) 而非 O(N²)。naive 在 N=30,000 上 OOM。</p>
+        <p class="pros">58,952 token 无 NaN/Inf；κ=4 的 cap 把最大 tangent 范数 175.0→82.3，中位数仍在 21。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>⑤ Oracle 上界<span class="cls">Sec. 5.6</span></h4>
+        <p>per-asset 选更接近 GT 的那个：两步 Inception FD <b>14.09 → 13.53</b>，且<b>只校准了约一半资产</b>。</p>
+        <p class="cons">可部署门控≈它但无 GT；<b>缩小剩余差距是开放方向</b>。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>⑥ 漂移 vs 步数<span class="cls">Table 6</span></h4>
+        <p>S 与「std&lt;0.8 通道占比」随步数减少<b>单调增长</b>：0.150/16.8%（12 步）→ 0.174/22.4%（2 步）→ 0.207/28.4%（1 步）。</p>
+        <p class="pros">四步学生回到 teacher 水平，与 Table 1 一致。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title">训练与实现配置</h3>
+    <div class="grid2">
+      <div class="card">
+        <dl class="kv">
+          <dt>骨干</dt><dd>TRELLIS.2-4B shape model（学生从它初始化），<b>只蒸馏 1024 shape flow</b></dd>
+          <dt>硬件</dt><dd>8× A800-80GB，DDP，seed 42</dd>
+          <dt>Batching</dt><dd><b>不用固定 batch size</b>——按 <b>40,000 active token</b> 预算打包 + 梯度累积（因稀疏 latent 长度可变）</dd>
+          <dt>优化器</dt><dd>Adam lr <b>2e-6</b>，β=(0.0, 0.999)，grad clip 1.0；权重网 lr 1e-2</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <dl class="kv">
+          <dt>EMA / σ<sub>min</sub></dt><dd>decay <b>0.9999</b>；σ<sub>min</sub> = 1e-5</dd>
+          <dt>切线</dt><dd>cap κ = 4× running median；warm-up 1000 步；步长 η = 1</dd>
+          <dt>训练</dt><dd>两个损失等权，最多 <b>80,000 步</b>，bfloat16</dd>
+          <dt>数据</dt><dd>Objaverse + Objaverse-XL 的 <b>100K 子集</b>；评测 Toys4K 全量 <b>3,216</b></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑨ 局限 -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 09 · LIMITATIONS</div>
+      <h2>局限：论文自己列的五条 + 本站的四条</h2>
+      <p>前五条来自 Sec. 6 Limitations 原文。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="takeaway">
+        <h4><span class="idx">1</span> 只蒸馏 shape 阶段</h4>
+        <p>端到端加速被冻结的纹理采样器限制住（4.5× → 1.5×）。<b>蒸馏纹理阶段是直接下一步。</b></p>
+        <p class="why">Sec. 6 原文。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">2</span> CM 不合成新的几何细节</h4>
+        <p>它只修 per-channel 分布漂移，<b>不增加几何细节</b>，所以四步学生在几何敏感指标上仍最强。</p>
+        <p class="why">Sec. 6 原文。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">3</span> 逐通道仿射 → 忽略通道间与空间结构</h4>
+        <p>作为 per-channel affine map，它<b>不建模通道间相关性，也不建模空间结构</b>。<b>full-covariance 或 grouped 变体</b>可以捕捉。</p>
+        <p class="why">Sec. 6 原文。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">4</span> 门控到 oracle 还有差距</h4>
+        <p>坍缩分数门控已恢复大部分可用收益，但<b>缩小到 GT oracle 的剩余差距仍是开放方向</b>。</p>
+        <p class="why">Sec. 6 原文。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">5</span> 把校准扩到纹理阶段未做</h4>
+        <p>论文明确：<b>"Extending the same calibration to the texture stage is a natural next question we leave open."</b></p>
+        <p class="why">Sec. 6 原文。这对做 PBR 的人其实是最值得追的一条——纹理阶段的 latent 也会有同样的漂移。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">6</span> 只在 TRELLIS.2 一个骨干上验证（本站）</h4>
+        <p>1024³ 一个分辨率、TRELLIS.2 一个骨干。<b>漂移是否在其他原生 3D 骨干（Sparc3D、Hunyuan3D）上同形态出现，没有验证。</b>考虑到作者自己就是 Sparc3D 团队，这个泛化实验其实是有条件做的。</p>
+        <p class="why">本站：结论 07 的泛化推断目前只是推断。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">7</span> 「开哪种形式」没有自动方案（本站）</h4>
+        <p>表 4 显示 full 在简单资产上<b>反向</b>变差，但门控只管「开不开」。<b>生产部署需要人工按数据集判断用 full 还是 std-only</b>——这是个实打实的落地风险。</p>
+        <p class="why">本站：最简单的补救是按 S 分段选形式，论文没试。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">8</span> 演示资产只有 72 个（本站）</h4>
+        <p>Table 3 / Table 5 的关键纹理证据都建立在 <b>n = 72</b> 的 TRELLIS.2 演示资产上（且是<b>瑕疵密集</b>的挑选样本）。全 Toys4K 上的结论（表 4）反而是「full 略差」。<b>引用 LPIPS 0.0742 这类数字时要带上"在瑕疵密集子集上"这个前提。</b></p>
+        <p class="why">本站：这个 n 与「瑕疵密集」的挑选，是全文最需要提防的一处。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">9</span> JVP 内核细节在补充材料（本站）</h4>
+        <p>正文只有一段 + Table 7，"full kernel implementation in the supplementary material"。<b>复现需要等补充材料</b>。另外 Table 7 只在 N=15,000 测，生产长度 30,000 只说了"仍能跑"没给数。</p>
+        <p class="why">本站：这个内核是让整套方法可用的关键，可复现性暂时存疑。</p>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <b>一句话总结。</b> 如果你想从这篇带走一样东西，应该是那个<b>诊断</b>而不是那个加速方法：
+      在多阶段原生 3D 流水线里，<b>把某一阶段的采样步数压下来，可能在几何完全正确的情况下，通过 latent 分布漂移把下游冻结阶段搞坏</b>——而且坏出来的样子<b>像结构缺陷</b>，极易误诊。
+      修法便宜得离谱（一次离线算统计量的逐通道仿射，不碰任何模型），而且<b>对 naive 少步采样同样有效</b>，所以不绑定蒸馏。
+      两个提醒：① 报「4.5×」要说是 shape sampling，端到端只有 1.5×；② <b>full match 不是无条件更好</b>——在坍缩轻微的简单资产上它比不校准还差，std-only 才是安全默认。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b>论文</b>：Di Yang, Zhihao Li, Yanhai Xiong, Yufei Wang. <i>Channel Match: Calibrating Shape Latents for Few-Step 3D Generation.</i> arXiv:2610.15321v1 [cs.CV], 11 Oct 2026. College of William &amp; Mary × SparcAI Inc.</p>
+    <p style="margin-top:6px">
+      <a href="https://arxiv.org/abs/2610.15321" target="_blank">arXiv</a> ·
+      <a href="../3d-generation-2026/index.html">2026 年 3D 生成论文合集</a> ·
+      <a href="../hi3d3/index.html">Hi3D 3.0 / Twinkle3D</a> ·
+      <a href="../gator/index.html">GATOR</a> ·
+      <a href="../flow3d-pro/index.html">DHO / Flow3D-Pro</a> ·
+      <a href="../pbr-materials/index.html">PBR 材质调研</a>
+    </p>
+    <p style="margin-top:10px">本页数值与引文均取自论文正文（Sec. 1–7、Table 1–7、Algorithm 1）。标注「本站」的判断为解读意见，非论文原话。</p>
+    <p style="margin-top:6px">3D-Research · 2026-11-02 上线</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  var C = (typeof Chart === 'undefined') ? null : Chart;
+  var FF = '"Segoe UI","PingFang SC",system-ui,sans-serif';
+  var GRID = '#eef2f8';
+
+  function mkAxis(extra){
+    var a = {ticks:{font:{size:11,family:FF}}, grid:{color:GRID}};
+    if (extra) { for (var k in extra) { a[k] = extra[k]; } }
+    if (extra && extra.position === 'right' && !extra.grid) { a.grid = {display:false}; }
+    return a;
+  }
+
+  function opts(yLeft, yRight){
+    var s = {
+      x:{ticks:{font:{size:10.5,family:FF}, autoSkip:false, maxRotation:32, minRotation:0}, grid:{display:false}},
+      y:mkAxis(yLeft)
+    };
+    if (yRight) { s.y1 = mkAxis(yRight); }
+    return {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{labels:{font:{size:11,family:FF}, boxWidth:12, boxHeight:12, usePointStyle:true}},
+        tooltip:{titleFont:{size:12.5,family:FF}, bodyFont:{size:12,family:FF}}
+      },
+      scales:s
+    };
+  }
+
+  function build(id, type, data, yLeft, yRight){
+    var el = document.getElementById(id);
+    if (!el) return;
+    new C(el, {type:type, data:data, options:opts(yLeft, yRight)});
+  }
+
+  if (C) {
+    // c1: FD
+    build('c1','bar',{
+      labels:['Teacher @12','Teacher @2','MDT @2','SCM @2','Ours @1','Ours @2','Ours @4'],
+      datasets:[
+        {label:'FD-Inception ↓', data:[12.56,15.67,15.98,14.76,17.56,14.09,13.40], backgroundColor:'#f3c9a4'},
+        {type:'line', label:'FD-DINOv2 ↓', data:[106.66,155.40,132.80,135.02,152.58,127.44,113.56], borderColor:'#ea8a3c', backgroundColor:'#ea8a3c', tension:.3, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:10, max:18}, {position:'right', min:100, max:160});
+
+    // c2: ULIP
+    build('c2','bar',{
+      labels:['Teacher @12','Teacher @2','MDT @2','SCM @2','Ours @1','Ours @2','Ours @4'],
+      datasets:[{label:'ULIP-I ×100 ↑', data:[38.45,38.23,38.04,38.43,38.21,38.48,38.49],
+        backgroundColor:['#c4c0f7','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#f3c9a4','#ea8a3c']}]
+    }, {min:37.9, max:38.7});
+
+    // c3: 漂移 vs 步数
+    build('c3','bar',{
+      labels:['Teacher 12 步','Student 4 步','Student 2 步','Student 1 步'],
+      datasets:[
+        {label:'坍缩分数 S ↓', data:[0.150,0.146,0.174,0.207], backgroundColor:['#c4c0f7','#c4c0f7','#f3c9a4','#ea8a3c']},
+        {type:'line', label:'std < 0.8 的通道占比 (%) ↓', data:[16.8,17.5,22.4,28.4], borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.25, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:0.12, max:0.22}, {position:'right', min:14, max:30});
+
+    // c4: Table 3 配对指标
+    build('c4','bar',{
+      labels:['None（两步学生）','Std only','Full (mean+std)'],
+      datasets:[
+        {label:'LPIPS ×1000 ↓', data:[80.2,76.2,74.7], backgroundColor:'#f3c9a4'},
+        {label:'PSNR ↑', data:[24.44,24.72,24.85], backgroundColor:'#9d97ee'},
+        {type:'line', label:'SSIM ×1000 ↑', data:[881.9,886.0,888.5], borderColor:'#0d9488', backgroundColor:'#0d9488', tension:.3, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:0, max:90}, {position:'right', min:870, max:895});
+
+    // c5: tau_S 敏感性
+    build('c5','bar',{
+      labels:['−∞ 全部 (100%)','0.20 默认 (77%)','0.27 (50%)','+∞ 不用 (0%)'],
+      datasets:[
+        {label:'LPIPS ×1000 ↓', data:[74.7,74.2,76.1,80.2], backgroundColor:'#f3c9a4'},
+        {type:'line', label:'SSIM ×1000 ↑', data:[888.5,888.4,886.2,881.9], borderColor:'#0d9488', backgroundColor:'#0d9488', tension:.3, pointRadius:4, yAxisID:'y1'},
+        {type:'line', label:'PSNR ×10 ↑', data:[248.5,248.9,247.2,244.4], borderColor:'#6366f1', backgroundColor:'#6366f1', tension:.3, pointRadius:4, borderDash:[5,3], yAxisID:'y1'}
+      ]
+    }, {min:70, max:82}, {position:'right', min:240, max:260});
+
+    // c6: 延迟
+    build('c6','bar',{
+      labels:['Shape sampling','End-to-end image→shape'],
+      datasets:[
+        {label:'Teacher (s)', data:[5.29,11.51], backgroundColor:'#dbe4f5'},
+        {label:'Ours @2 (s)', data:[1.18,7.55], backgroundColor:'#ea8a3c'}
+      ]
+    }, {min:0, max:12.5});
+  } else {
+    document.querySelectorAll('.chart-box').forEach(function(box){
+      var tip = document.createElement('p');
+      tip.className = 'chart-note';
+      tip.textContent = '图表需要联网加载 Chart.js，当前离线。所有数据见上方表格。';
+      box.appendChild(tip);
+    });
+  }
+})();
+</script>
+</body>
+</html>

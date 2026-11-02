@@ -250,6 +250,18 @@
         <div class="p-go">进入解读 →</div>
       </a>
 
+      <a class="p-card" href="./channel-match/index.html">
+        <div class="p-badges"><span class="p-badge b-survey">🔬 深度解读</span><span class="p-badge b-date">2026-11-02 上线</span></div>
+        <h3>Channel Match：少步 3D 生成里，几何对了但材质错了</h3>
+        <p class="p-desc">William &amp; Mary × SparcAI · arXiv:2610.15321 —— 指出一个被当成"瑕疵"的现象其实是可诊断的分布问题：少步采样把 shape latent 压到 2 步后，<b>逐通道 std 单边坍缩</b>；解码出的网格<b>几何仍然正确</b>，但后续冻结的纹理阶段从未见过这种 latent，于是产出错误材质与深色斑块，看起来像结构缺陷。Channel Match 用<b>免训练的逐通道仿射校准</b>把 std 拉回教师分布，并用<b>坍缩分数</b>门控每一层。</p>
+        <div class="p-meta">
+          <div><b>74.2</b>LPIPS×1000（两步学生 80.2）</div>
+          <div><b>+0.28</b>PSNR / +4.1 SSIM×1000</div>
+          <div><b>免训练</b>推理期逐通道校准</div>
+        </div>
+        <div class="p-go">进入解读 →</div>
+      </a>
+
       <div class="p-card soon">
         <div class="big">🚧</div>
         <div>更多论文解读筹备中<br>敬请期待</div>
