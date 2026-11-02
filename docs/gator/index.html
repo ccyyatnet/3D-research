@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GATOR 深度解读 · 生成式 + Agentic 的随手拍 3D 物体重建 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eefaf6 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#d5f2ea;color:#0f766e;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:31px;line-height:1.32;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--teal)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:940px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--teal);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  section.alt{background:#fbfcfe;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:340px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card.hl{border-color:#a8ddc8;background:linear-gradient(180deg,#f2fbf8,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#eefaf6;font-weight:600}
+  tr.ours:hover td{background:#e2f6ef}
+  tr.dim td{color:var(--ink3)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .callout.tex{background:linear-gradient(90deg,#f0fbf7,#eef7ff);border-color:#bfe6d5}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl.c-teal{border-left-color:var(--teal)} .concl.c-teal .n{color:var(--teal)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--teal)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#d5f2ee;color:#0f766e;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .cmp div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .cmp .who{font-size:12px;font-weight:700;color:var(--ink3)}
+  .cmp .act{font-size:13.5px;font-weight:700;margin-top:4px}
+  .cmp .d{font-size:12.5px;color:var(--ink2);margin-top:4px}
+  .cmp div.hl{border-color:#a8ddc8;background:linear-gradient(180deg,#f2fbf8,#fff)}
+  .prompt{background:#f8fafc;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:13px;color:var(--ink2);font-family:Consolas,Monaco,"Segoe UI",system-ui,sans-serif;line-height:1.8}
+  .prompt .zh{display:block;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);font-size:13.2px;margin-top:2px}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#setup">② 问题设定</a>
+      <a href="#mixer">③ 模态混合</a>
+      <a href="#mask">④ 分阶段掩码</a>
+      <a href="#texrepair" style="font-weight:700;color:#0d9488">⑤ 纹理修复 ★</a>
+      <a href="#exp">⑥ 实验</a>
+      <a href="#texnum">⑦ 纹理的量化证据</a>
+      <a href="#cost">⑧ 时间与成本</a>
+      <a href="#limits">⑨ 局限</a>
+      <a href="../3d-generation-2026/index.html" style="font-weight:700;color:#0d9488">前沿合集 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-11-02 · arXiv:2610.11215 · NVIDIA × Simon Fraser University</span>
+    <h1>先<b>生成</b>一个完整资产，再让 Agent 当<b>修理工</b><br><em>GATOR</em>：随手拍图像的生成式 + Agentic 3D 物体重建</h1>
+    <p class="sub">
+      从随手拍（casual images）恢复完整、场景对齐的物体，难在两件事要同时做对：<b>把没看见的部分补全</b>，以及<b>把看见的部分忠实还原</b>——尤其纹理。
+      纯生成式（TRELLIS.2、Pixal3D）补得出来但细节糊、文字乱码、背景污染；纯 Agentic（GPT-6-Astra 从零用 Blender 建模）能显式控制但慢且会把零件简化成方块。
+      GATOR 的解法是<b>让两者各干各擅长的一半</b>：用 TRELLIS.2 的三阶段级联先出一个完整、带 PBR、带场景相对位姿的资产（约 32 秒），
+      再把这个资产<b>连同输入照片和 Blender 一起交给多模态 Agent</b>做局部修补——补全缺失部件、修复拓扑、<b>修纹理</b>。
+      本页除常规解读外，<b>重点拆开第 ⑤ 节的纹理修复机制</b>：论文附录 Prompt 1 里那段「Texture and material repairs」是我见过写得最细的 agentic 纹理修复约束，逐条都有明确的反偷懒意图。
+    </p>
+    <div class="meta">
+      <span class="pill">📄 32 页（正文 9 + 附录 23）· cs.CV · 2026-10-08</span>
+      <span class="pill">👥 Qirui Wu, Stan Birchfield, Hesam Rabeti, Angel X. Chang, Bowen Wen</span>
+      <span class="pill">🏢 NVIDIA × Simon Fraser University</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2610.11215" target="_blank">arXiv:2610.11215</a></span>
+      <span class="pill">🌐 <a href="https://research.nvidia.com/labs/lpr/gator/" target="_blank">项目页</a></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>0.009</b><span>真实桌面场景 CD（Pixal3D 0.018，约减半）；Toys4K 七项指标全第一</span></div>
+      <div class="stat"><b>0.5 min</b><span>不加 agent 精修的耗时，质量已超跑 20 分钟预算的 GPT-6-Astra</span></div>
+      <div class="stat"><b>1.3°</b><span>精修后会议室椅子的倾角（精修前 3 把倾倒 40–79°）</span></div>
+      <div class="stat"><b>+0.67 dB</b><span>agent 纹理修复带来的 PSNR（HANDAL 消融 18.93 → 19.60）</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ① 结论 -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 01 · TAKEAWAYS</div>
+      <h2>先把结论读完</h2>
+      <p>七条，其中第 4–7 条是本站读完全文（含附录与两份 agent prompt 原文）后的判断，不是论文原话。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl c-teal">
+        <span class="n">结论 01 · 定位</span>
+        <h4>「生成做 builder、Agent 做 refiner」比反过来便宜 40 倍</h4>
+        <p>GATOR 不加 agent 的纯生成约 <b>0.5 分钟</b>，质量已超过跑 <b>20 分钟</b>预算的 GPT-6-Astra 从零建模。而 GPT-6-Astra 在 1 分钟预算下 10 个物体<b>一个都交不出有效资产</b>（0/10），2 分钟 5/10，5 分钟起才 10/10。这是本文对 agentic 3D 路线最有价值的结论：Agent 应该修，不该造。</p>
+      </div>
+      <div class="concl">
+        <span class="n">结论 02 · 架构</span>
+        <h4>三个贡献点里，最易被忽略的是「同一份 mask 的两种相反用法」</h4>
+        <p>结构流看<b>完整 crop（含遮挡物和桌面）</b>，mask 作为独立 token 送进去——为了在补全被遮挡部分时知道周围有什么；几何/外观流<b>只看去背后的图</b>——为了不让背景和邻近物体泄漏进纹理。论文点名 TRELLIS.2 / Pixal3D / ReconViaGen 是「每阶段都去背」，把场景上下文丢掉了。</p>
+      </div>
+      <div class="concl c-teal">
+        <span class="n">结论 03 · 纹理</span>
+        <h4>纹理修复的本质是一个「信息在哪」的二分类决策</h4>
+        <p>Prompt 1 的骨架是：<b>若图集（atlas）里已经有那个细节 → 修 UV 映射；否则 → 用干净的局部 RGB 对应从照片补</b>。先查信息是不是已经在纹理图里（只是映射错了），不在才做投影。这个决策顺序避免了「动不动就重投影一遍」的常见退化。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 04 · 纹理（本站）</span>
+        <h4>那段 prompt 里的禁止条款，全是在堵 agent 的<b>低成本伪造</b>路径</h4>
+        <p>「改一个材质标量不算恢复细节」「不许编造读不出的文字或品牌」「不许用纯色涂抹替换有辨识度的表面」「不许克隆重复痕迹」「不许用 alpha 贴图假装镂空」。
+
+        五条禁令指向同一件事：<b>agentic 修复的默认失败模式就是用一个便宜操作让渲染图看起来变好了</b>。写这类 prompt 时这五条值得直接抄。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 05 · 评测（本站）</span>
+        <h4>agent 的收益集中在<b>感知指标</b>，SSIM 反而会降——这是诚实的信号</h4>
+        <p>三个真实数据集上 PSNR 与 LPIPS 全线改善，但 SSIM 在 HANDAL 上从 0.927 降到 0.917、消融里从 0.925 降到 0.918。原因是局部重投影/重绘改变了像素级结构统计。<b>如果你的下游看 SSIM，agentic 精修未必划算。</b></p>
+      </div>
+      <div class="concl c-green">
+        <span class="n">结论 06 · 评测（本站）</span>
+        <h4>几何指标变差 ≠ 结果变差：CD/F1 对「能不能站住」完全不敏感</h4>
+        <p>HANDAL 上加了 agent 后 CD 0.008→0.009、F1 0.936→0.923、IoU 0.757→0.728，全都略降。但放到 PyBullet 里，同样这批椅子从<b>倾倒 40–79°</b>变成<b>1.3° 内稳稳立住</b>。这是全文最有说服力的论证，也暴露了当前 3D 重建评测的盲区。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">结论 07 · 口径提醒（本站）</span>
+        <h4>这篇的 PSNR/SSIM/LPIPS 不评估「材质恢复得对不对」</h4>
+        <p>附录 C.3 明确写了：参考 CAD 模型的颜色来自真实拍摄，渲染时统一用<b>粗糙漫反射材质</b>，分数衡量的是「与渲染参考的一致性」而非「标定的材质恢复」。做 PBR 的同学要注意这个口径——<b>PBR 通道（roughness/metalness）的正确性在本文实验里没有被直接评测</b>。</p>
+      </div>
+      <div class="concl">
+        <span class="n">结论 08 · 局限</span>
+        <h4>agent 编辑的正确性目前靠 LLM 自己看图判断</h4>
+        <p>edit-render-review 闭环是「渲染原版和候选版、让同一个模型比对、退化了就 revert」——<b>校验者就是编辑者</b>。论文自己在 D.7 把「agent 编辑的自动几何校验」列为未来工作。加上闭源 GPT-6-Astra + 每物体 10 分钟，工程落地成本不低。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 问题设定 -->
+<section id="setup" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 02 · PROBLEM</div>
+      <h2>「随手拍」到底难在哪</h2>
+      <p>不是简单的「单图/多图重建」，而是四重不确定性叠加，且每一重都会直接反映到纹理上。</p>
+    </div>
+
+    <div class="grid4">
+      <div class="card">
+        <div class="sub-h" style="margin-top:0"><span class="t">难点 1</span> 覆盖不全</div>
+        <p style="font-size:13.5px;color:var(--ink2)">物体可能只被看到一两面，背面完全没观测。没看见的部分只能靠先验生成——<b>生成得「看起来合理」和「实际长那样」是两回事</b>。</p>
+      </div>
+      <div class="card">
+        <div class="sub-h" style="margin-top:0"><span class="t">难点 2</span> 遮挡与杂乱</div>
+        <p style="font-size:13.5px;color:var(--ink2)">目标混在桌面/房间里，被别的物体压着挡着。<b>纹理层面直接表现为背景污染</b>：邻近物体的颜色被投影到目标表面上。</p>
+      </div>
+      <div class="card">
+        <div class="sub-h" style="margin-top:0"><span class="t">难点 3</span> 相机与深度是估的</div>
+        <p style="font-size:13.5px;color:var(--ink2)">不要求标定。用 Pi3X / VGGT-Ω 估相机与深度，<b>本身就是噪声</b>。投影错一点，纹理就糊一格、文字就乱码。</p>
+      </div>
+      <div class="card">
+        <div class="sub-h" style="margin-top:0"><span class="t">难点 4</span> 还要位姿</div>
+        <p style="font-size:13.5px;color:var(--ink2)">不只出资产，还要能<b>放回原场景</b>。所以输出必须是场景相对位姿，而不是规范坐标系里的孤立物体。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title">输入 / 输出的形式化</h3>
+    <div class="eq">
+      C = ( { I<sub>v</sub>, M<sub>v</sub>, K<sub>v</sub>, T<sub>v</sub>, D<sub>v</sub> }<sup>N</sup><sub>v=1</sub>, c )
+      <span class="cmt">　←　RGB、目标掩码、内参、位姿、深度（<b>全部可以估出来</b>）+ 文本 c（类别名或 VLM caption）</span><br>
+      q = (x − t<sub>g</sub>) / s<sub>g</sub> 　,　 x = s<sub>g</sub> q + t<sub>g</sub>
+      <span class="cmt">　←　归一化只做平移和缩放，<b>绝不旋转</b>，所以输出天然保持场景相对朝向（附录 A.1）</span>
+    </div>
+    <div class="callout">
+      <b>为什么「不旋转」这件事很关键。</b> 多数生成式重建把物体规范到自己的 canonical frame，出来之后还得再估一次位姿才能放回场景。GATOR 用 masked depth 反投影的<b>中心 t<sub>g</sub> 与等方尺度 s<sub>g</sub></b> 做归一化，坐标系轴向与输入一致——生成出来的资产<b>自带正确朝向</b>，之后只用一个可微渲染的 placement 步骤微调平移与尺度（朝向和局部几何锁死不变）。这是它能直接做 ADD-SB（joint pose+shape）评测的前提。
+    </div>
+
+    <h3 class="block-title">对比：两条路各自的短板</h3>
+    <div class="cmp">
+      <div>
+        <div class="who">单图/多图生成式</div>
+        <div class="act">LRM · TRELLIS.2 · SAM 3D</div>
+        <div class="d">背面靠先验推断，<b>视觉上合理 ≠ 实际正确</b>；多视图要靠额外适配。</div>
+      </div>
+      <div>
+        <div class="who">多视图生成式</div>
+        <div class="act">ShapeR · ReconViaGen · Pixal3D</div>
+        <div class="d">多模态常作为<b>独立条件流</b>喂进去，去噪器得自己推断局部对应关系；Pixal3D 还隐含假设锚点视图里目标全可见，遇遮挡就脆。</div>
+      </div>
+      <div>
+        <div class="who">纯 Agentic</div>
+        <div class="act">GPT-6-Astra（本文基线）</div>
+        <div class="d">从零写代码建模：反复调用 + 渲染，<b>慢且贵</b>；细粒度几何仍难，会把零件简化成方块（论文 Fig. 1 的滤锅耳朵与把手）。</div>
+      </div>
+      <div class="hl">
+        <div class="who">GATOR</div>
+        <div class="act">生成初始化 + Agent 局部精修</div>
+        <div class="d">生成阶段负责<b>完整性与位姿</b>，agent 阶段负责<b>显式控制</b>：缺失部件、拓扑、UV 与纹理、文字可读性。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ③ 模态混合 -->
+<section id="mixer">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 03 · METHOD A</div>
+      <h2>Local Modality Mixing：先把「同一个 patch 的三种证据」绑在一起</h2>
+      <p>核心设计是<b>把 patch 级的跨模态融合，和全局的跨视图推理，拆成两件事先后做</b>，而不是一股脑丢进 denoiser 让它自己学。</p>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GATOR 三阶段级联与分阶段掩码使用">
+        <defs>
+          <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#8494a9"/>
+          </marker>
+          <marker id="arT" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d9488"/>
+          </marker>
+        </defs>
+
+        <!-- 输入 -->
+        <text x="12" y="22" font-size="12.5" font-weight="700" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">Casual 观测（N views）</text>
+        <rect x="12" y="32" width="86" height="34" rx="7" fill="#eef5ff" stroke="#bfd4f5"/>
+        <text x="55" y="54" font-size="12" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">RGB</text>
+        <rect x="106" y="32" width="86" height="34" rx="7" fill="#eef5ff" stroke="#bfd4f5"/>
+        <text x="149" y="54" font-size="12" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">Pointmap</text>
+        <rect x="200" y="32" width="86" height="34" rx="7" fill="#eef5ff" stroke="#bfd4f5"/>
+        <text x="243" y="54" font-size="12" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">Target mask</text>
+        <rect x="294" y="32" width="70" height="34" rx="7" fill="#f3eefd" stroke="#d5c9f7"/>
+        <text x="329" y="54" font-size="12" text-anchor="middle" fill="#6d28d9" font-family="Segoe UI,sans-serif">Text</text>
+
+        <!-- 对齐编码 -->
+        <line x1="172" y1="68" x2="172" y2="86" stroke="#8494a9" marker-end="url(#ar)"/>
+        <rect x="12" y="88" width="352" height="26" rx="6" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="188" y="105" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">共享 patch grid · Fourier 坐标 + Plücker 射线 → 对应嵌入 a</text>
+
+        <!-- Stage 1 -->
+        <rect x="12" y="128" width="352" height="52" rx="9" fill="#fff" stroke="#a8ddc8" stroke-width="1.6"/>
+        <text x="26" y="148" font-size="12.5" font-weight="700" fill="#0f766e" font-family="Segoe UI,PingFang SC,sans-serif">① 结构流（Structure Flow）</text>
+        <text x="26" y="166" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">Local Modality Mixer（patch 内三模态残差注意力）→ 跨视图 cross-attn</text>
+        <text x="336" y="148" font-size="11" font-weight="700" fill="#b45309" text-anchor="end" font-family="Segoe UI,sans-serif">看完整 crop</text>
+        <text x="336" y="166" font-size="11" fill="#b45309" text-anchor="end" font-family="Segoe UI,sans-serif">含遮挡物 · 保留上下文</text>
+
+        <line x1="188" y1="182" x2="188" y2="200" stroke="#0d9488" marker-end="url(#arT)"/>
+        <text x="200" y="195" font-size="11" fill="#0d9488" font-family="Segoe UI,sans-serif">稀疏结构 Ŝ</text>
+
+        <!-- Stage 2/3 -->
+        <rect x="12" y="202" width="170" height="52" rx="9" fill="#fff" stroke="#bfd4f5" stroke-width="1.6"/>
+        <text x="26" y="222" font-size="12.5" font-weight="700" fill="#1d4ed8" font-family="Segoe UI,PingFang SC,sans-serif">② 几何流</text>
+        <text x="26" y="240" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,sans-serif">投影 DINOv3 + NAF 特征</text>
+
+        <rect x="194" y="202" width="170" height="52" rx="9" fill="#fff" stroke="#bfd4f5" stroke-width="1.6"/>
+        <text x="208" y="222" font-size="12.5" font-weight="700" fill="#1d4ed8" font-family="Segoe UI,PingFang SC,sans-serif">③ 外观流（PBR）</text>
+        <text x="208" y="240" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,sans-serif">以 shape latents 为条件</text>
+
+        <rect x="376" y="196" width="292" height="64" rx="9" fill="#f0fbf7" stroke="#a8ddc8" stroke-dasharray="4 3"/>
+        <text x="390" y="216" font-size="12" font-weight="700" fill="#0f766e" font-family="Segoe UI,PingFang SC,sans-serif">②③ 只看 target-masked 图像</text>
+        <text x="390" y="234" font-size="11.5" fill="#15803d" font-family="Segoe UI,PingFang SC,sans-serif">遮挡物与背景不泄漏进表面细节与纹理</text>
+        <text x="390" y="250" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">+ T5Gemma2 caption tokens 做全局交叉注意力</text>
+
+        <!-- Agent -->
+        <line x1="188" y1="256" x2="188" y2="272" stroke="#0d9488" marker-end="url(#arT)"/>
+        <rect x="12" y="274" width="656" height="20" rx="6" fill="#eefaf6" stroke="#a8ddc8"/>
+        <text x="340" y="288" font-size="11.5" text-anchor="middle" fill="#0f766e" font-family="Segoe UI,PingFang SC,sans-serif">完整资产 + 场景相对位姿 → Agentic 精修（补全部件 / 修拓扑 / 修 UV 与纹理）</text>
+      </svg>
+      <p class="svg-cap">图 1：GATOR 三阶段级联（对应论文 Fig. 2A）。注意掩码在两个阶段的用法<b>相反</b>，这是防纹理污染的第一道闸。</p>
+    </div>
+
+    <h3 class="block-title">Modality Mixer 的形式（式 1）</h3>
+    <div class="eq">
+      { <i>ĥ</i><sup>m</sup><sub>vp</sub> }<sub>m∈{I,M,P}</sub> = ModalityMixer( { h<sup>m</sup><sub>vp</sub> + a<sub>vp</sub> }<sub>m∈{I,M,P}</sub> )　，　a<sub>vp</sub> = A( γ(u<sub>p</sub>), r<sub>vp</sub> )
+      <span class="cmt">　←　对<b>同一个 patch</b> 的 RGB / mask / pointmap 三个 token 做残差注意力；输出 token 仍保留各自模态身份</span>
+    </div>
+    <div class="grid3">
+      <div class="method-card">
+        <h4>为什么是 patch 内而非全局<span class="cls">设计</span></h4>
+        <p class="tagline">把已知的空间对应<b>写进架构</b>，而不是留给去噪器去学</p>
+        <p>三种模态本来就共享同一个 patch grid 和同一套 2D 位置 + Plücker 射线编码，对应关系是<b>已知的</b>。ShapeR 是各自编码后在 denoiser 里合并，RecGen 干脆把 mask 和 pointmap 的 embedding <b>直接加到 image token 上</b>——后者连「哪块是目标」都糊进了外观特征里。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>副产品：天然抗上游估计误差<span class="cls">收益</span></h4>
+        <p class="tagline">三个线索互相交叉验证</p>
+        <p>同一 patch 的三种证据同时可见，模型可以拿外观和 mask 去<b>交叉核对深度</b>。消融里加 mixer 后 ADD-SB 从 0.057 降到 0.037（越小越好）——因为相机和深度都是估的，这个改进基本就是<b>抗噪能力</b>换来的。</p>
+      </div>
+      <div class="method-card">
+        <h4>结构流用全局注意力<span class="cls">分工</span></h4>
+        <p class="tagline">稀疏结构还不知道，没法做局部投影</p>
+        <p>dense structure latents 对<b>所有视图</b>的混合 token bank 做 cross-attention。对比 Pixal3D 从锚点视图做局部投影——它隐含假设目标在锚点视图里全可见，遇到遮挡就脆。GATOR 这个选择在「覆盖不全 + 遮挡」场景下明显更稳。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-purple">文本语义条件：三个阶段各用各的</h3>
+    <div class="grid2">
+      <div class="card">
+        <ul class="tight">
+          <li><b>结构流</b>：SigLIP2 池化的<b>短类别名</b>（如 "a mug"），经 adapter 后调制 timestep embedding 与 adaLN——是<b>全局调制</b>，不是 token。</li>
+          <li><b>几何流 / 外观流</b>：冻结的 <b>T5Gemma2</b> + 可训练 adapter 产出<b>文本 token</b>，走交叉注意力；训练时 caption 从「简短类别名」到「详细长描述」都有，目的是给更细的引导。</li>
+          <li>对比 ShapeR：只在 shape denoiser 里加文本 token，几何外观阶段完全没有。</li>
+        </ul>
+      </div>
+      <div class="callout" style="margin-top:0">
+        <b>消融里的文本贡献（Table 4，55 个 HANDAL 物体）。</b>加文本后<b>九个指标全部改善</b>：ADD-SB 0.037→0.032、CD 0.011→0.008、F1 0.872→0.930、PSNR 18.16→18.93、LPIPS 0.114→0.102。这是消融四行里改善最整齐的一行——说明<b>类别语义在观测稀疏/被遮挡时确实能替外观补位</b>，而且连纹理指标都吃到了红利（PSNR +0.77 dB）。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ④ 分阶段掩码 -->
+<section id="mask" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 04 · METHOD B</div>
+      <h2>同一份 mask 的两种相反用法：这是纹理防污染的第一道闸</h2>
+      <p>论文 §3.4 专门有一小节叫「Masks across stages」。这段很短但信息密度极高，而且是理解后面纹理修复的前提。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>阶段</th><th>看到的图像</th><th>mask 的角色</th><th>为什么这么设计</th><th>纹理层面的后果</th></tr>
+        </thead>
+        <tbody>
+          <tr class="ours">
+            <td><b>① 结构流</b></td>
+            <td><b>完整 crop</b>（含遮挡物、支撑桌面）</td>
+            <td>作为<b>独立 token</b>与 RGB/pointmap 并列</td>
+            <td>补全被遮挡部分时，需要知道「周围有什么挡着、物体搁在什么上面」</td>
+            <td>间接影响：结构边界错了，后面投影的纹理位置就错</td>
+          </tr>
+          <tr class="ours">
+            <td><b>②③ 几何/外观流</b></td>
+            <td><b>target-masked</b> 图像（去背）</td>
+            <td>直接把图裁掉</td>
+            <td>表面细节和纹理只需要目标自身的信息</td>
+            <td><b>直接决定：邻近物体与背景不会泄漏进纹理</b></td>
+          </tr>
+          <tr class="dim">
+            <td>TRELLIS.2 / Pixal3D / ReconViaGen</td>
+            <td>每个阶段都去背</td>
+            <td>—</td>
+            <td>—</td>
+            <td>结构阶段也丢掉了上下文，<b>补全被遮挡物体更困难</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout tex">
+      <b>这段设计的现实动机。</b> 论文 §3.5 第一句就点明了生成阶段之后残留的三类缺陷：<i>"missing parts, fused openings, or <b>texture contamination</b>"</i>（缺失部件、开口被糊死、<b>纹理污染</b>）。
+      也就是说——<b>即便做到了「外观流只用去背图」，纹理污染依然存在</b>，只是从「背景污染」降级成了更细的问题：UV 映射错误、文字乱码、烘焙光照残留、邻近物体局部渗色。这正是第 ⑤ 节 agent 要接手的部分。
+    </div>
+
+    <h3 class="block-title c-teal">外观流的投影条件（式 2、式 6）</h3>
+    <div class="eq">
+      f<sub>j</sub> = 1/|V<sub>j</sub>| · Σ<sub>v∈V<sub>j</sub></sub> [ F<sup>D</sup><sub>v</sub>(π<sub>v</sub>(s<sub>g</sub>q<sub>j</sub> + t<sub>g</sub>)) ; F<sup>N</sup><sub>v</sub>(π<sub>v</sub>(s<sub>g</sub>q<sub>j</sub> + t<sub>g</sub>)) ]　<span class="cmt">← 式 2</span><br>
+      Δh<sup>(ℓ)</sup><sub>j</sub> = CrossAttn<sub>ℓ</sub>( LN<sub>ℓ</sub>(h<sup>(ℓ)</sup><sub>j</sub>), G ) + W<sub>ℓ</sub> f<sub>j</sub> + b<sub>ℓ</sub>　<span class="cmt">← 式 6：全局 token 走交叉注意力，局部特征走加法</span>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <ul class="tight">
+          <li><b>双编码器取特征</b>：冻结 <b>DINOv3</b> 特征 + 其 <b>NAF</b> 上采样版本（Chambon et al., CVPR 2026），拼在一起。NAF 补的是 DINOv3 下采样丢掉的<b>高频细节</b>——对文字、logo、颜色边界这类东西很关键。</li>
+          <li><b>多视图平均</b>：只对「坐标在相机前方且投影落在 crop 内」的视图求平均；一个都没有就置零。</li>
+          <li><b>不做遮挡测试</b>（与 Pixal3D 相同）：沿相机射线的所有坐标都拿到它投影到的像素特征，靠 masking 把遮挡物挡在特征之外。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <ul class="tight">
+          <li><b>G 是什么</b>：5 个视图平均后的 DINOv3 class + register token，加 T5Gemma2 文本 token。</li>
+          <li><b>训练/推理不对称</b>：两个 flow 都在 <b>GT 稀疏结构</b>上训练，推理时用<b>预测的</b>稀疏结构——这个 gap 是误差来源之一。</li>
+          <li><b>对齐补救（附录 A.3）</b>：观测很少时，先把生成结构与观测对齐再重算归一化，消除投影前的坐标错配；训练时特意用 perturbed / estimated cameras，让 flow 容忍残余错配。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ 纹理修复（重点） -->
+<section id="texrepair">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 05 · TEXTURE REPAIR ★ 重点</div>
+      <h2>Agentic 纹理修复：把「Texture and material repairs」这段 prompt 逐条拆开</h2>
+      <p>论文附录 A.4 给了两份完整 prompt。下面这段是 <b>Prompt 1（精修模式）</b>里的纹理与材质专节——原文 13 行，我按语义切成 9 条，每条标明<b>它在防什么</b>。</p>
+    </div>
+
+    <h3 class="block-title c-teal">5.1 闭环：edit → render → review → keep or revert</h3>
+    <div class="svg-card">
+      <svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="edit-render-review 闭环">
+        <defs>
+          <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d9488"/>
+          </marker>
+          <marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#c2410c"/>
+          </marker>
+        </defs>
+
+        <rect x="14" y="20" width="130" height="46" rx="9" fill="#eefaf6" stroke="#a8ddc8"/>
+        <text x="79" y="40" font-size="12.5" font-weight="700" text-anchor="middle" fill="#0f766e" font-family="Segoe UI,PingFang SC,sans-serif">生成资产</text>
+        <text x="79" y="57" font-size="11" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">+ 输入照片 + Blender</text>
+
+        <line x1="146" y1="43" x2="180" y2="43" stroke="#0d9488" marker-end="url(#a2)"/>
+
+        <rect x="182" y="20" width="130" height="46" rx="9" fill="#fff" stroke="#bfd4f5"/>
+        <text x="247" y="40" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,PingFang SC,sans-serif">Inspect 证据</text>
+        <text x="247" y="57" font-size="11" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">照片 / mask / 相机·深度</text>
+
+        <line x1="314" y1="43" x2="348" y2="43" stroke="#0d9488" marker-end="url(#a2)"/>
+
+        <rect x="350" y="20" width="130" height="46" rx="9" fill="#fff" stroke="#bfd4f5"/>
+        <text x="415" y="40" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,PingFang SC,sans-serif">Edit（写脚本）</text>
+        <text x="415" y="57" font-size="11" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">几何 / UV / 材质</text>
+
+        <line x1="482" y1="43" x2="516" y2="43" stroke="#0d9488" marker-end="url(#a2)"/>
+
+        <rect x="518" y="20" width="148" height="46" rx="9" fill="#fef6ee" stroke="#f2c49b"/>
+        <text x="592" y="40" font-size="12.5" font-weight="700" text-anchor="middle" fill="#b45309" font-family="Segoe UI,PingFang SC,sans-serif">Render 对比</text>
+        <text x="592" y="57" font-size="11" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">同相机 · 同光照 · 原版 vs 候选</text>
+
+        <!-- 回边 -->
+        <path d="M592,68 L592,92 L79,92 L79,68" fill="none" stroke="#0d9488" marker-end="url(#a2)" stroke-dasharray="4 3"/>
+        <text x="335" y="108" font-size="11.5" text-anchor="middle" fill="#0f766e" font-family="Segoe UI,PingFang SC,sans-serif">✅ 与观测更一致 → 保留 / checkpoint，继续下一处</text>
+
+        <path d="M592,68 L640,68 L640,120 L200,120 L200,150 L340,150" fill="none" stroke="#c2410c" marker-end="url(#a3)" stroke-dasharray="4 3"/>
+        <text x="420" y="140" font-size="11.5" fill="#c2410c" font-family="Segoe UI,PingFang SC,sans-serif">❌ 退化 → revert 到上一个已验证候选</text>
+
+        <!-- 决策树 -->
+        <rect x="14" y="165" width="652" height="72" rx="10" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="28" y="186" font-size="12.5" font-weight="700" fill="#1a2332" font-family="Segoe UI,PingFang SC,sans-serif">纹理决策树（Prompt 1 原文骨架）</text>
+        <text x="28" y="206" font-size="11.8" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">① 先分诊：geometry / UV / base color / normal / roughness-metalness / baked lighting <tspan font-weight="700" fill="#0f766e">六类错误分开诊断</tspan></text>
+        <text x="28" y="224" font-size="11.8" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">② 再决策：<tspan fill="#0f766e" font-weight="700">atlas 里已有细节 → 修 UV 映射</tspan>　｜　<tspan fill="#1d4ed8" font-weight="700">atlas 里没有 → clean local RGB correspondence 从照片补</tspan></text>
+      </svg>
+      <p class="svg-cap">图 2：edit-render-review 闭环 + 纹理决策树。校验者与编辑者是同一个模型——这是它最大的软肋（见结论 08）。</p>
+    </div>
+
+    <h3 class="block-title c-teal">5.2 逐条拆解：这 9 条在防什么</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th style="width:30px">#</th><th style="width:290px">Prompt 原文要点（英）</th><th>中文拆解</th><th style="width:230px">它在防什么 / 本站备注</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>1</b></td>
+            <td><i>Diagnose geometry, UV, base color, normal, roughness/metalness and baked-lighting errors separately.</i></td>
+            <td><b>六类错误分开诊断</b>：几何、UV、基色、法线、粗糙度/金属度、烘焙光照。</td>
+            <td>防「一上来就调材质」。这六类的修法完全不同，混着改等于把病因搞混。</td>
+          </tr>
+          <tr class="ours">
+            <td><b>2</b></td>
+            <td><i>A material scalar change does not restore recoverable detail.</i></td>
+            <td><b>改一个材质标量，不算恢复了可恢复的细节。</b></td>
+            <td><span class="badge-tag tag-bad">反偷懒</span> 最直白的一条。把 roughness 从 0.5 调到 0.3 会让渲染图「看起来不一样」，但没有恢复任何真实信息。</td>
+          </tr>
+          <tr class="ours">
+            <td><b>3</b></td>
+            <td><i>If the atlas contains the detail, repair UV mapping. Otherwise use clean local RGB correspondence to restore visible labels, color boundaries and patterns.</i></td>
+            <td><b>图集里已有细节 → 修 UV 映射；否则 → 用干净的局部 RGB 对应恢复可见的标签、颜色边界、图案。</b></td>
+            <td><span class="badge-tag tag-good">核心决策树</span> 先判断「信息在不在纹理图里」：<b>在</b>就是映射错了，重映射即可（无损、不引入新噪声）；<b>不在</b>才动用照片投影（有损、受位姿误差影响）。</td>
+          </tr>
+          <tr>
+            <td><b>4</b></td>
+            <td><i>Check orientation and stretching.</i></td>
+            <td>检查纹理<b>朝向</b>与<b>拉伸</b>。</td>
+            <td>UV 重映射后的两个典型次生缺陷。拉伸在整物体视角下很容易被忽略，所以 prompt 还要求「若小修复在整体尺度下看不出，要额外提供一个紧凑的局部对比 rig」。</td>
+          </tr>
+          <tr class="ours">
+            <td><b>5</b></td>
+            <td><i>Do not invent unreadable text or brands.</i></td>
+            <td><b>不要编造读不出来的文字或品牌。</b></td>
+            <td><span class="badge-tag tag-bad">反幻觉</span> 宁可保留模糊，也不伪造「看起来像字」的东西。<b>做仿真/电商资产时伪造品牌是法律风险</b>，这条同时是合规条款。</td>
+          </tr>
+          <tr class="ours">
+            <td><b>6</b></td>
+            <td><i>Remove neighbor/background contamination locally, avoiding cloned repeated marks or uniform paint replacing a distinctive surface.</i></td>
+            <td><b>局部</b>移除邻近/背景污染；禁止<b>克隆重复痕迹</b>；禁止用<b>纯色涂抹</b>替换有辨识度的表面。</td>
+            <td><span class="badge-tag tag-bad">反偷懒</span> 两条具体禁令都很准：克隆印章（clone stamp）会产生周期性重复纹理，纯色覆盖是最省事的「假修复」。两者都让指标变好但丢了真实外观。</td>
+          </tr>
+          <tr>
+            <td><b>7</b></td>
+            <td><i>Preserve appropriate PBR maps; give new parts connected compatible materials rather than white defaults.</i></td>
+            <td>保留合适的 <b>PBR 贴图</b>；新补的部件要给<b>与相邻部件兼容的材质</b>，而不是白色默认值。</td>
+            <td>直接对应下游可用性：默认白模在仿真和游戏里就是废资产。这条把「补几何」和「补材质」绑成了一件事。</td>
+          </tr>
+          <tr>
+            <td><b>8</b></td>
+            <td><i>Use supplied estimated cameras/depth as noisy evidence, not exact geometry.</i></td>
+            <td>估计的相机/深度是<b>噪声证据</b>，不是精确几何；注意相机约定，必要时用局部锚点。</td>
+            <td>防止 agent 过度信任投影结果。与正文 §3.4「训练时用 perturbed/estimated cameras」是同一个思路，只是在推理阶段用 prompt 再兜一次。</td>
+          </tr>
+          <tr class="ours">
+            <td><b>9</b></td>
+            <td><i>Retain an earlier good repair if a later texture projection regresses.</i></td>
+            <td><b>如果后一次纹理投影导致退化，保留前一次那个好的修复。</b></td>
+            <td><span class="badge-tag tag-good">回归保护</span> 与全局的 checkpoint/revert 机制呼应。说明作者清楚：<b>纹理投影是会退化的操作</b>，不能假设「多修一次就更好」。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="block-title c-orange">5.3 另外三条散落在别处、但同样管纹理的约束</h3>
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4>用 <code>review --clay</code> 验证真开口<span class="cls">防纹理伪装几何</span></h4>
+        <p class="tagline">"Strainers, whisks and baskets require actual wire gaps/perforations, not alpha paint on a solid shell."</p>
+        <p><b>不许在实心壳上用 alpha 贴图假装镂空。</b>滤锅、打蛋器、篮子必须有<b>真实的金属丝间隙/穿孔</b>。验证手段是 <code>review --clay</code>——用<b>完全不透明材质</b>渲染，这样 alpha 伪装无处遁形。</p>
+        <p class="pros">这条很值得抄：用「关闭某个通道」的方式去验证「这个效果是不是靠该通道伪造的」。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>换掉局部损坏面后要恢复 UV/材质<span class="cls">几何→纹理联动</span></h4>
+        <p class="tagline">"Remove competing damaged faces, attach cleanly, and restore UVs/materials."</p>
+        <p>当贴补救不回来时，允许<b>整块换掉</b>损坏的局部表面/部件；但换完必须<b>干净地接上，并恢复 UV 与材质</b>。避免浮空碎片、重叠盖片、把功能性孔洞糊死、或为了藏损伤把整个部件压平。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>不许用 trivial shader 改动冒充完成<span class="cls">验收</span></h4>
+        <p class="tagline">"Do not stop at a trivial shader change while a required structural repair is feasible."</p>
+        <p>在<b>结构性修复仍可行</b>时，不许停在「改了下 shader」就收工。反过来也写了：「若原版已经合适，检查后<b>原样交付</b>；绝不伪造改进，也绝不把失败的修复悄悄标成完成。」（桌腿缺失的例子：只做纹理清理是不够的。）</p>
+        <p class="cons">修不动时要标 <code>needs_review</code> 并写明真实残留缺陷——「一个诚实的 needs_review 优于耗尽时钟写文档」。</p>
+      </div>
+    </div>
+
+    <div class="callout tex">
+      <b>Prompt 2（从零重建基线）里的对应条款，可以看成对照实验。</b> 同一个 agent 在没有初始网格时，纹理要求降级为：<i>"Reconstruct distinctive colors, texture placement and material response. Use photograph-derived texture with <b>defensible correspondence</b>... <b>Plain PBR is appropriate for unobserved surfaces, not a substitute for visible instance-specific detail</b>."</i>
+      ——即「看不到的面用纯 PBR 就行，但不能拿它替代可见的实例专属细节」。<b>有了 GATOR 的初始资产之后，纹理要求从「大致对」升级到了「可读、不污染、不伪造」</b>。这就是「先生成再精修」在纹理维度的具体红利。
+    </div>
+
+    <h3 class="block-title">5.4 论文里点名的纹理缺陷与对应修复（Fig. 11）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>类别</th><th>缺陷表现</th><th>Agent 的做法</th><th>在指标上的反映</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>纹理污染</b></td><td>邻近物体 / 背景颜色渗到目标表面</td><td>局部移除，禁止克隆重复与纯色覆盖</td><td>LPIPS ↓（感知最敏感）</td></tr>
+          <tr><td><b>文字/图案乱码</b></td><td>包装盒上的印字糊成一团（Fig. 11b）</td><td>UV 重映射 或 局部 RGB 对应重建；<b>读不出就不编</b></td><td>PSNR ↑ / LPIPS ↓；<b>SSIM 可能反降</b></td></tr>
+          <tr class="dim"><td>烘焙光照残留</td><td>把拍摄时的阴影烤进了 albedo</td><td>与基色/材质分开诊断后单独处理</td><td>共享 studio lighting 评测下体现为 PSNR ↑</td></tr>
+          <tr class="dim"><td>UV 映射错误</td><td>细节在图集里但位置/朝向不对、被拉伸</td><td>修 UV，检查朝向与拉伸</td><td>同上</td></tr>
+          <tr class="dim"><td>新部件缺材质</td><td>补出来的部件是白模</td><td>给与相邻部件兼容的材质，不用白默认</td><td>外观指标整体 ↑</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ 实验 -->
+<section id="exp" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 06 · EXPERIMENTS</div>
+      <h2>实验结果：三个合成/真实层级 + Toys4K 受控对比</h2>
+      <p>评测覆盖受控物体渲染（Toys4K）、杂乱桌面（LM-O / HB / HANDAL）、室内扫描（ScanNet++）。所有距离按参考直径归一化。</p>
+    </div>
+
+    <h3 class="block-title">Toys4K 四视图重建（Table 1）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>方法</th><th class="num">CD↓</th><th class="num">NC↑</th><th class="num">F1↑</th><th class="num">IoU<sub>2D</sub>↑</th><th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">LPIPS↓</th></tr>
+        </thead>
+        <tbody>
+          <tr class="dim"><td>GPT-6-Astra（闭源基线）</td><td class="num">0.013</td><td class="num">0.754</td><td class="num">0.614</td><td class="num">0.774</td><td class="num">17.11</td><td class="num">0.865</td><td class="num">0.214</td></tr>
+          <tr><td>TRELLIS.2†（MultiDiffusion）</td><td class="num">0.014</td><td class="num">0.751</td><td class="num">0.628</td><td class="num">0.747</td><td class="num">15.73</td><td class="num">0.855</td><td class="num">0.231</td></tr>
+          <tr><td>ReconViaGen</td><td class="num">0.014</td><td class="num">0.767</td><td class="num">0.579</td><td class="num">0.764</td><td class="num">14.39</td><td class="num">0.825</td><td class="num">0.228</td></tr>
+          <tr><td>Pixal3D-SV</td><td class="num">0.027</td><td class="num">0.681</td><td class="num">0.433</td><td class="num">0.629</td><td class="num">14.22</td><td class="num">0.844</td><td class="num">0.287</td></tr>
+          <tr><td>Pixal3D-MV</td><td class="num">0.011</td><td class="num">0.783</td><td class="num">0.701</td><td class="num">0.798</td><td class="num">17.18</td><td class="num">0.871</td><td class="num">0.203</td></tr>
+          <tr class="ours"><td>GATOR（Ours）</td><td class="num">0.009</td><td class="num">0.801</td><td class="num">0.757</td><td class="num">0.819</td><td class="num">17.60</td><td class="num">0.873</td><td class="num">0.191</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">七项指标<b>全第一</b>（含闭源 GPT-6-Astra）。相对最强开源基线 Pixal3D-MV：CD ↓19.7%，F1 0.701 → 0.757。</p>
+
+    <div class="grid2" style="margin-top:22px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Toys4K · 几何</h4>
+        <div class="chart-box"><canvas id="c1"></canvas></div>
+        <p class="chart-note">柱：CD×1000（↓）；线：F1 与 IoU<sub>2D</sub>（↑）。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Toys4K · 外观</h4>
+        <div class="chart-box"><canvas id="c2"></canvas></div>
+        <p class="chart-note">柱：PSNR（↑，左轴）；线：LPIPS×1000（↓，右轴）。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">真实桌面场景（Table 2：LM-O + HB + HANDAL 汇总）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>方法</th><th class="num">ADD-SB↓</th><th class="num">@0.1↑</th><th class="num">CD↓</th><th class="num">NC↑</th><th class="num">F1↑</th><th class="num">IoU<sub>2D</sub>↑</th><th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">LPIPS↓</th></tr>
+        </thead>
+        <tbody>
+          <tr class="dim"><td>GPT-6-Astra</td><td class="num">0.027</td><td class="num">100.00</td><td class="num">0.016</td><td class="num">0.799</td><td class="num">0.773</td><td class="num">0.791</td><td class="num">17.16</td><td class="num">0.886</td><td class="num">0.160</td></tr>
+          <tr><td>SimFoundry</td><td class="num">0.183</td><td class="num">63.36</td><td class="num">0.040</td><td class="num">0.716</td><td class="num">0.533</td><td class="num">0.626</td><td class="num">14.90</td><td class="num">0.875</td><td class="num">0.200</td></tr>
+          <tr><td>RecGen</td><td class="num">0.057</td><td class="num">85.50</td><td class="num">0.021</td><td class="num">0.791</td><td class="num">0.666</td><td class="num">0.757</td><td class="num">16.00</td><td class="num">0.885</td><td class="num">0.178</td></tr>
+          <tr><td>ReconViaGen</td><td class="num">—</td><td class="num">—</td><td class="num">0.027</td><td class="num">0.750</td><td class="num">0.608</td><td class="num">0.730</td><td class="num">14.48</td><td class="num">0.858</td><td class="num">0.181</td></tr>
+          <tr><td>ShapeR</td><td class="num">0.057</td><td class="num">87.02</td><td class="num">0.028</td><td class="num">0.709</td><td class="num">0.606</td><td class="num">0.700</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+          <tr><td>MV-SAM3D</td><td class="num">0.044</td><td class="num">91.60</td><td class="num">0.019</td><td class="num">0.778</td><td class="num">0.687</td><td class="num">0.757</td><td class="num">15.51</td><td class="num">0.883</td><td class="num">0.168</td></tr>
+          <tr><td>Pixal3D</td><td class="num">—</td><td class="num">—</td><td class="num">0.018</td><td class="num">0.784</td><td class="num">0.780</td><td class="num">0.813</td><td class="num">16.94</td><td class="num">0.890</td><td class="num">0.163</td></tr>
+          <tr class="ours"><td>GATOR（Ours）</td><td class="num">0.022</td><td class="num">98.47</td><td class="num">0.009</td><td class="num">0.859</td><td class="num">0.904</td><td class="num">0.841</td><td class="num">17.97</td><td class="num">0.890</td><td class="num">0.140</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">九项指标全第一（不含闭源基线）。<b>CD 约为 Pixal3D 的一半</b>（0.009 vs 0.018）；Pixal3D 与 ReconViaGen 不做场景放置，所以没有 joint（ADD-SB）结果；ShapeR 只出无纹理网格，无外观分数。</p>
+
+    <h3 class="block-title c-indigo">室内扫描 ScanNet++（Table 3：229 targets / 49 scenes）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>方法</th><th class="num">ADD-SB↓</th><th class="num">@0.1↑</th><th class="num">CD↓</th><th class="num">NC↑</th><th class="num">F1↑</th><th class="num">IoU<sub>2D</sub>↑</th></tr>
+        </thead>
+        <tbody>
+          <tr class="dim"><td>GPT-6-Astra</td><td class="num">0.049</td><td class="num">90.83</td><td class="num">0.033</td><td class="num">0.716</td><td class="num">0.581</td><td class="num">0.716</td></tr>
+          <tr><td>SimFoundry</td><td class="num">0.125</td><td class="num">72.49</td><td class="num">0.104</td><td class="num">0.664</td><td class="num">0.426</td><td class="num">0.614</td></tr>
+          <tr><td>RecGen</td><td class="num">0.067</td><td class="num">90.83</td><td class="num">0.041</td><td class="num">0.703</td><td class="num">0.540</td><td class="num">0.682</td></tr>
+          <tr><td>ReconViaGen</td><td class="num">—</td><td class="num">—</td><td class="num">0.161</td><td class="num">0.676</td><td class="num">0.423</td><td class="num">0.498</td></tr>
+          <tr><td>ShapeR</td><td class="num">0.071</td><td class="num">81.66</td><td class="num">0.060</td><td class="num">0.684</td><td class="num">0.458</td><td class="num">0.610</td></tr>
+          <tr><td>MV-SAM3D</td><td class="num">0.057</td><td class="num">90.83</td><td class="num">0.042</td><td class="num">0.699</td><td class="num">0.493</td><td class="num">0.648</td></tr>
+          <tr><td>Pixal3D</td><td class="num">—</td><td class="num">—</td><td class="num">0.052</td><td class="num">0.679</td><td class="num">0.475</td><td class="num">0.623</td></tr>
+          <tr class="ours"><td>GATOR（Ours）</td><td class="num">0.041</td><td class="num">95.63</td><td class="num">0.031</td><td class="num">0.726</td><td class="num">0.603</td><td class="num">0.733</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">相机、深度、掩码<b>全部由估计得到</b>（VGGT-Ω + SAM3）。相对第二名 RecGen：CD ↓23%（0.041 → 0.031），F1 0.540 → 0.603；且<b>每一项都超过从零重建的 GPT-6-Astra</b>。</p>
+
+    <div class="grid2" style="margin-top:22px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">视点数的影响（Table 7，LM-O + HB）</h4>
+        <div class="chart-box"><canvas id="c3"></canvas></div>
+        <p class="chart-note">GATOR 单一模型支持任意视点数：<b>2 视图的 CD 约为 Pixal3D 8 视图的一半</b>。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">训练语料构成（Table 5，S3 等 5 源）</h4>
+        <div class="chart-box"><canvas id="c4"></canvas></div>
+        <p class="chart-note">共 243,554 场景 / 3,342,876 epoch items / 1,545,271 唯一资产；S3 占 68.44%。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑦ 纹理的量化证据 -->
+<section id="texnum">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 07 · TEXTURE NUMBERS</div>
+      <h2>纹理修复到底值多少分：把 agent 的贡献单独摘出来</h2>
+      <p>这是本页最该看的一节。结论是：<b>PSNR 与 LPIPS 三个数据集全改善，SSIM 会分化，几何指标在 HANDAL 上反而变差。</b></p>
+    </div>
+
+    <h3 class="block-title c-teal">消融：逐组件叠加（Table 4，55 个 HANDAL 物体 / 四视图）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>配置</th><th class="num">ADD-SB↓</th><th class="num">@0.1↑</th><th class="num">CD↓</th><th class="num">NC↑</th><th class="num">F1↑</th><th class="num">IoU<sub>2D</sub>↑</th><th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">LPIPS↓</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Base model</td><td class="num">0.057</td><td class="num">94.55</td><td class="num">0.010</td><td class="num">0.813</td><td class="num">0.877</td><td class="num">0.688</td><td class="num">18.20</td><td class="num">0.922</td><td class="num">0.116</td></tr>
+          <tr><td>+ Modality mixer</td><td class="num">0.037</td><td class="num">94.55</td><td class="num">0.011</td><td class="num">0.811</td><td class="num">0.872</td><td class="num">0.700</td><td class="num">18.16</td><td class="num">0.922</td><td class="num">0.114</td></tr>
+          <tr><td>+ Text conditioning</td><td class="num">0.032</td><td class="num">98.18</td><td class="num">0.008</td><td class="num">0.828</td><td class="num">0.930</td><td class="num">0.739</td><td class="num">18.93</td><td class="num">0.925</td><td class="num">0.102</td></tr>
+          <tr class="ours"><td>+ Agentic refinement</td><td class="num">0.032</td><td class="num">98.18</td><td class="num">0.007</td><td class="num">0.829</td><td class="num">0.936</td><td class="num">0.717</td><td class="num">19.60</td><td class="num">0.918</td><td class="num">0.097</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid2" style="margin-top:22px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">PSNR 与 SSIM 的走向是<b>相反</b>的</h4>
+        <div class="chart-box"><canvas id="c5"></canvas></div>
+        <p class="chart-note">加 agent 后 PSNR 18.93 → 19.60（+0.67 dB），但 <b>SSIM 0.925 → 0.918 反降</b>。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">LPIPS：感知指标持续改善</h4>
+        <div class="chart-box"><canvas id="c6"></canvas></div>
+        <p class="chart-note">LPIPS×1000：116 → 114 → 102 → <b>97</b>。纹理 conditioning 与 agent 各贡献一半左右。</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>怎么读这组数字（本站判断）。</b> PSNR ↑ + LPIPS ↓ 同时 SSIM ↓，是一个非常典型的「<b>局部重绘</b>」指纹：
+      重绘后的表面在<b>感知特征空间</b>里更接近参考（LPIPS 用的是 VGG 特征），在<b>像素误差</b>上也更小（PSNR），
+      但因为重投影/重绘改变了局部结构统计，<b>SSIM 的结构相似性项反而受损</b>。
+      换句话说：<b>agent 修的是「看起来对不对」，不是「像素排得对不对」</b>。
+      如果你的下游指标是 SSIM 或者需要像素级可复现，这套精修未必划算；如果下游是渲染/仿真/展示，PSNR + LPIPS 的改善是实打实的。
+    </div>
+
+    <h3 class="block-title c-teal">分数据集：agent 前后（Table 6）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>数据集</th><th>版本</th><th class="num">CD↓</th><th class="num">F1↑</th><th class="num">IoU<sub>2D</sub>↑</th><th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">LPIPS↓</th><th>agent 的净效果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>LM-O</b></td><td>GATOR w/o agent</td><td class="num">0.023</td><td class="num">0.655</td><td class="num">0.872</td><td class="num">17.21</td><td class="num">0.917</td><td class="num">0.204</td><td><span class="badge-tag tag-good">全改善</span></td></tr>
+          <tr class="ours"><td><b>LM-O</b></td><td><b>GATOR</b>（含 agent）</td><td class="num">0.022</td><td class="num">0.665</td><td class="num">0.873</td><td class="num">17.53</td><td class="num">0.925</td><td class="num">0.189</td><td>PSNR +0.32 · LPIPS −0.015 · SSIM +0.008</td></tr>
+          <tr><td><b>HB</b></td><td>GATOR w/o agent</td><td class="num">0.009</td><td class="num">0.916</td><td class="num">0.919</td><td class="num">15.83</td><td class="num">0.863</td><td class="num">0.174</td><td><span class="badge-tag tag-good">全改善</span></td></tr>
+          <tr class="ours"><td><b>HB</b></td><td><b>GATOR</b>（含 agent）</td><td class="num">0.009</td><td class="num">0.917</td><td class="num">0.917</td><td class="num">16.53</td><td class="num">0.866</td><td class="num">0.166</td><td>PSNR +0.70 · LPIPS −0.008 · SSIM +0.003</td></tr>
+          <tr><td><b>HANDAL</b></td><td>GATOR w/o agent</td><td class="num">0.008</td><td class="num">0.936</td><td class="num">0.757</td><td class="num">19.42</td><td class="num">0.927</td><td class="num">0.097</td><td><span class="badge-tag tag-mid">分化</span></td></tr>
+          <tr class="ours"><td><b>HANDAL</b></td><td><b>GATOR</b>（含 agent）</td><td class="num">0.009</td><td class="num">0.923</td><td class="num">0.728</td><td class="num">20.07</td><td class="num">0.917</td><td class="num">0.096</td><td>PSNR +0.65 · LPIPS −0.001，但 <b>CD·F1·IoU·SSIM 全部变差</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">论文原话：<i>"refinement improves PSNR and LPIPS on every dataset"</i>——这是<b>唯一在全部分集上都成立</b>的两项，也是本文为「agentic 纹理修复」给出的核心量化证据。</p>
+
+    <div class="card" style="margin-top:18px">
+      <h4 style="font-size:14.5px;margin-bottom:8px">三个数据集：agent 带来的外观增益</h4>
+      <div class="chart-box" style="height:320px"><canvas id="c7"></canvas></div>
+      <p class="chart-note">柱：PSNR（↑，左轴）；线：LPIPS×1000（↓，右轴）。浅色 = 精修前，深色 = 精修后。</p>
+    </div>
+
+    <div class="callout">
+      <b>HANDAL 上几何指标为什么变差？</b> 论文给了两条解释，都很实在：<br>
+      ① <b>编辑是局部的</b>——agent 打开的是洞和槽（Fig. 5），这类改动在平均几何指标上几乎不动，甚至因为加了 GT 里没有的结构而变差；<br>
+      ② <b>收益在仿真等下游</b>（Sec. D.6），<b>无法被这些量化指标反映</b>。<br>
+      论文没有回避这个数字，反而把它和 PyBullet 实验放在一起讲——这是全文最漂亮的一处论证。
+    </div>
+  </div>
+</section>
+
+<!-- ⑧ 时间与成本 -->
+<section id="cost" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 08 · COST</div>
+      <h2>时间预算：为什么「先生成后精修」碾压「从零 agent 造」</h2>
+      <p>Fig. 6 是全文最有工程价值的一张图。核心数字：GPT-6-Astra 在 1 分钟预算下 <b>0/10</b> 个物体能交出有效资产。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">有效资产产出率（10 个采样物体中）</h4>
+        <div class="chart-box"><canvas id="c8"></canvas></div>
+        <p class="chart-note">GPT-6-Astra：1 min → 0/10，2 min → 5/10，5 min 起 → 10/10。<b>GATOR 不加精修约 0.5 min，10/10 且质量已超 GPT-6 跑 20 min。</b></p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">成本结构</h4>
+        <dl class="kv">
+          <dt>生成阶段</dt><dd>约 <b>32 秒</b>/物体（估计值），三个 flow 各 12 sampling steps，guidance 3.0</dd>
+          <dt>无精修总耗时</dt><dd>约 <b>0.5 分钟</b></dd>
+          <dt>Agent 预算</dt><dd><b>10 分钟</b>/物体，extra-high reasoning effort，不限修订次数</dd>
+          <dt>训练</dt><dd>结构 denoiser 从 <b>1.3B TRELLIS.2</b> 初始化；lr 1e-4（结构）/ 2e-5（几何·外观）；bf16；effective batch 128</dd>
+          <dt>推理分辨率</dt><dd>结构流 384px context crops；几何/外观流 512px target-masked crops；crop margin 1.1</dd>
+          <dt>外部依赖</dt><dd>DINOv3、SigLIP2、T5Gemma2（均冻结）；Pi3X / VGGT-Ω（相机深度）；SAM3（ScanNet++ 掩码）；<b>GPT-6-Astra（闭源 API）</b></dd>
+        </dl>
+        <div class="callout warn" style="margin-top:14px">
+          <b>落地提醒。</b> agent 阶段依赖<b>闭源商业 API</b> 且每物体最多 10 分钟。论文 D.7 自己列的三条改进方向里，有两条正指向这里：<b>开源 agent</b>、<b>agent 编辑的自动几何校验</b>。
+        </div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-green">下游验证：PyBullet 刚体仿真（附录 D.6）</h3>
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4>设置<span class="cls">公平</span></h4>
+        <p>ScanNet++ 会议室中 GATOR 重建的 <b>15 个物体</b>，PyBullet 各跑一次：精修前 vs 精修后。共享相同直立放置、相同假定质量与物理参数、相同凸包碰撞近似。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>结果<span class="cls">显著</span></h4>
+        <p>精修前：<b>3 把椅子倾斜或翻倒 40–79°</b>；大会议桌站在<b>高低不平、歪斜的桌腿</b>上。<br>精修后：椅子稳定在<b>直立 1.3° 以内</b>；桌腿被 agent 修直修齐。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>意义<span class="cls">本站</span></h4>
+        <p>这是「<b>指标下降但实际更好</b>」的直接证据。CD/F1/IoU 全都测不出「这把椅子能不能站住」，而仿真一句话就说清楚了。<b>做仿真资产的团队应该把「稳定性通过率」当主指标。</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑨ 局限 -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 09 · LIMITATIONS</div>
+      <h2>局限与本站判断</h2>
+      <p>前四条是论文 D.7 原文，后四条是本站读完全文后的补充。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="takeaway">
+        <h4><span class="idx">1</span> 依赖 mask 与相机/深度估计</h4>
+        <p>混合模态降低了敏感度（消融里 ADD-SB 0.057 → 0.037 就是证据），但<b>灾难性失败仍会毁掉重建</b>：分割丢了、深度完全错。没有兜底机制。</p>
+        <p class="why">论文 D.7 原文。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">2</span> Agent 是闭源 API + 每物体 10 分钟</h4>
+        <p>成本与可复现性都是问题。本文所有 agent 实验都建立在 <b>GPT-6-Astra</b> 上，换模型结论是否成立未知。</p>
+        <p class="why">论文 D.7 原文。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">3</span> 编辑正确性的校验者 = 编辑者</h4>
+        <p>edit-render-review 让<b>同一个模型</b>判断自己的修改是否退化。没有几何层面的自动校验——论文把它列为未来工作。这意味着<b>失败模式是系统性的</b>：模型看不出的错误会一路留到交付。</p>
+        <p class="why">本站：这是 agentic 3D 编辑路线的通病，本文提供了闭环与 revert，但没解决校验独立性问题。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">4</span> 外观评测不评估材质正确性</h4>
+        <p>附录 C.3 明确：参考 CAD 用<b>粗糙漫反射材质</b>渲染，分数衡量与渲染参考的一致性，<b>不是标定的材质恢复</b>。所以 <b>PBR 通道（roughness / metalness / normal）的正确性本文没有直接验证</b>，尽管模型输出的是 PBR latents。</p>
+        <p class="why">本站：做 PBR 的人要注意这个口径，别把 PSNR 当成材质恢复质量的证据。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">5</span> 消融模型与主模型不可直接比</h4>
+        <p>论文 D.5 明确说：Table 4 的消融模型是<b>单独训练</b>的，分数与 Table 2 / Table 6 不可直接比较。引用消融数字时要带上这个前提。</p>
+        <p class="why">本站：这点论文自己标注了，值得表扬，但也意味着消融的绝对值不能当主结果用。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">6</span> 训练/推理的结构 gap</h4>
+        <p>几何流与外观流在 <b>GT 稀疏结构</b>上训练，推理时用<b>预测结构</b>。这个 gap 在观测稀疏时会被放大。附录 A.3 的「先对齐再重算归一化」是补救，但不是根治。</p>
+        <p class="why">本站：与 Flow3D-Pro 那类两阶段系统面临的是同一类问题。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">7</span> ScanNet++ 用部分扫描做 GT</h4>
+        <p>ScanNet++ 只提供<b>部分扫描</b>的参考网格，对齐只拟合到观测表面，但对称距离仍会惩罚扫描没覆盖到的补全表面。<b>补全得越好，可能罚得越多</b>。</p>
+        <p class="why">论文 D.4 说明了这一点；本站认为这会让该 benchmark 上的 CD 系统性低估方法真实水平。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">8</span> 纹理修复的可验证性仍是空的</h4>
+        <p>「不许编造读不出的文字」写了，但<b>没有机制去验证 agent 是否真的遵守了</b>——校验的还是那个模型自己。要真正落地，需要的是 OCR 一致性检查、跨视图纹理重投影误差这类<b>确定性</b>判据。</p>
+        <p class="why">本站：这是把这套 prompt 用到生产里之前必须先补的一环。</p>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <b>一句话总结。</b> GATOR 最有价值的贡献不是某个新模块，而是<b>把「生成式重建」和「agentic 编辑」的成本结构摆正了</b>：生成负责 0.5 分钟内出完整、带位姿的资产，agent 在这上面做 10 分钟的局部纹理与结构修补。
+      对做纹理的人来说，附录 Prompt 1 那段「Texture and material repairs」是全文信息密度最高的部分——<b>它本质上是一份「agentic 纹理修复的失败模式清单」</b>，五条禁令分别对应五种低成本伪造。
+      而它给出的量化证据也很诚实：PSNR + LPIPS 全改善，SSIM 会降，几何指标可能变差——但椅子能站住了。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b>论文</b>：Qirui Wu, Stan Birchfield, Hesam Rabeti, Angel X. Chang, Bowen Wen. <i>GATOR: Generative and Agentic 3D Object Reconstruction from Casual Images.</i> arXiv:2610.11215v1 [cs.CV], 8 Oct 2026. NVIDIA × Simon Fraser University.</p>
+    <p style="margin-top:6px">
+      <a href="https://arxiv.org/abs/2610.11215" target="_blank">arXiv</a> ·
+      <a href="https://research.nvidia.com/labs/lpr/gator/" target="_blank">项目页</a> ·
+      <a href="../3d-generation-2026/index.html">2026 年 3D 生成论文合集</a> ·
+      <a href="../pbr-materials/index.html">PBR 材质调研</a> ·
+      <a href="../ultratex/index.html">UltraTex</a> ·
+      <a href="../hktex/index.html">HKTex</a> ·
+      <a href="../flow3d-pro/index.html">DHO / Flow3D-Pro</a>
+    </p>
+    <p style="margin-top:10px">本页数值与引文均取自论文正文与附录（含 Table 1–7、附录 A.4 两份 prompt 原文、C.3、D.6、D.7）。标注「本站」的判断为解读意见，非论文原话。</p>
+    <p style="margin-top:6px">3D-Research · 2026-11-02 上线</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  var C = (typeof Chart === 'undefined') ? null : Chart;
+  var FF = '"Segoe UI","PingFang SC",system-ui,sans-serif';
+  var GRID = '#eef2f8';
+
+  function mkAxis(extra){
+    var a = {ticks:{font:{size:11,family:FF}}, grid:{color:GRID}};
+    if (extra) { for (var k in extra) { a[k] = extra[k]; } }
+    if (extra && extra.position === 'right' && !extra.grid) { a.grid = {display:false}; }
+    return a;
+  }
+
+  function opts(yLeft, yRight){
+    var s = {
+      x:{ticks:{font:{size:11,family:FF}, autoSkip:false, maxRotation:35, minRotation:0}, grid:{display:false}},
+      y:mkAxis(yLeft)
+    };
+    if (yRight) { s.y1 = mkAxis(yRight); }
+    return {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{labels:{font:{size:11.5,family:FF}, boxWidth:12, boxHeight:12, usePointStyle:true}},
+        tooltip:{titleFont:{size:12.5,family:FF}, bodyFont:{size:12,family:FF}}
+      },
+      scales:s
+    };
+  }
+
+  function build(id, type, data, yLeft, yRight){
+    var el = document.getElementById(id);
+    if (!el) return;
+    new C(el, {type:type, data:data, options:opts(yLeft, yRight)});
+  }
+
+  if (C) {
+    // c1: Toys4K 几何
+    build('c1','bar',{
+      labels:['GPT-6-Astra','TRELLIS.2†','ReconViaGen','Pixal3D-SV','Pixal3D-MV','GATOR'],
+      datasets:[
+        {type:'bar', label:'CD ×1000 ↓', data:[13,14,14,27,11,9], backgroundColor:'#bfdbfe'},
+        {type:'line', label:'F1 ↑', data:[0.614,0.628,0.579,0.433,0.701,0.757], borderColor:'#2563eb', backgroundColor:'#2563eb', tension:.3, pointRadius:4, yAxisID:'y1'},
+        {type:'line', label:'IoU₂D ↑', data:[0.774,0.747,0.764,0.629,0.798,0.819], borderColor:'#0d9488', backgroundColor:'#0d9488', tension:.3, pointRadius:4, borderDash:[5,3], yAxisID:'y1'}
+      ]
+    }, null, {position:'right', min:0.4, max:0.85});
+
+    // c2: Toys4K 外观
+    build('c2','bar',{
+      labels:['GPT-6-Astra','TRELLIS.2†','ReconViaGen','Pixal3D-SV','Pixal3D-MV','GATOR'],
+      datasets:[
+        {type:'bar', label:'PSNR ↑', data:[17.11,15.73,14.39,14.22,17.18,17.60], backgroundColor:'#a7d5c8'},
+        {type:'line', label:'LPIPS ×1000 ↓', data:[214,231,228,287,203,191], borderColor:'#ea8a3c', backgroundColor:'#ea8a3c', tension:.3, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:13, max:18.5}, {position:'right', min:180, max:300});
+
+    // c3: 视点数
+    build('c3','bar',{
+      labels:['2 views','4 views','8 views'],
+      datasets:[
+        {type:'bar', label:'GATOR CD ×1000 ↓', data:[11,10,10], backgroundColor:'#86c9b4'},
+        {type:'bar', label:'Pixal3D CD ×1000 ↓', data:[27,21,20], backgroundColor:'#dbe4f5'},
+        {type:'line', label:'GATOR ADD-SB ×1000 ↓', data:[15,14,13], borderColor:'#0d9488', backgroundColor:'#0d9488', tension:.3, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:0}, {position:'right', min:10, max:30});
+
+    // c4: 训练语料
+    build('c4','bar',{
+      labels:['S3','3D-FRONT','InternScenes','SceneSmith','SAGE'],
+      datasets:[
+        {label:'Epoch items（百万）', data:[2.288,0.064,0.248,0.020,0.723], backgroundColor:'#7fb0e8'},
+        {label:'唯一资产（百万）', data:[0.949,0.009,0.084,0.010,0.493], backgroundColor:'#a7d5c8'}
+      ]
+    }, {min:0});
+
+    // c5: 消融 PSNR vs SSIM（走向相反）
+    build('c5','bar',{
+      labels:['Base','+ Mixer','+ Text','+ Agent'],
+      datasets:[
+        {type:'bar', label:'PSNR ↑', data:[18.20,18.16,18.93,19.60], backgroundColor:'#a7d5c8'},
+        {type:'line', label:'SSIM ×100 ↑', data:[92.2,92.2,92.5,91.8], borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.3, pointRadius:5, yAxisID:'y1'}
+      ]
+    }, {min:17.8, max:19.9}, {position:'right', min:91.4, max:92.8});
+
+    // c6: 消融 LPIPS
+    build('c6','bar',{
+      labels:['Base','+ Mixer','+ Text','+ Agent'],
+      datasets:[{label:'LPIPS ×1000 ↓', data:[116,114,102,97], backgroundColor:['#dbe4f5','#bfd9ee','#8fbfe0','#0d9488']}]
+    }, {min:90, max:120});
+
+    // c7: 三个数据集 agent 前后
+    build('c7','bar',{
+      labels:['LM-O 前','LM-O 后','HB 前','HB 后','HANDAL 前','HANDAL 后'],
+      datasets:[
+        {type:'bar', label:'PSNR ↑', data:[17.21,17.53,15.83,16.53,19.42,20.07], backgroundColor:['#cfe6de','#0d9488','#cfe6de','#0d9488','#cfe6de','#0d9488']},
+        {type:'line', label:'LPIPS ×1000 ↓', data:[204,189,174,166,97,96], borderColor:'#ea8a3c', backgroundColor:'#ea8a3c', tension:.25, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:14, max:21}, {position:'right', min:80, max:220});
+
+    // c8: 有效资产产出率
+    build('c8','bar',{
+      labels:['GATOR 0.5min','GPT-6 1min','GPT-6 2min','GPT-6 5min','GPT-6 10min','GPT-6 20min'],
+      datasets:[{label:'有效资产 / 10', data:[10,0,5,10,10,10], backgroundColor:['#0d9488','#f0c3bb','#f5d9c0','#dbe4f5','#dbe4f5','#dbe4f5']}]
+    }, {min:0, max:11, ticks:{stepSize:2, font:{size:11,family:FF}}});
+  } else {
+    document.querySelectorAll('.chart-box').forEach(function(box){
+      var tip = document.createElement('p');
+      tip.className = 'chart-note';
+      tip.textContent = '图表需要联网加载 Chart.js，当前离线。所有数据见上方表格。';
+      box.appendChild(tip);
+    });
+  }
+})();
+</script>
+</body>
+</html>
