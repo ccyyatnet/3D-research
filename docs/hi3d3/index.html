@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hi3D 3.0 (Twinkle3D) 深度解读 · 物体专属保真度与 2048³ 水密网格 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#efeffd 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#e0e0fb;color:#4338ca;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:31px;line-height:1.32;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--indigo)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:940px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--indigo);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  section.alt{background:#fbfcfe;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:340px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#c3c0f7;background:linear-gradient(180deg,#f6f5ff,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#f1f0fe;font-weight:600}
+  tr.ours:hover td{background:#e7e5fd}
+  tr.dim td{color:var(--ink3)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .callout.ind{background:linear-gradient(90deg,#f2f1ff,#f7f4ff);border-color:#d9d5fa}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl.c-indigo{border-left-color:var(--indigo)} .concl.c-indigo .n{color:var(--indigo)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--indigo)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#e3e1fb;color:#4338ca;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .cmp div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .cmp .who{font-size:12px;font-weight:700;color:var(--ink3)}
+  .cmp .act{font-size:13.5px;font-weight:700;margin-top:4px}
+  .cmp .d{font-size:12.5px;color:var(--ink2);margin-top:4px}
+  .cmp div.hl{border-color:#c3c0f7;background:linear-gradient(180deg,#f6f5ff,#fff)}
+  .quote{background:#f8fafc;border-left:3px solid var(--indigo);border-radius:8px;padding:10px 16px;margin:10px 0;font-size:13.5px;color:var(--ink2);font-style:normal}
+  .quote .src{display:block;font-size:12px;color:var(--ink3);margin-top:4px}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#fidelity">② 物体专属保真度</a>
+      <a href="#method">③ 四个技术维度</a>
+      <a href="#eval">④ 评测协议</a>
+      <a href="#main">⑤ 主结果</a>
+      <a href="#inscription" style="font-weight:700;color:#4338ca">⑥ 铭文保真度 ★</a>
+      <a href="#human">⑦ 人工评测</a>
+      <a href="#abl">⑧ 消融与定性</a>
+      <a href="#limits">⑨ 局限</a>
+      <a href="../3d-generation-2026/index.html" style="font-weight:700;color:#0d9488">前沿合集 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-11-02 · arXiv:2610.11685 · Hi3D Team（hi3d.ai）</span>
+    <h1>"几何双胞胎不只是长得像"<br><em>Hi3D 3.0 / Twinkle3D</em>：把「像不像」和「是不是」分开</h1>
+    <p class="sub">
+      Image-to-3D 现在能稳定产出<b>整体轮廓和比例都对</b>的物体，于是新问题浮出水面：<b>能不能还原图中那个<em>特定</em>的物体本身</b>。
+      铭文少一笔就是另一个词，人像眼距差几个百分点就换了个人——这类"物体专属特征"（object-specific features）<b>几乎不改变轮廓</b>，所以现有 silhouette 类指标根本测不出它们丢了没有。
+      Hi3D 3.0 把这条轴单拎出来命名为 <b>object-specific fidelity</b>，并给出两件东西：几何模型 <b>Twinkle3D</b>（单图 → <b>2048³ 水密三角网格</b>），
+      以及一套<b>几何域评测协议</b> + 一个 <b>OCR 打分的铭文基准</b>。
+      最扎眼的数字是：526 个真值字符，Hi3D 3.0 读回 <b>82.1%</b>（精确率 98.2%，全榜只虚构了 <b>1</b> 个字符），而最强竞品 Meshy 7 只有 21.7%、自家上一代 Hi3D 2.1 是 <b>0%</b>。
+    </p>
+    <div class="meta">
+      <span class="pill">📄 18 页技术报告 · cs.CV · v1 2026-10-08 / v2 10-24</span>
+      <span class="pill">👥 Hi3D Team（26 人）· 核心：Ziying Li, Shengchu Zhao, Huiang He, Yiyang Chen</span>
+      <span class="pill">🏢 hi3d.ai · 负责人：Yukun Li, Heliang Zheng, Rongfei Jia</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2610.11685" target="_blank">arXiv:2610.11685</a></span>
+      <span class="pill">🌐 <a href="https://mathmagic-official.github.io/twinkle3d/" target="_blank">项目页</a> · <a href="https://www.hi3d.ai/" target="_blank">产品</a></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>82.1%</b><span>铭文字符召回（526 字符基准；最强竞品 21.7%）</span></div>
+      <div class="stat"><b>2048³</b><span>单图直接生成的水密三角网格分辨率（最多 30 万几何 token）</span></div>
+      <div class="stat"><b>60×</b><span>单步训练时间压缩：约 10 分钟 → 10 秒（千卡规模）</span></div>
+      <div class="stat"><b>36% vs 4%</b><span>细节对齐 vs 轮廓 IoU 的相对跨度——轮廓已饱和</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ① 结论 -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 01 · TAKEAWAYS</div>
+      <h2>先把结论读完</h2>
+      <p>八条，其中第 4–8 条是本站读完全文（含 3.8 自我否定段）后的判断，不是论文原话。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl c-indigo">
+        <span class="n">结论 01 · 定位</span>
+        <h4>「object-specific fidelity」这个提法比模型本身更有价值</h4>
+        <p>它把「生成的物体<b>像不像</b>输入」和「是不是输入<b>描绘的那个</b>物体」分成了两件事。后者对小尺度几何的正确性是<b>离散的</b>：缺一笔就是另一个字。这解释了一个长期现象——指标很好看，但生成的工业泵铭牌是块空白板。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 02 · 评测</span>
+        <h4>轮廓 IoU 已经饱和，细节对齐没有：跨度 4% vs 36%</h4>
+        <p>Table 1 五个系统：全局对齐 0.879–0.918（列均值的 <b>4%</b>），细节对齐 0.265–0.378（列均值的 <b>36%</b>）。<b>用 silhouette / CLIP 类指标做 3D 生成评测，在这个水平上已经分不出高下了。</b></p>
+      </div>
+      <div class="concl c-indigo">
+        <span class="n">结论 03 · 铭文</span>
+        <h4>Precision / Hallucination 分开报，是本文最聪明的设计</h4>
+        <p>Tripo 3.1 与 Rodin Gen 2.5 的 F1 只差 0.9 分（8.4 vs 7.5），但 Tripo 多恢复了约 60% 的字符——因为它的<b>幻觉率高达 32.0%</b>（247 个凭空字符）：它在造"看起来像字"的浮雕。Hi3D 3.0 全榜只造了 <b>1</b> 个字符。<b>「宁可省略，不要发明」是 3D 生成的正确默认。</b></p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 04 · 方法（本站）</span>
+        <h4>「单阶段 > 两阶段精修」与主流做法相反，值得单独记一笔</h4>
+        <p>TRELLIS、Hunyuan3D、Sparc3D 都走 coarse-to-fine。本文的论证是：精修<b>只在第一阶段表面上加细节，不修正它的位置</b>，所以当两个相邻边界各自位移量接近其间距时，<b>间距直接闭合、结构融合</b>。Fig. 5 三个例子都复现了这个 fusion signature。这个机制清晰且可迁移。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">结论 05 · 评测盲点（本站）</span>
+        <h4>「把整个场景丢掉」这种失败，所有细节指标都登记不了</h4>
+        <p>Fig. 6(a)：Rodin Gen 2.5 除主体外全部丢弃（壁龛、树叶、底座），但<b>它保留下来的那部分细节本身无可挑剔</b>，所以细节对齐指标测不出这个失败。完整性必须单列一轴——而本文自己的多视图完整性也只有 <b>0.757</b>，<b>包括自己在内没有一家解决</b>。</p>
+      </div>
+      <div class="concl c-green">
+        <span class="n">结论 06 · 诚实度</span>
+        <h4>3.8 节自己列了三条负面结论，其中一条直接限制了自家结论</h4>
+        <p>① 完整性 0.757，近 1/4 背视图补全不过「表面是否补全」这个最低标准；② 16.5% miss，<b>约六分之一的字符仍低于可辨识度</b>；③ <b>33 个输入只支持"组间"分离，不支持"组内"排序</b>——Hi3D 3.0 与 Meshy 7 在细节对齐上的 0.0088 差距落在这个规模的方差范围内。</p>
+      </div>
+      <div class="concl">
+        <span class="n">结论 07 · 报告性质（本站）</span>
+        <h4>这是技术报告，架构基本是黑箱</h4>
+        <p>没有方法章节：DiT 怎么重设计、image–3D 跨模态交互具体怎么做，都只有一句带过；没有消融表（只有自编码器重建与一阶段/两阶段两个<b>定性</b>实验）；没有训练数据规模、参数量、推理耗时。可验证的是<b>评测协议和结果</b>，不是方法。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 08 · 引用注意（本站）</span>
+        <h4>细节对齐的参考是「单目法线估计」，不是真值</h4>
+        <p>论文自己写明：该指标衡量的是<b>与一个估计器的一致性</b>，并继承其偏差；且只在<b>高置信位姿子集</b>上计算（位姿拟合不可靠的系统会被部分排除），而它恰恰是区分度最大的指标。引用这个分数时别当成绝对几何误差。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 什么是 object-specific fidelity -->
+<section id="fidelity" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 02 · THE AXIS</div>
+      <h2>为什么轮廓测不出「是不是那个物体」</h2>
+      <p>论文开篇的论证很短但很锋利，值得逐句看。</p>
+    </div>
+
+    <div class="quote">
+      "A geometric twin is more than a look-alike."
+      <span class="src">—— 报告标题下的第一句话</span>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <div class="sub-h" style="margin-top:0"><span class="t">性质 1</span> 尺度小</div>
+        <p style="font-size:13.5px;color:var(--ink2)">铭文、品牌标记、重复结构在物体上占的面积很小，对整体投影面积几乎没有贡献。</p>
+      </div>
+      <div class="card">
+        <div class="sub-h" style="margin-top:0"><span class="t">性质 2</span> 正确性离散</div>
+        <p style="font-size:13.5px;color:var(--ink2)"><b>人脸眼距改几个百分点，还是像，但已是另一个人；铭文缺一笔，就是另一个词或干脆读不出。</b>没有"差不多对"这回事。</p>
+      </div>
+      <div class="card">
+        <div class="sub-h" style="margin-top:0"><span class="t">性质 3</span> 不影响轮廓</div>
+        <p style="font-size:13.5px;color:var(--ink2)">所以 silhouette 类指标对它几乎不敏感。<b>本文基准上五个系统的 silhouette IoU 挤在 4 分之内，但恢复出的细结构差异巨大。</b></p>
+      </div>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="轮廓相同但细节不同的三个物体">
+        <text x="14" y="20" font-size="12.5" font-weight="700" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">同一个轮廓（silhouette IoU 几乎相同）下，三种完全不同的物体身份</text>
+
+        <!-- 三个同轮廓物体 -->
+        <g>
+          <rect x="30" y="36" width="170" height="150" rx="10" fill="#fff" stroke="#e3e9f2"/>
+          <text x="115" y="58" font-size="12" text-anchor="middle" fill="#4338ca" font-weight="700" font-family="Segoe UI,sans-serif">A · 空白铭牌</text>
+          <!-- 轮廓：一个圆角矩形 -->
+          <rect x="78" y="74" width="74" height="74" rx="6" fill="#eef2fb" stroke="#8494a9" stroke-width="1.6"/>
+          <rect x="92" y="96" width="46" height="30" rx="3" fill="#f8fafc" stroke="#cbd5e5" stroke-dasharray="3 2"/>
+          <text x="115" y="112" font-size="9" text-anchor="middle" fill="#b8c4d4" font-family="Segoe UI,sans-serif">（无内容）</text>
+          <text x="115" y="176" font-size="11" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">轮廓 ✓　身份 ✗</text>
+        </g>
+        <g>
+          <rect x="212" y="36" width="170" height="150" rx="10" fill="#fff" stroke="#f5d9c0"/>
+          <text x="297" y="58" font-size="12" text-anchor="middle" fill="#c2410c" font-weight="700" font-family="Segoe UI,sans-serif">B · 文字状浮雕</text>
+          <rect x="260" y="74" width="74" height="74" rx="6" fill="#fef6ee" stroke="#8494a9" stroke-width="1.6"/>
+          <!-- 假字：乱线 -->
+          <path d="M272,94 L280,94 M272,102 L284,102 M272,110 L279,110 M272,118 L285,118" stroke="#ea8a3c" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M294,94 L302,102 M302,94 L294,102 M294,110 L302,118 M302,110 L294,118" stroke="#ea8a3c" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M312,94 L320,94 L312,102 L320,102" stroke="#ea8a3c" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="297" y="176" font-size="11" text-anchor="middle" fill="#c2410c" font-family="Segoe UI,PingFang SC,sans-serif">有细节 ✗　但读不出 = 幻觉</text>
+        </g>
+        <g>
+          <rect x="394" y="36" width="170" height="150" rx="10" fill="#f6f5ff" stroke="#c3c0f7"/>
+          <text x="479" y="58" font-size="12" text-anchor="middle" fill="#4338ca" font-weight="700" font-family="Segoe UI,sans-serif">C · 可读铭文</text>
+          <rect x="442" y="74" width="74" height="74" rx="6" fill="#fff" stroke="#8494a9" stroke-width="1.6"/>
+          <text x="479" y="112" font-size="20" text-anchor="middle" fill="#4338ca" font-weight="700" font-family="Georgia,serif">SHADOW</text>
+          <text x="479" y="176" font-size="11" text-anchor="middle" fill="#4338ca" font-family="Segoe UI,PingFang SC,sans-serif">轮廓 ✓　身份 ✓　OCR 可读</text>
+        </g>
+
+        <!-- 指标行 -->
+        <rect x="30" y="200" width="534" height="46" rx="9" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="44" y="220" font-size="12" font-weight="700" fill="#1a2332" font-family="Segoe UI,PingFang SC,sans-serif">Silhouette IoU：A ≈ B ≈ C（测不出差别）</text>
+        <text x="44" y="238" font-size="12" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">OCR 铭文基准：A recall 0%　B 幻觉率高　C recall 82.1% · precision 98.2%</text>
+      </svg>
+      <p class="svg-cap">图 1：同一个投影轮廓下，三种物体身份结果。这正是本文主张「必须在几何域评测、且要把精度与幻觉分开报」的原因。</p>
+    </div>
+
+    <div class="callout ind">
+      <b>为什么不用 VLM 给渲染图打分（这是常见替代方案）。</b> 论文明确反驳：VLM 打分<b>把几何和纹理、材质、光照混在一起</b>，当几何差异细微时，<b>外观会主导分数</b>。
+      所以本文只在 VLM 能可靠回答的问题上用它（背视图是否补全），并把主指标放在<b>几何域</b>——silhouette IoU 与法线带通，两者都从二值 mask 和法线场计算，<b>纹理/材质/光照的选择完全影响不到</b>。
+    </div>
+
+    <h3 class="block-title c-indigo">Hi3D 系列的演进</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>版本</th><th>对应工作</th><th>时间</th><th>核心主张</th><th>铭文召回</th></tr></thead>
+        <tbody>
+          <tr><td><b>Hi3D 1.0</b></td><td>Sparc3D（NeurIPS 2025）</td><td>2025</td><td>8× 压缩的稀疏 latent 不牺牲重建精度</td><td class="num">—</td></tr>
+          <tr><td><b>Hi3D 2.1</b></td><td>—</td><td>2026-05</td><td>（商业系统，无公开方法）</td><td class="num">0.0%</td></tr>
+          <tr class="ours"><td><b>Hi3D 3.0</b></td><td><b>Twinkle3D</b></td><td>2026-10</td><td>2048³ 水密网格 + 物体专属保真度</td><td class="num">82.1%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">Hi3D 2.1 在铭文基准上 99.2% 的字符低于可辨识度——论文判断<b>铭文尺度位于该系统有效分辨率之下</b>。这也是全文最有说服力的一个「分辨率不是唯一变量」的证据。</p>
+  </div>
+</section>
+
+<!-- ③ 四个技术维度 -->
+<section id="method">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 03 · METHOD</div>
+      <h2>Twinkle3D 的四个维度</h2>
+      <p>每一维都对应流水线上的一个「物体专属保真度丢失点」。注意：这是技术报告，四个维度各只有一小节文字，架构细节基本未公开。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="method-card hl">
+        <h4><span class="cls">① 表示</span> 多曲面片 + 无水密修复</h4>
+        <p class="tagline">自编码器决定了生成器可用的细节上限</p>
+        <p><b>问题</b>：每个 cell 只编码单个曲面片的表示，无法描述<b>薄壁、紧密相邻的部件、多个曲面交汇的 junction</b>；而对非闭合网格做修复，会引入<b>物体上本不存在的表面</b>。</p>
+        <p>O-Voxel / FaithC 允许每 cell 多个曲面片，表达精度高，但实践中<b>表面质量差且不水密</b>。</p>
+        <p class="pros"><b>Twinkle3D</b>：同时解决这两个问题，保留 2048³ 精度，做到<b>无需修复步骤的水密封闭网格提取</b>。Sec. 3.5 用自编码器重建单独隔离了这个组件。</p>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">② 规模化</span> 30 万 token 的 DiT + 分布式优化</h4>
+        <p class="tagline">标准 DiT 的全注意力在这个序列长度上不可行</p>
+        <p>一个 2048³ 样本包含<b>最多 30 万个几何 token</b>。重新设计 DiT 架构以在此序列长度上工作，并引入大规模分布式训练优化。</p>
+        <p class="pros"><b>单步训练时间：约 10 分钟 → 约 10 秒（约 60×）</b>，在千卡规模下。这让 10⁵ 步的训练计划从「接近两年」缩短到「数天」。</p>
+        <p class="cons">未公开具体架构改动（对比：同期工作多用稀疏注意力，如 Direct3D-S2）。</p>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">③ 训练策略</span> 单阶段 &gt; 两阶段精修</h4>
+        <p class="tagline">精修加细节，但不修正第一阶段的边界位置</p>
+        <p>高分辨率系统普遍采用 coarse-to-fine：精修阶段<b>相对第一阶段表面</b>添加细节，<b>不修订其位置</b>。</p>
+        <p>后果：① 与特征尺寸相当的位移精修后依然存在；② <b>两个相邻面各自位移量接近其间距时，直接融合</b>。</p>
+        <p class="pros"><b>Twinkle3D</b> 在初始生成阶段同时强化全局形状与局部细节。<b>单阶段</b>即超过 Sparc3D 与 TRELLIS 2.0 的「第一阶段 + 512³ 精修」。</p>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">④ 条件</span> 细粒度 image–3D 跨模态交互</h4>
+        <p class="tagline">物体专属特征在图中占面积小 → 图像 token 少</p>
+        <p>恢复它们需要生成器在<b>局部视觉证据</b>与<b>实现它的几何 token</b> 之间建立精确对应。</p>
+        <p>引入细粒度 image–3D 跨模态交互机制强化该对应，改善铭文、标记与重复结构的恢复。</p>
+        <p class="cons">同样只有一句描述，无消融、无可视化。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">机制图：为什么两阶段精修会把相邻结构融合</h3>
+    <div class="svg-card">
+      <svg viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="两阶段精修的融合机制">
+        <defs>
+          <marker id="hh" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#8494a9"/>
+          </marker>
+        </defs>
+        <text x="14" y="20" font-size="12.5" font-weight="700" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">真值：两条相邻边界（间距 d）</text>
+        <line x1="40" y1="46" x2="40" y2="86" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+        <line x1="70" y1="46" x2="70" y2="86" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+        <line x1="40" y1="96" x2="70" y2="96" stroke="#16a34a" stroke-width="1.2"/>
+        <text x="55" y="112" font-size="11" text-anchor="middle" fill="#15803d" font-family="Segoe UI,sans-serif">d</text>
+
+        <line x1="120" y1="66" x2="160" y2="66" stroke="#8494a9" marker-end="url(#hh)"/>
+        <text x="140" y="58" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">阶段 1</text>
+
+        <text x="170" y="20" font-size="12" font-weight="700" fill="#c2410c" font-family="Segoe UI,PingFang SC,sans-serif">阶段 1 输出：两条边界各自位移 ≈ d</text>
+        <line x1="196" y1="46" x2="196" y2="86" stroke="#ea8a3c" stroke-width="4" stroke-linecap="round"/>
+        <line x1="222" y1="46" x2="222" y2="86" stroke="#ea8a3c" stroke-width="4" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="40" y2="86" stroke="#cbd5e5" stroke-width="1.2" stroke-dasharray="3 2"/>
+        <line x1="70" y1="46" x2="70" y2="86" stroke="#cbd5e5" stroke-width="1.2" stroke-dasharray="3 2"/>
+        <text x="209" y="112" font-size="10.5" text-anchor="middle" fill="#c2410c" font-family="Segoe UI,sans-serif">位移 ≈ 间距</text>
+
+        <line x1="270" y1="66" x2="310" y2="66" stroke="#8494a9" marker-end="url(#hh)"/>
+        <text x="290" y="58" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">精修</text>
+
+        <text x="320" y="20" font-size="12" font-weight="700" fill="#dc4c4c" font-family="Segoe UI,PingFang SC,sans-serif">精修：在其上加细节，但不修正位置 → 融合</text>
+        <line x1="348" y1="46" x2="348" y2="86" stroke="#dc4c4c" stroke-width="4" stroke-linecap="round"/>
+        <line x1="366" y1="46" x2="366" y2="86" stroke="#dc4c4c" stroke-width="4" stroke-linecap="round"/>
+        <rect x="344" y="46" width="26" height="40" fill="#dc4c4c" opacity="0.35"/>
+        <text x="357" y="112" font-size="10.5" text-anchor="middle" fill="#dc4c4c" font-family="Segoe UI,sans-serif">间距闭合 → 融合</text>
+
+        <line x1="420" y1="66" x2="452" y2="66" stroke="#8494a9" marker-end="url(#hh)"/>
+
+        <rect x="462" y="34" width="204" height="90" rx="10" fill="#f6f5ff" stroke="#c3c0f7"/>
+        <text x="476" y="56" font-size="12" font-weight="700" fill="#4338ca" font-family="Segoe UI,PingFang SC,sans-serif">Twinkle3D：单阶段</text>
+        <text x="476" y="76" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">在<b>初始生成阶段</b>同时强化</text>
+        <text x="476" y="94" font-size="11.5" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">全局形状 + 局部细节</text>
+        <text x="476" y="112" font-size="11.5" fill="#4338ca" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">→ 边界位置从一开始就是对的</text>
+
+        <rect x="14" y="140" width="652" height="56" rx="10" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="28" y="162" font-size="12" font-weight="700" fill="#1a2332" font-family="Segoe UI,PingFang SC,sans-serif">Fig. 5 的三例定性证据</text>
+        <text x="28" y="182" font-size="11.8" fill="#4b5a6e" font-family="Segoe UI,PingFang SC,sans-serif">长袍的穿孔图案、刀刃之间的分离、底座的分层涡卷；绳索与流苏；马鞍与缰绳——两阶段基线全部融合，单阶段保持分离。</text>
+      </svg>
+      <p class="svg-cap">图 2：Sec. 1 与 Sec. 3.6 的论证。这是全文唯一被定性实验直接支持的机制性主张。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ④ 评测协议 -->
+<section id="eval" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 04 · PROTOCOL</div>
+      <h2>四个指标：为什么这么设计</h2>
+      <p>3D 生成缺少 FID / CLIP score 那样的自动指标。本文的做法是——<b>能放在几何域的都放几何域，VLM 只用于它能可靠回答的问题</b>。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th style="width:150px">指标</th><th style="width:80px">值域</th><th>怎么算</th><th>关键设计</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Global alignment</b><br><span style="font-size:11.5px;color:var(--ink3)">轮廓 IoU</span></td>
+            <td class="num">[0,1]</td>
+            <td>所有系统共享一组透视内参（垂直 FOV 35°）；<b>为每个系统单独拟合相机位姿</b>以最大化光栅化轮廓与输入前景 mask 的 IoU；取该位姿下的 IoU。</td>
+            <td><b>单独拟合</b>避免惩罚各家的尺度/朝向约定差异。只测<b>投影占据</b>。</td>
+          </tr>
+          <tr class="ours">
+            <td><b>Detail alignment</b><br><span style="font-size:11.5px;color:var(--ink3)">法线带通</span></td>
+            <td class="num">[0,1]</td>
+            <td>参考 = 输入的<b>单目法线估计</b>；预测 = 网格在拟合位姿下的法线渲染。都限制在共享前景内，在法线空间做<b>多尺度带通分解</b>，两个轴分别打分。</td>
+            <td><b>Richness</b>：比较每频带能量，<b>过度平滑与注入细节同罚</b>——把表面弄粗糙会提高频带能量但不提高分数。<br><b>Envelope</b>：比较各频带幅值的<b>集中位置</b>而非有符号值，容忍位姿拟合的亚像素配准误差。</td>
+          </tr>
+          <tr>
+            <td><b>Multi-view plausibility</b><br><span style="font-size:11.5px;color:var(--ink3)">完整性</span></td>
+            <td class="num">[0,1]</td>
+            <td>前两个指标只约束可见侧。用 <b>VLM 给 Blender 背视图渲染</b>打分，检查孔洞、空白面、无差别表面。</td>
+            <td>是<b>有无判断</b>而非分级偏好。与两个对齐指标<b>相互独立</b>（见结论 05）。</td>
+          </tr>
+          <tr class="dim">
+            <td><b>Shape aesthetics</b><br><span style="font-size:11.5px;color:var(--ink3)">Q-Judger</span></td>
+            <td class="num">[0,100]</td>
+            <td>专业艺术家搭模板渲染前后视图共 <b>328 张</b>，用 <b>Qwen-Image-Bench</b> 按固定三级 rubric 打分：Fail→0 / Pass→60 / Excel→100。</td>
+            <td><b>刻意是外观相关的</b>，用来覆盖外观维度。实际结果：<b>四家落在 1 分之内</b>（三级 rubric 饱和）。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <b>两个必须知道的口径限制（论文自己写明）。</b><br>
+      ① Detail alignment 的参考是<b>单目法线估计，不是真值</b> → 它衡量的是「与一个估计器的一致性」，<b>继承其偏差</b>，不是绝对几何误差；<br>
+      ② 它<b>依赖位姿拟合</b>，因此只在<b>高置信位姿子集</b>上计算 —— <b>位姿拟合不可靠的系统会被部分排除</b>，而它恰恰是区分度最大的那个指标。
+    </div>
+
+    <h3 class="block-title">铭文基准的协议（Table 2 的基础）</h3>
+    <div class="grid2">
+      <div class="card">
+        <ul class="tight">
+          <li>测试集覆盖<b>中英文铭文、雕刻、品牌标记</b>。</li>
+          <li>每个系统的输出在 <b>clay shading</b> 下渲染，用 <b>PaddleOCR</b> 读取。</li>
+          <li>对照共享的<b>场景级 ground truth：526 个字符</b>，<b>逐字符对齐</b>。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <ul class="tight">
+          <li><b>Recall</b>：真值字符中被恢复的比例。</li>
+          <li><b>Precision</b> = correct / (correct + wrong + extra)。</li>
+          <li><b>Miss</b>：OCR 定位不到的真值字符（几何低于可辨识度）。</li>
+          <li><b>Halluc.</b>：虚构字符占「真值 + extras」的比例。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout ind">
+      <b>为什么铭文是个好探针。</b> 论文理由：<b>字符要么读得回来要么读不回来，判断不依赖渲染风格；模型无法靠生成「文字状浮雕」拿分。</b>
+      这正好补上了 VLM 打分的短板——VLM 会被"看起来像字"的浮雕骗过去，OCR 不会。
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ 主结果 -->
+<section id="main">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 05 · MAIN RESULTS</div>
+      <h2>Table 1：五个系统，33 个生产请求输入</h2>
+      <p>对比 Hi3D 3.0、Hi3D 2.1、Meshy 7、Tripo 3.1、Rodin Gen 2.5，<b>各跑各自最高几何分辨率</b>，用同一套协议打分。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Model</th><th class="num">Global Alignment↑</th><th class="num">Detail Alignment↑</th><th class="num">Multi-view Plausibility↑</th><th class="num">Shape Aesthetics (Q-Judger)↑</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Rodin Gen 2.5</td><td class="num">0.8787</td><td class="num">0.2645</td><td class="num">0.663</td><td class="num">46.67</td></tr>
+          <tr><td>Tripo 3.1</td><td class="num">0.8953</td><td class="num">0.2826</td><td class="num">0.722</td><td class="num">50.16</td></tr>
+          <tr><td>Meshy 7</td><td class="num">0.9013</td><td class="num">0.3694</td><td class="num">0.638</td><td class="num">50.00</td></tr>
+          <tr><td>Hi3D 2.1</td><td class="num">0.9038</td><td class="num">0.2813</td><td class="num">0.636</td><td class="num">50.30</td></tr>
+          <tr class="ours"><td>Hi3D 3.0</td><td class="num">0.9184</td><td class="num">0.3782</td><td class="num">0.757</td><td class="num">50.91</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">Hi3D 3.0 在<b>四个指标上全部第一</b>。</p>
+
+    <div class="grid2" style="margin-top:22px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">三个几何域指标（0–1）</h4>
+        <div class="chart-box"><canvas id="c1"></canvas></div>
+        <p class="chart-note">注意 Global alignment（浅色柱）几乎齐平，而 Detail alignment（深色柱）明显分成两组。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">各指标的<b>相对跨度</b>（(max−min)/mean）</h4>
+        <div class="chart-box"><canvas id="c2"></canvas></div>
+        <p class="chart-note">Detail alignment 的跨度是 Global alignment 的约 <b>9 倍</b>；美学指标基本分不开。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">论文从 Table 1 读出的三点</h3>
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4>① 轮廓饱和，细节没有</h4>
+        <p>Global 跨 0.879–0.918（列均值的 <b>4%</b>），Detail 跨 0.265–0.378（<b>36%</b>）。且细节上是<b>分组</b>而非均匀铺开：Hi3D 3.0 (0.3782) 与 Meshy 7 (0.3694) 一组，其余三家低 <b>0.087–0.114</b>。</p>
+        <p class="pros">因为指标对<b>过量频带能量与缺失同罚</b>，这个差距反映的是「与输入<b>一致</b>的细结构」，而非仅仅「存在细结构」。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>② 完整性是独立的一根轴</h4>
+        <p>Hi3D 3.0 与 Meshy 7 是细节前二，完整性却差 <b>0.119</b>。反过来 Hi3D 2.1 与 Meshy 7 细节差 0.088，完整性只差 <b>0.002</b>。</p>
+        <p class="cons"><b>完整性对所有系统都远未触顶，包括本文的 0.757。</b></p>
+      </div>
+      <div class="method-card hl">
+        <h4>③ 美学分不开这个领域</h4>
+        <p>五家里四家落在 <b>1 分之内</b>。论文归因于<b>三级 rubric 饱和</b>——一旦输出稳定达到中间档，分数就不再动。</p>
+        <p>最大跨度来自<b>细节对齐与完整性</b>，那两个正是测「投影占据之外的几何」的指标。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ 铭文保真度 -->
+<section id="inscription" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 06 · INSCRIPTION ★ 重点</div>
+      <h2>铭文基准：全文最扎眼的一张表</h2>
+      <p>526 个真值字符，PaddleOCR 逐字符对齐。这张表同时报了 recall 与 precision，因而能区分两种完全不同的失败模式。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Model</th><th class="num">Recall↑</th><th class="num">Precision↑</th><th class="num">F1↑</th><th class="num">Miss↓</th><th class="num">Halluc.↓</th><th class="num">Missed / Wrong / Extra</th><th>失败模式</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Hi3D 2.1</td><td class="num">0.0%</td><td class="num">0.0%</td><td class="num">0.0%</td><td class="num">99.2%</td><td class="num">4.5%</td><td class="num">522 / 4 / 25</td><td><span class="badge-tag tag-bad">有效分辨率不足</span> 几乎全部低于可辨识度</td></tr>
+          <tr><td>Rodin Gen 2.5</td><td class="num">4.6%</td><td class="num">21.8%</td><td class="num">7.5%</td><td class="num">88.0%</td><td class="num">8.2%</td><td class="num">463 / 39 / 47</td><td><span class="badge-tag tag-mid">留空</span> 铭牌返回空白</td></tr>
+          <tr><td>Tripo 3.1</td><td class="num">7.4%</td><td class="num">9.8%</td><td class="num">8.4%</td><td class="num">71.3%</td><td class="num">32.0%</td><td class="num">375 / 112 / 247</td><td><span class="badge-tag tag-bad">幻觉</span> 造出读不出的文字状浮雕</td></tr>
+          <tr><td>Meshy 7</td><td class="num">21.7%</td><td class="num">62.0%</td><td class="num">32.1%</td><td class="num">76.0%</td><td class="num">9.9%</td><td class="num">400 / 12 / 58</td><td><span class="badge-tag tag-good">刻得浅</span> 字在但笔画过浅</td></tr>
+          <tr class="ours"><td>Hi3D 3.0</td><td class="num">82.1%</td><td class="num">98.2%</td><td class="num">89.4%</td><td class="num">16.5%</td><td class="num">0.2%</td><td class="num">87 / 7 / 1</td><td><span class="badge-tag tag-good">省略而非发明</span> 全榜仅 1 个虚构字符</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid2" style="margin-top:22px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Recall / Precision / F1</h4>
+        <div class="chart-box"><canvas id="c3"></canvas></div>
+        <p class="chart-note">Hi3D 3.0 的 recall 是第二名的 <b>3.8 倍</b>，且 precision 仍高达 98.2%。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">两种失败模式：Miss vs Hallucination</h4>
+        <div class="chart-box"><canvas id="c4"></canvas></div>
+        <p class="chart-note">Tripo 3.1 的 <b>32.0% 幻觉率</b>（247 个凭空字符）被 F1 掩盖了——它和 Rodin 的 F1 只差 0.9 分。</p>
+      </div>
+    </div>
+
+    <div class="callout ind">
+      <b>这张表最关键的一句在正文里：</b>
+      <i>"A model that omits illegible text keeps precision high while losing recall. A model that invents text-like relief loses both."</i><br>
+      ——<b>漏掉读不出的文字，只是丢 recall；发明文字状浮雕，recall 和 precision 一起丢。</b>
+      所以 Tripo 3.1 与 Rodin Gen 2.5 的 F1 挤在 8.4 / 7.5，尽管 Tripo 多恢复了约 60% 的字符——多出来的几乎全是<b>编造的</b>。
+      <b>如果只报 F1，这两种行为看起来一样差；分开报才知道谁在撒谎。</b>
+    </div>
+
+    <h3 class="block-title c-indigo">定性佐证（Fig. 2 / 3 / 8）</h3>
+    <div class="grid2">
+      <div class="card">
+        <ul class="tight">
+          <li><b>Fig. 2 左 · 工业泵</b>：型号、压力与温度额定值、序列号与批次牌、铸造流向箭头，连同机加工螺栓凸台、法兰内孔、吊耳。<b>全部以几何形式复现</b>（normal shading，不依赖纹理材质）。</li>
+          <li><b>Fig. 2 右 · 纪念章</b>：沿边缘弯曲排列的字母，覆盖在低浮雕场景之上。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <ul class="tight">
+          <li><b>Fig. 3(a) · "Shadow" 铭牌</b>：只有 Hi3D 3.0 复现出这个词；Tripo 3.1 造出<b>读不成词的字母状笔画</b>（即幻觉列测的东西）；Meshy 7 留下浅痕；Rodin 返回空板；Hi3D 2.1 只有一根光条。</li>
+          <li><b>Fig. 3(b) · 学者摆件上的刻字</b>：Hi3D 3.0 每一笔都<b>锐利深切</b>；Meshy 7 笔画更浅更软；Tripo 3.1 造出<b>读不出的伪字</b>。</li>
+          <li><b>Fig. 8(b) · 狐仙额头红点</b>：Hi3D 3.0 把它恢复成<b>中心凹陷的凸起菱形</b>；其他系统没有或只有浅痕。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑦ 人工评测 -->
+<section id="human">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 07 · HUMAN STUDY</div>
+      <h2>盲测 pairwise：结构差 vs 细节差</h2>
+      <p>与四个竞品逐一盲测，评分者在<b>整体结构</b>与<b>几何细节质量</b>两个维度上分别判断（Hi3D 3.0 更好 / 相同 / 更差）。表内为「相同或更好」的占比。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Hi3D 3.0 vs.</th><th class="num">结构（相同或更好）</th><th class="num">几何细节（相同或更好）</th><th class="num">差值</th></tr></thead>
+          <tbody>
+            <tr><td>Hi3D 2.1</td><td class="num">89.0%</td><td class="num">94.7%</td><td class="num">+5.7</td></tr>
+            <tr><td>Meshy 7</td><td class="num">78.0%</td><td class="num">91.1%</td><td class="num">+13.1</td></tr>
+            <tr><td>Rodin Gen 2.5</td><td class="num">89.8%</td><td class="num">95.5%</td><td class="num">+5.7</td></tr>
+            <tr><td>Tripo 3.1</td><td class="num">79.5%</td><td class="num">88.1%</td><td class="num">+8.6</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">结构 vs 细节的差值</h4>
+        <div class="chart-box" style="height:270px"><canvas id="c5"></canvas></div>
+        <p class="chart-note">对<b>每一个</b>系统，细节维度的优势都大于结构维度（+5.7 至 +13.1 点）。</p>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <b>与 Table 1 的两点互证。</b> ① 系统之间的差异在<b>细节</b>而非结构；② <b>Meshy 7 是最接近的竞品</b>——在 Table 1 的细节对齐上最接近，在这里的结构偏好上也最接近（78.0% 是四个里最低的结构分）。
+      值得注意的是：Hi3D 3.0 对 Meshy 7 的<b>结构</b>分只有 78.0%，但细节分 91.1%——<b>结构层面两者互有胜负，差距几乎全部来自细节</b>。
+    </div>
+  </div>
+</section>
+
+<!-- ⑧ 消融与定性 -->
+<section id="abl" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 08 · ABLATIONS</div>
+      <h2>两个隔离实验（都是定性的）</h2>
+      <p>报告没有消融表。只有 Sec. 3.5（自编码器重建）与 Sec. 3.6（一阶段 vs 两阶段）两个定性对比，各对应一个技术维度。</p>
+    </div>
+
+    <h3 class="block-title c-indigo">3.5 自编码器重建：隔离「表示」这一维</h3>
+    <p style="font-size:13.8px;color:var(--ink2)">把<b>同一个输入网格</b>分别过 Sparc3D（Hi3D 1.0）、TRELLIS 2.0、Twinkle3D 的自编码器，看谁能保住承载身份的细结构。</p>
+    <div class="grid2">
+      <div class="method-card hl">
+        <h4>(a) 前格栅：多曲面片 / cell 的极端情形<span class="cls">周期性</span></h4>
+        <p>格栅是<b>细密且紧密排列的周期性阵列</b>。</p>
+        <ul class="tight" style="margin-top:6px">
+          <li><b>Sparc3D</b>：变成不规则穿孔，<b>丢失周期性</b></li>
+          <li><b>TRELLIS 2.0</b>：恢复了条状结构，但<b>没恢复间距与厚度</b></li>
+          <li><b>Twinkle3D</b>：保持阵列<b>周期性且在整幅宽度上同相</b></li>
+        </ul>
+        <p class="pros">三个输出都带细尺度内容，但<b>只有一个的细尺度内容与参考一致</b>——这正是 detail 指标 <b>richness</b> 项要登记的区分。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>(b) 箭的倒钩：沿杆的重复轮廓<span class="cls">分离性</span></h4>
+        <p>倒钩是<b>沿单根杆重复的轮廓</b>。</p>
+        <ul class="tight" style="margin-top:6px">
+          <li><b>Sparc3D</b>：把它们<b>削成锥形</b></li>
+          <li><b>TRELLIS 2.0 / Twinkle3D</b>：保持<b>相互分离</b></li>
+        </ul>
+        <p class="cons">这一例 TRELLIS 2.0 与 Twinkle3D 打平——说明差距不是"谁分辨率高"这么简单。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">3.6 单阶段 vs 两阶段：隔离「训练策略」这一维</h3>
+    <p style="font-size:13.8px;color:var(--ink2)">Twinkle3D <b>只跑第一阶段</b>；Sparc3D 与 TRELLIS 2.0 跑<b>第一阶段 + 512³ 精修</b>。三个输入上：</p>
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4>(b) 剑客<span class="cls">Fig. 5</span></h4>
+        <p>长袍的<b>穿孔图案</b>、<b>刀刃之间的分离</b>、底座的<b>分层涡卷</b>——单阶段结果是<b>分离的面</b>，两个基线把它们<u>融合</u>。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>(a) 盔甲人像<span class="cls">Fig. 5</span></h4>
+        <p><b>绳索与流苏</b>同样：单阶段保持独立，两阶段基线融合。</p>
+      </div>
+      <div class="method-card hl">
+        <h4>(c) 骑手<span class="cls">Fig. 5</span></h4>
+        <p><b>马鞍、缰绳与挽具</b>同上。论文：<i>"Fusion is the signature we expect."</i></p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">3.7 定性：五个探针，各测一种失败模式</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th style="width:60px">图</th><th style="width:150px">探测什么</th><th>观察</th></tr></thead>
+        <tbody>
+          <tr><td>6(a)</td><td><b>场景完整性</b></td><td>Rodin Gen 2.5 <b>丢掉除主体外的一切</b>（壁龛、树叶、底座），右特写只剩一只鹿角。<b>没有细节指标能登记这个失败——因为它保留下来的细节本身无可挑剔。</b></td></tr>
+          <tr><td>6(b)</td><td>紧密间距的薄结构</td><td>Hi3D 3.0 / Meshy 7 / Tripo 3.1 形成分离的叶与球果；Hi3D 2.1 把它们融成团块。</td></tr>
+          <tr><td>6(c)</td><td>细浮雕（多尺度共存）</td><td>灯塔与 "PORT OF" / "COMMERCE" 边缘字。奖牌<b>同时</b>有字母、中尺度浮雕、细索具——<b>一个系统可以在一个尺度成功、另一尺度失败</b>。Tripo 3.1 把 "COMMERCE" 弄变形并切走内场；Rodin 造出 "PORT OF" 但搞乱 "COMMERCE" 且没有灯塔；Hi3D 2.1 是乱码字形 + 光塔。</td></tr>
+          <tr><td>6(d)(e)</td><td>面部身份（高频头发与布料）</td><td>输入是<b>已知人脸的照片</b>。Hi3D 3.0 形成分离的锥形发丝与雕刻虹膜；其他系统是团块、缎带或光滑面。Meshy 7 在颈部截断胸像，并给两尊胸像<b>加了输入里没有的底座</b>。</td></tr>
+          <tr><td>7 / 8</td><td>近距离：装饰与铭文</td><td>翼人羽毛与冠带、麒麟的 filigree 带与 C 形涡卷、面具柜的 "Jade" 铭牌与额饰、狐仙的额发与额头印记（输入里只是个小<b>红点</b>）。<b>在这个尺度上，各系统对物体形状是一致的，差异全在标识它的那些特征上。</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ⑨ 局限 -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 09 · LIMITATIONS</div>
+      <h2>局限：论文自己列的三条 + 本站的五条</h2>
+      <p>前三条来自 Sec. 3.8「Summary」——一篇把负面结论写进摘要节的报告不多见，值得表扬。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="takeaway">
+        <h4><span class="idx">1</span> 完整性 0.757：近 1/4 背视图不过关</h4>
+        <p>多视图完整性只有 0.757，意味着<b>接近四分之一的背视图补全，连"表面是否被补全"这个最低标准都没过</b>。这是论文自认的最大短板。</p>
+        <p class="why">Sec. 3.8 原文。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">2</span> 16.5% miss：每六个字符仍有一个读不出</h4>
+        <p>miss rate 16.5%，且有 <b>7 个字符被定位但读错</b>。论文判断：<b>"模型是省略而非发明，但能力远未饱和。"</b></p>
+        <p class="why">Sec. 3.8 原文。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">3</span> 33 个输入只支持组间分离，不支持组内排序</h4>
+        <p>论文明确：33 个输入足以支撑 Table 1 的<b>组间</b>差距（两组至少差 0.087），但<b>不足以支撑组内排序</b>。Hi3D 3.0 与 Meshy 7 的 0.0088、以及四家在美学上的 1 分跨度，<b>都落在这个规模的 per-input 方差范围内</b>。</p>
+        <p class="why">Sec. 3.8 原文。引用「Hi3D 3.0 &gt; Meshy 7」时必须带这个前提。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">4</span> 技术报告：方法基本是黑箱（本站）</h4>
+        <p>没有方法章节。DiT 架构怎么重设计、image–3D 跨模态交互怎么做，各只有一句话；没有消融表；<b>没有训练数据规模、参数量、推理耗时</b>。可复现性接近零。</p>
+        <p class="why">本站：与 Seed3D / Hunyuan3D Studio 那类报告一致——能信的是<b>协议与结果</b>，不是方法。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">5</span> 与四个商业黑盒 API 对比（本站）</h4>
+        <p>"各跑各自最高几何分辨率"是现实约束，但不是严格公平对比——各家的分辨率、是否带纹理、默认后处理都不同。而且 <b>Hi3D 2.1 是自家人</b>，铭文 recall 0% 这个对比略残酷（说明 2.1 完全不支持该尺度）。</p>
+        <p class="why">本站：这张表的价值在于<b>协议一致</b>（同一套几何域指标 + 同一 OCR 基准），不在于绝对公平。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">6</span> 细节对齐的参考是估计器，不是真值（本站）</h4>
+        <p>参考是<b>单目法线估计</b>，继承其偏差；且只在<b>高置信位姿子集</b>上算，而位姿拟合不可靠的系统会被部分排除——<b>这反而可能是对强系统更有利的选择偏差</b>。</p>
+        <p class="why">论文自己写明了；本站补充：位姿子集筛选的方向性影响未被讨论。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">7</span> 只做几何，纹理/PBR 不在范围内（本站）</h4>
+        <p>Twinkle3D 是<b>几何模型</b>，输出 2048³ 水密三角网格；报告明确说<b>拓扑与面数控制不在本报告范围</b>，纹理与 PBR 也只字未提。做材质的人别指望从这里拿到东西。</p>
+        <p class="why">本站：与 UltraTex / HKTex / Luce 是互补而非竞争关系。</p>
+      </div>
+      <div class="takeaway">
+        <h4><span class="idx">8</span> 面数/拓扑未报，工程可用性存疑（本站）</h4>
+        <p>2048³ 密度提取出的网格面数没有报，也不做拓扑控制。对游戏/仿真这类有面数预算的下游，<b>大概率需要重拓扑</b>——而重拓扑恰恰会抹掉它费劲保住的细节。这是高分辨率路线的通病。</p>
+        <p class="why">本站：报告明说「topology and face-budget control are outside the scope」，等于把这个问题留给了下游。</p>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <b>一句话总结。</b> Hi3D 3.0 最值得带走的是<b>两件工具</b>而不是那个模型：一是「object-specific fidelity」这条轴——它解释了为什么轮廓指标已经饱和（跨度 4%）而真实差距在细节（跨度 36%）；二是铭文 OCR 基准里 <b>recall 与 hallucination 分开报</b>的做法——它让「省略」和「编造」这两种行为第一次能被区分开（Tripo 3.1 的 32% 幻觉率被 F1 完全掩盖了）。
+      技术上最反直觉的一条是<b>单阶段胜过两阶段精修</b>，理由是精修不修正边界位置所以会融合相邻结构——这个机制清晰、可迁移，但报告只给了三个定性例子，没有量化。
+      最后要记住论文自己的限定：<b>33 个输入只支持"组间"分离，不支持"组内"排序</b>。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b>论文</b>：Hi3D Team. <i>Hi3D 3.0 (Twinkle3D): Object-specific 3D Asset Generation with High Resolution.</i> Technical Report, arXiv:2610.11685v2 [cs.CV], 24 Oct 2026（v1: 8 Oct 2026）. hi3d.ai.</p>
+    <p style="margin-top:6px">
+      <a href="https://arxiv.org/abs/2610.11685" target="_blank">arXiv</a> ·
+      <a href="https://mathmagic-official.github.io/twinkle3d/" target="_blank">项目页</a> ·
+      <a href="https://www.hi3d.ai/" target="_blank">产品</a> ·
+      <a href="../3d-generation-2026/index.html">2026 年 3D 生成论文合集</a> ·
+      <a href="../gator/index.html">GATOR</a> ·
+      <a href="../ultratex/index.html">UltraTex</a> ·
+      <a href="../hktex/index.html">HKTex</a> ·
+      <a href="../pbr-materials/index.html">PBR 材质调研</a>
+    </p>
+    <p style="margin-top:10px">本页数值与引文均取自报告正文（Sec. 1–3、Table 1–3、Fig. 2–9、Sec. 3.8）。标注「本站」的判断为解读意见，非论文原话。</p>
+    <p style="margin-top:6px">3D-Research · 2026-11-02 上线</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  var C = (typeof Chart === 'undefined') ? null : Chart;
+  var FF = '"Segoe UI","PingFang SC",system-ui,sans-serif';
+  var GRID = '#eef2f8';
+
+  function mkAxis(extra){
+    var a = {ticks:{font:{size:11,family:FF}}, grid:{color:GRID}};
+    if (extra) { for (var k in extra) { a[k] = extra[k]; } }
+    if (extra && extra.position === 'right' && !extra.grid) { a.grid = {display:false}; }
+    return a;
+  }
+
+  function opts(yLeft, yRight){
+    var s = {
+      x:{ticks:{font:{size:11,family:FF}, autoSkip:false, maxRotation:28, minRotation:0}, grid:{display:false}},
+      y:mkAxis(yLeft)
+    };
+    if (yRight) { s.y1 = mkAxis(yRight); }
+    return {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{labels:{font:{size:11.5,family:FF}, boxWidth:12, boxHeight:12, usePointStyle:true}},
+        tooltip:{titleFont:{size:12.5,family:FF}, bodyFont:{size:12,family:FF}}
+      },
+      scales:s
+    };
+  }
+
+  function build(id, type, data, yLeft, yRight){
+    var el = document.getElementById(id);
+    if (!el) return;
+    new C(el, {type:type, data:data, options:opts(yLeft, yRight)});
+  }
+
+  var SYS = ['Rodin Gen 2.5','Tripo 3.1','Meshy 7','Hi3D 2.1','Hi3D 3.0'];
+
+  if (C) {
+    // c1: 三个几何域指标
+    build('c1','bar',{
+      labels:SYS,
+      datasets:[
+        {label:'Global alignment（轮廓 IoU）↑', data:[0.8787,0.8953,0.9013,0.9038,0.9184], backgroundColor:'#dbe4f5'},
+        {label:'Detail alignment（法线带通）↑', data:[0.2645,0.2826,0.3694,0.2813,0.3782], backgroundColor:'#9d97ee'},
+        {type:'line', label:'Multi-view plausibility ↑', data:[0.663,0.722,0.638,0.636,0.757], borderColor:'#ea8a3c', backgroundColor:'#ea8a3c', tension:.3, pointRadius:4}
+      ]
+    }, {min:0, max:1});
+
+    // c2: 相对跨度
+    build('c2','bar',{
+      labels:['Detail alignment','Multi-view plausibility','Shape aesthetics','Global alignment'],
+      datasets:[{
+        label:'相对跨度 (max−min)/mean（%）',
+        data:[35.8,17.4,8.6,4.3],
+        backgroundColor:['#6366f1','#ea8a3c','#bfd4f5','#dbe4f5']
+      }]
+    }, {min:0, max:40});
+
+    // c3: 铭文 recall/precision/F1
+    build('c3','bar',{
+      labels:['Hi3D 2.1','Rodin Gen 2.5','Tripo 3.1','Meshy 7','Hi3D 3.0'],
+      datasets:[
+        {label:'Recall ↑', data:[0,4.6,7.4,21.7,82.1], backgroundColor:'#9d97ee'},
+        {label:'Precision ↑', data:[0,21.8,9.8,62.0,98.2], backgroundColor:'#c4c0f7'},
+        {type:'line', label:'F1 ↑', data:[0,7.5,8.4,32.1,89.4], borderColor:'#0d9488', backgroundColor:'#0d9488', tension:.3, pointRadius:4}
+      ]
+    }, {min:0, max:100});
+
+    // c4: Miss vs Hallucination
+    build('c4','bar',{
+      labels:['Hi3D 2.1','Rodin Gen 2.5','Tripo 3.1','Meshy 7','Hi3D 3.0'],
+      datasets:[
+        {label:'Miss ↓（读不出）', data:[99.2,88.0,71.3,76.0,16.5], backgroundColor:'#dbe4f5'},
+        {label:'Hallucination ↓（凭空造）', data:[4.5,8.2,32.0,9.9,0.2], backgroundColor:'#f0a99b'}
+      ]
+    }, {min:0, max:100});
+
+    // c5: 人工评测 结构 vs 细节
+    build('c5','bar',{
+      labels:['vs Hi3D 2.1','vs Meshy 7','vs Rodin Gen 2.5','vs Tripo 3.1'],
+      datasets:[
+        {label:'结构（相同或更好）', data:[89.0,78.0,89.8,79.5], backgroundColor:'#c4c0f7'},
+        {label:'几何细节（相同或更好）', data:[94.7,91.1,95.5,88.1], backgroundColor:'#6366f1'}
+      ]
+    }, {min:70, max:100});
+  } else {
+    document.querySelectorAll('.chart-box').forEach(function(box){
+      var tip = document.createElement('p');
+      tip.className = 'chart-note';
+      tip.textContent = '图表需要联网加载 Chart.js，当前离线。所有数据见上方表格。';
+      box.appendChild(tip);
+    });
+  }
+})();
+</script>
+</body>
+</html>
