@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Video Diffusion Avatars 深度解读 · avatar 不必是 3D 资产 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eef4ff 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#dde7fb;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:31px;line-height:1.32;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:940px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--blue);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  section.alt{background:#fbfcfe;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:340px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eef2fb;color:var(--blue);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#b9cdf5;background:linear-gradient(180deg,#f4f8ff,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2f6fd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f8faff}
+  tr.ours td{background:#eaf2ff;font-weight:600}
+  tr.ours:hover td{background:#dde9fc}
+  tr.dim td{color:var(--ink3)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eef5ff,#f5f0ff);border:1px solid #d8e4fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .summary-box{background:#f6f9ff;border:1px solid #e2eafb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0e9ff;color:#1d4ed8}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl.c-indigo{border-left-color:var(--indigo)} .concl.c-indigo .n{color:var(--indigo)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--blue)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#dde7fb;color:#1d4ed8;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .cmp div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .cmp .who{font-size:12px;font-weight:700;color:var(--ink3)}
+  .cmp .act{font-size:13.5px;font-weight:700;margin-top:4px}
+  .cmp .d{font-size:12.5px;color:var(--ink2);margin-top:4px}
+  .cmp div.hl{border-color:#b9cdf5;background:linear-gradient(180deg,#f4f8ff,#fff)}
+  .quote{background:#f8fafc;border-left:3px solid var(--blue);border-radius:8px;padding:10px 16px;margin:10px 0;font-size:13.5px;color:var(--ink2)}
+  .quote .src{display:block;font-size:12px;color:var(--ink3);margin-top:4px}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#paradigm">② 范式之争</a>
+      <a href="#distract" style="font-weight:700;color:#1d4ed8">③ DISTRACT ★</a>
+      <a href="#disentangle">④ 解缠与翻译</a>
+      <a href="#pose" style="font-weight:700;color:#1d4ed8">⑤ Plücker 代理网格 ★</a>
+      <a href="#triplet" style="font-weight:700;color:#1d4ed8">⑥ 相机三元组 ★</a>
+      <a href="#exp">⑦ 主结果</a>
+      <a href="#abl">⑧ 消融</a>
+      <a href="#limits">⑨ 局限</a>
+      <a href="../3d-generation-2026/index.html" style="font-weight:700;color:#0d9488">前沿合集 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-11-03 · arXiv:2610.23772 · TUM × Woven by Toyota × Toyota Motor Europe</span>
+    <h1>avatar 不必是一个 3D 资产<br><em>Video Diffusion Avatars</em>：把视频扩散模型直接调教成可控 3D 头像</h1>
+    <p class="sub">
+      主流做法两条路：<b>3DMM 驱动 + 3DGS 渲染</b>（显式资产），或<b>先用扩散模型出多视图图、再蒸馏进 3DGS</b>（CAP4D / MVP4D）。
+      这篇两样都不用——<b>VDM 本身就是 avatar，全程不建任何 3D 资产</b>，从而完整保留互联网级视频先验：
+      头发动力学、阴影、镜片反射与折射、随动作变形的衣物，这些显式渲染器很难做对的东西直接"继承"过来。
+      代价是<b>多视图一致性必须由训练教会，而不是由表示保证</b>。
+      本文最有价值的部分不在架构，而在两件事：① 用 <b>DISTRACT 基准</b>证明 learned 表情编码器带着严重的<b>视角偏差</b>（X-NeMo 视角不变性 Rank-1 仅 18%）；
+      ② 发现 <b>相机三元组监督本身就能涌现视角不变性</b>（0.244 → 0.792），而单视角监督卡在 0.486。
+    </p>
+    <div class="meta">
+      <span class="pill">📄 28 页（正文 10 + 附录 18）· cs.CV · 2026-10-16</span>
+      <span class="pill">👥 Simon Giebenhain¹, Tobias Kirschstein¹, Liam Schoneveld², Davide Davoli³, Zhe Chen², Matthias Nießner¹</span>
+      <span class="pill">🏢 ¹ Technical University of Munich · ² Woven by Toyota · ³ Toyota Motor Europe</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2610.23772v1" target="_blank">arXiv:2610.23772v1</a></span>
+      <span class="pill">🌐 <a href="https://simongiebenhain.github.io/video-diffusion-avatars/" target="_blank">项目页</a> · <a href="https://github.com/SimonGiebenhain/video-diffusion-avatars" target="_blank">代码（将开源）</a></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>34 h</b><span>单张 A100 训练，仅用公开多视图数据（NeRSemble + AVA-256）</span></div>
+      <div class="stat"><b>−29%</b><span>BecomingLit 脸部 LPIPS（0.283 → 0.202，对比最强基线）</span></div>
+      <div class="stat"><b>+66%</b><span>感知质量 JOD（2.40 → 3.99，视频级指标）</span></div>
+      <div class="stat"><b>12 min</b><span>77 帧 576×1024 的推理代价——这是它真正的短板</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ① 结论 -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 01 · TAKEAWAYS</div>
+      <h2>先把结论读完</h2>
+      <p>共 9 条。第 1–4 条是论文的核心主张，第 5–9 条是本站读完全文（含附录 Limitations、消融与实验协议）后的判断，<b>不是论文原话</b>。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl c-blue">
+        <span class="n">结论 01 · 主张</span>
+        <h4>不建 3D 资产，prior 才保得住</h4>
+        <p>CAP4D / MVP4D 把扩散输出蒸馏进 3DGS，本质是用<b>照片级先验换一个显式资产</b>。VDA 反过来：<b>视频直接由 VDM 合成</b>，阴影、反射、折射、头发动力学全部来自 prior。代价是"多视图一致性"<b>必须学出来</b>，而不是由几何表示天然保证。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 02 · 最值钱的发现</span>
+        <h4>learned 表情空间带严重视角偏差，而且它被忽视了</h4>
+        <p>DISTRACT 基准：X-NeMo 视角不变性 Rank-1 只有 <b>18%</b>，Wan-Animate 21%，PD-FGC 甚至只有 <b>8%</b>；而经典 3DMM 回归器 DECA 有 <b>61%</b>。也就是说：<b>表达力更强的 learned 表情空间，视角污染也更重</b>——这是一个此前没有被量化的 trade-off。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 03 · 机理</span>
+        <h4>表情信息没丢，只是和视角缠在一起</h4>
+        <p>在同一个<b>冻结</b>的 X-NeMo latent 上，仅加一个 2 层 MLP probe，视角不变性 Rank-1 从 18% 跳到 <b>98%</b>。这说明表情信息完好保存，只是与视角纠缠——所以正确解法是<b>显式解缠</b>，而不是换编码器或加大容量。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">结论 04 · 相机控制</span>
+        <h4>表情码管不了相机：X-NeMo 分不清"转相机"和"转脖子"</h4>
+        <p>论文明确写道：把 disentangle 出来的 camera latent 扫过去，<b>动的是头而不是视点</b>（附录 Figure 12）。所以相机与上半身姿态必须走另一条路——<b>Plücker 着色的代理网格</b>，且头部与躯干用<b>各自的局部坐标系</b>，靠颜色对比编码颈部旋转。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 05 · 本站 · 消融读法</span>
+        <h4>三大贡献里，解缠模块的<b>独立贡献最小</b></h4>
+        <p>Table 5：<b>去掉解缠</b>但保留相机三元组，PSNR 22.06 vs full 22.43（只差 0.37 dB）；而<b>改成单视角自驱动</b>（self-driven）直接掉到 20.69。真正的功劳在 <b>cross-view 三元组监督</b>，不在解缠模块本身。论文把 disentanglement 列为支柱 (b)，消融显示它更接近"锦上添花"。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 06 · 本站 · 指标口径</span>
+        <h4>所有像素指标都<b>先对齐 3DMM 到真值</b>再算</h4>
+        <p>论文附录明说：为了消除歧义，先把每个方法输出的 3DMM 对齐到 GT 3DMM，再算 PSNR / LPIPS。<b>这一步会系统性掩盖位姿误差</b>——位姿错得多的方法在对齐后也不会被充分惩罚。所以像素指标上 22.43 vs 20.55 的差距要打折看；多视图一致性另用 3DGS 探针单测，是论文的补救设计。</p>
+      </div>
+      <div class="concl c-indigo">
+        <span class="n">结论 07 · 本站 · 静态下的优势收窄</span>
+        <h4>3DGS 探针上，VDA 只比 FlexAvatar 好一点点</h4>
+        <p>Table 4（静态、冻结表情）：Ours PSNR <b>23.69</b> / LPIPS <b>0.192</b>，FlexAvatar <b>23.28</b> / <b>0.203</b>。而 Table 2（动态自驱动）：Ours 22.43 / 0.202，FlexAvatar 20.55 / 0.327。<b>动态场景差距远大于静态</b> → VDA 的优势很大一部分来自表情与动态，纯静态多视图几何一致性上优势有限。</p>
+      </div>
+      <div class="concl c-green">
+        <span class="n">结论 08 · 成本结构</span>
+        <h4>训练极便宜，<b>推理极贵</b>——部署门槛在推理侧</h4>
+        <p>训练 34 小时单 A100、只用公开数据（4,696 clips / 640 identities），这在同类工作里非常良心。但推理 <b>77 帧要 12 分钟</b>，且长序列有时间漂移；而 3DGS avatar 一旦建好就能实时渲染。论文的补救是 Self Forcing 蒸馏原型：4 步、4.8 fps @288×512，仍<b>低于实时</b>且画质有损。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">结论 09 · 本站 · 一个被跳过的数字</span>
+        <h4>对 FactorPortrait，我们的<b>头部姿态误差更大</b></h4>
+        <p>Table 6：Ours 在 PSNR / SSIM / LPIPS / JOD / ID / Expr 上都优于 FactorPortrait，唯独 <b>APD（头部姿态角误差）2.94 vs 2.37 更差</b>。论文没有讨论这一项。合理推测是对比设置对我们不利（片段由对方挑选、我们只能单目估计相机），但既然报了就该解释。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 范式之争 -->
+<section id="paradigm" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 02 · POSITIONING</div>
+      <h2>三条路线的取舍：显式资产 / 蒸馏到资产 / VDM 即资产</h2>
+      <p>理解 VDA 的定位，关键看清楚它<b>放弃了什么</b>：放弃了"渲染一次、随时复用"的显式资产，换来的是 prior 不被蒸馏损耗。</p>
+    </div>
+
+    <div class="cmp">
+      <div>
+        <div class="who">路线 A · 传统</div>
+        <div class="act">3DMM + 3DGS/体素</div>
+        <div class="d">LAM / FlexAvatar / UIKA。显式资产，建好可实时渲染。但 3DMM 表达力有天花板（无口腔内部、微表情丢失），阴影/反射/折射/头发动力学难以显式渲染。</div>
+      </div>
+      <div>
+        <div class="who">路线 B · 折中</div>
+        <div class="act">扩散 → 蒸馏进 3DGS</div>
+        <div class="d">CAP4D / MVP4D / Joker。先让扩散模型出多视图图（或视频），再拟合 3DGS/NeRF avatar。<b>用照片级 prior 换显式资产</b>，蒸馏过程会损耗质量。</div>
+      </div>
+      <div>
+        <div class="who">路线 C · 2D 化</div>
+        <div class="act">VDM 肖像动画</div>
+        <div class="d">LivePortrait / X-NeMo / Wan-Animate 系列。时间连贯、画质高，但<b>没有相机控制</b>，输出是 2D 视频不是 3D avatar。FaceCam 有相机控制但无表情控制。</div>
+      </div>
+      <div class="hl">
+        <div class="who">本文 · 路线 D</div>
+        <div class="act">VDM 就是 avatar</div>
+        <div class="d">不建任何 3D 资产，直接微调 Wan-Animate-14B，让相机、表情、上半身姿态成为<b>三个独立可控的条件</b>。prior 完整保留；代价是多视图一致性必须被训练出来。</div>
+      </div>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 268" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VDA 架构：三路条件注入 Wan-Animate-14B">
+        <defs>
+          <marker id="vda1" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#8494a9"/>
+          </marker>
+          <marker id="vda2" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#2563eb"/>
+          </marker>
+        </defs>
+
+        <text x="14" y="16" font-size="11.5" font-weight="700" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">输入（三个不同的相机：π_ref / π_drv / π_tar）</text>
+
+        <!-- 左：参考图 -->
+        <rect x="14" y="26" width="112" height="46" rx="9" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="70" y="46" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">① 参考图 I_ref</text>
+        <text x="70" y="62" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">提供身份 · π_ref</text>
+
+        <!-- 上支路：表情 -->
+        <rect x="150" y="24" width="104" height="46" rx="9" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="202" y="44" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">② 驱动视频</text>
+        <text x="202" y="60" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">Wan-Animate · π_drv</text>
+        <line x1="126" y1="49" x2="148" y2="49" stroke="#8494a9" marker-end="url(#vda1)"/>
+        <line x1="254" y1="47" x2="278" y2="47" stroke="#8494a9" marker-end="url(#vda1)"/>
+
+        <rect x="280" y="18" width="118" height="58" rx="9" fill="#eef4ff" stroke="#b9cdf5" stroke-width="1.6"/>
+        <text x="339" y="38" font-size="11" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">X-NeMo 编码 → 解缠</text>
+        <text x="339" y="54" font-size="10.5" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">D^XN 拆出 z_ex / z_cam</text>
+        <text x="339" y="69" font-size="10.5" text-anchor="middle" fill="#c2410c" font-family="Segoe UI,sans-serif">z_cam 丢弃 ✕</text>
+        <line x1="398" y1="47" x2="422" y2="47" stroke="#2563eb" marker-end="url(#vda2)"/>
+
+        <rect x="424" y="18" width="130" height="58" rx="9" fill="#eef4ff" stroke="#b9cdf5" stroke-width="1.6"/>
+        <text x="489" y="38" font-size="11" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">翻译 T → 重新纠缠 E</text>
+        <text x="489" y="54" font-size="10.5" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">配上视角中性相机码 z̄_cam</text>
+        <text x="489" y="69" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">输出 Wan-Animate 原生格式</text>
+        <line x1="554" y1="47" x2="576" y2="47" stroke="#2563eb" marker-end="url(#vda2)"/>
+
+        <!-- 下支路：相机 + 姿态 -->
+        <rect x="150" y="104" width="104" height="46" rx="9" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="202" y="124" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">FLAME 头</text>
+        <text x="202" y="140" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">+ SAM-3D-Body 躯干</text>
+        <line x1="126" y1="127" x2="148" y2="127" stroke="#8494a9" marker-end="url(#vda1)"/>
+        <line x1="254" y1="127" x2="278" y2="127" stroke="#8494a9" marker-end="url(#vda1)"/>
+
+        <rect x="280" y="98" width="118" height="58" rx="9" fill="#fdf3e9" stroke="#f2c49b" stroke-width="1.6"/>
+        <text x="339" y="118" font-size="11" text-anchor="middle" fill="#b45309" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">从 π_tar 渲染</text>
+        <text x="339" y="134" font-size="10.5" text-anchor="middle" fill="#b45309" font-family="Segoe UI,sans-serif">Plücker 光线方向着色</text>
+        <text x="339" y="149" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">头/躯干各自局部系</text>
+        <line x1="398" y1="127" x2="422" y2="127" stroke="#2563eb" marker-end="url(#vda2)"/>
+
+        <rect x="424" y="98" width="130" height="58" rx="9" fill="#fdf3e9" stroke="#f2c49b" stroke-width="1.6"/>
+        <text x="489" y="118" font-size="11" text-anchor="middle" fill="#b45309" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">P_mesh（零初始化）</text>
+        <text x="489" y="134" font-size="10.5" text-anchor="middle" fill="#b45309" font-family="Segoe UI,sans-serif">+ 3D 骨架 P_skel</text>
+        <text x="489" y="149" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">加到带噪视频 latent</text>
+        <line x1="554" y1="127" x2="576" y2="127" stroke="#2563eb" marker-end="url(#vda2)"/>
+
+        <!-- 中间：DiT -->
+        <rect x="578" y="30" width="88" height="126" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+        <text x="622" y="62" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">Wan-Animate</text>
+        <text x="622" y="78" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">-14B DiT</text>
+        <text x="622" y="98" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">❄ 冻结</text>
+        <text x="622" y="114" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">face-fuser 839M</text>
+        <text x="622" y="130" font-size="10.5" text-anchor="middle" fill="#c2410c" font-family="Segoe UI,sans-serif">🔥 微调</text>
+        <text x="622" y="148" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">20 步欧拉采样</text>
+
+        <!-- 输出 -->
+        <line x1="666" y1="93" x2="640" y2="93" stroke="#2563eb"/>
+        <line x1="640" y1="93" x2="640" y2="196" stroke="#2563eb"/>
+        <line x1="640" y1="196" x2="366" y2="196" stroke="#2563eb" marker-end="url(#vda2)"/>
+        <rect x="228" y="204" width="278" height="34" rx="9" fill="#eef4ff" stroke="#b9cdf5"/>
+        <text x="367" y="226" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">输出：目标视频 Î（相机 π_tar，表情来自驱动，身份来自参考）</text>
+
+        <!-- 底部说明 -->
+        <rect x="14" y="244" width="652" height="20" rx="6" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="340" y="258" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">训练监督：相机三元组 —— 参考 / 驱动 / 目标来自三台不同相机，使表情码中的视角信息变成"主动误导"，训练会压制它</text>
+      </svg>
+      <div class="svg-cap">图：VDA 架构。表情与相机走<b>两条互不干扰的通路</b>，这正是本文的关键设计。</div>
+    </div>
+
+    <div class="callout">
+      <b>为什么必须分两条路？</b>论文在附录给了一个很干脆的证据：把解缠出来的 camera latent 当作控制信号扫过去，<b>转的是头而不是相机</b>——因为 X-NeMo 的潜空间里"换相机"和"转脖子"是同一件事。
+      所以相机与身体姿态只能交给 <b>Plücker 着色的代理网格</b>（第 ⑤ 节），表情码专管表情。
+      <span class="src" style="display:block;font-size:12px;color:var(--ink3);margin-top:6px">来源：附录 I，原文 "X-NeMo cannot distinguish a camera change from a neck rotation, so the camera code moves the head rather than the viewpoint."</span>
+    </div>
+  </div>
+</section>
+
+<!-- ③ DISTRACT -->
+<section id="distract">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 03 · 本文新增基准 ★</div>
+      <h2>DISTRACT：learned 表情空间到底有多"偏视角"</h2>
+      <p>这是本文独立于架构的贡献，也是我认为最值得记住的部分。它测的问题很朴素：<b>同一个表情从不同相机看过去，编码器给出的码还算不算同一个？</b></p>
+    </div>
+
+    <div class="grid2">
+      <div class="method-card hl">
+        <h4><span class="cls">基准设计</span>两个不变性轴 + 四类干扰项</h4>
+        <p class="tagline">基于 NeRSemble 的 16 相机 FLAME 跟踪序列</p>
+        <p><b>视角不变性</b>（500 queries）：同身份、同序列、同帧，不同相机。<b>身份不变性</b>（456 组挖掘 → 人工核验保留 126 组）：不同身份的相同表情。</p>
+        <p style="margin-top:8px">每个 query 配 4 类干扰项：<b>A</b> 同身份同相机 / <b>B</b> 只同身份 / <b>C</b> 只同相机 / <b>D</b> 都不同。用余弦距离排序，Rank-1 = 干扰项都没排到正样本前面的比例。</p>
+        <div class="pros">优点：直接量化"被混淆的程度"，而不是间接看下游指标。</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls">关键结果</span>18% → 98%：信息没丢，只是缠住了</h4>
+        <p class="tagline">在同一个冻结 latent 上加 2 层 MLP probe</p>
+        <p>X-NeMo 裸码视角不变性 Rank-1 仅 <b>18%</b>，但加一个两层的 MLP probe 后到 <b>98%</b>；Wan-Animate 21% → 94%；PD-FGC 8% → 90%。</p>
+        <p style="margin-top:8px">结论很硬：<b>表情信息完好保存在 latent 里，只是与视角纠缠</b>。因此解法应是显式解缠，而不是换更大的编码器。</p>
+        <div class="cons">注意：probe 是 transductive 的（在含 benchmark 帧的 NeRSemble embedding 上拟合），测的是"latent 里含多少视角不变信息"，不代表泛化到未见身份。</div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-red">Table 1：DISTRACT 结果（%）—— 反直觉的一张表</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>编码器</th><th>不变性任务</th><th class="num">裸码 R-1↑</th><th class="num">Err-A↓</th><th class="num">Err-B↓</th><th class="num">Err-C↓</th><th class="num">Err-D↓</th><th class="num">+MLP probe↑</th></tr></thead>
+        <tbody>
+          <tr><td><b>DECA</b> <span class="badge-tag tag-good">3DMM</span></td><td>视角不变</td><td class="num"><b>61</b></td><td class="num">33</td><td class="num">18</td><td class="num">18</td><td class="num">11</td><td class="num">85</td></tr>
+          <tr><td><b>PD-FGC</b> <span class="badge-tag tag-bad">learned</span></td><td>视角不变</td><td class="num">08</td><td class="num">90</td><td class="num">42</td><td class="num">79</td><td class="num">43</td><td class="num">90</td></tr>
+          <tr><td><b>Wan-Animate</b> <span class="badge-tag tag-bad">learned</span></td><td>视角不变</td><td class="num">21</td><td class="num">72</td><td class="num">34</td><td class="num">59</td><td class="num">33</td><td class="num">94</td></tr>
+          <tr class="ours"><td><b>X-NeMo</b> <span class="badge-tag tag-bad">learned</span>（本文采用）</td><td>视角不变</td><td class="num">18</td><td class="num">78</td><td class="num">35</td><td class="num">70</td><td class="num">34</td><td class="num"><b>98</b></td></tr>
+          <tr><td><b>DECA</b> <span class="badge-tag tag-good">3DMM</span></td><td>身份不变</td><td class="num"><b>34</b></td><td class="num">51</td><td class="num">37</td><td class="num">25</td><td class="num">24</td><td class="num">32</td></tr>
+          <tr><td><b>PD-FGC</b> <span class="badge-tag tag-bad">learned</span></td><td>身份不变</td><td class="num">07</td><td class="num">91</td><td class="num">48</td><td class="num">81</td><td class="num">43</td><td class="num">46</td></tr>
+          <tr><td><b>Wan-Animate</b> <span class="badge-tag tag-bad">learned</span></td><td>身份不变</td><td class="num">14</td><td class="num">74</td><td class="num">32</td><td class="num">62</td><td class="num">26</td><td class="num">66</td></tr>
+          <tr class="ours"><td><b>X-NeMo</b> <span class="badge-tag tag-bad">learned</span>（本文采用）</td><td>身份不变</td><td class="num">14</td><td class="num">78</td><td class="num">37</td><td class="num">68</td><td class="num">37</td><td class="num"><b>76</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">Err-X = 干扰项 X 排到正样本前面的比例。附录 Table 10 另报了 8 个编码器的完整结果：EMOCA 42、SHeaP 54、EMOPortraits 23、VOODOO-XP 15——<b>经典 3DMM 回归器（DECA 61 / EMOCA 42 / SHeaP 54）整体比 learned 编码器视角偏差小得多</b>。</p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">裸码 vs MLP probe：视角不变性 Rank-1</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c1"></canvas></div>
+        <p class="chart-note">蓝柱为裸码，橙柱为同一冻结 latent 上 2 层 MLP probe 后的结果。差距即"被纠缠掉的信息量"。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">身份不变性 Rank-1</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c2"></canvas></div>
+        <p class="chart-note">注意 DECA 在身份不变性上 probe 后<b>反而从 34 降到 32</b>——3DMM 的裸码本就偏结构，probe 榨不出额外信息。</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>这里有个 trade-off 值得单独拎出来。</b>DECA 裸码视角不变性 61%，X-NeMo 只有 18%——光看这个表，DECA 完胜。
+      但 DECA 的 probe 上限只有 85，X-NeMo 是 98；而且 3DMM 的表达力天花板（无口腔内部、舌头、微表情）是硬伤。
+      本文的取舍是：<b>要 X-NeMo 的高表达力，再用解缠模块把视角污染换掉</b>。<b>表达力与视角不变性在这里是一对矛盾，不是同一件事。</b>
+    </div>
+  </div>
+</section>
+
+<!-- ④ 解缠 -->
+<section id="disentangle" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 04 · 表情控制</div>
+      <h2>解缠模块：把 z_raw 拆成 z_ex 与 z_cam，再把表情"翻译"回原生格式</h2>
+      <p>两个设计都很克制：<b>不归一化</b>（norm 携带表情强度），<b>不改动 DiT 主干</b>（最大程度保 prior）。</p>
+    </div>
+
+    <div class="sub-h"><span class="t">式 2</span>解缠 / 纠缠：两个 MLP head，循环重构</div>
+    <div class="eq">
+      D(z_raw) = ( z_ex , z_cam )        <span class="cmt">← 拆开：表情 / 相机（X-NeMo 版另有 z_id、可选的 z_res）</span>
+      E( z_ex , z_cam ) = ẑ_raw ≈ z_raw  <span class="cmt">← 拼回：保证没丢信息</span>
+    </div>
+
+    <div class="grid3">
+      <div class="method-card">
+        <h4>① 有监督对比损失</h4>
+        <p>标签来自多视图结构本身：同一帧的 16 个相机 = 同一表情类；相机 ID = 视角类；人物 = 身份类。三个 head 各自一个对比损失，把每个因子拉进自己的 head、把其他因子推出去。</p>
+        <div class="pros">无需任何人工标注，多视图数据天然提供监督。</div>
+      </div>
+      <div class="method-card hl">
+        <h4>② 循环一致性损失</h4>
+        <p>取两个码 a、b，<b>交换相机 latent</b> 后穿过纠缠器再解缠，要求还原出原来的因子。这强制分解是"干净且稳定"的，而不只是能重构。</p>
+        <div class="pros">这是让 z_ex / z_cam 真正可分离的关键，光靠重构损失不够。</div>
+      </div>
+      <div class="method-card">
+        <h4>③ 不归一化</h4>
+        <p>论文特意说明：<b>不对 latent 做归一化</b>，因为 <b>norm 本身携带表情强度</b>，必须活着走完整个往返。这是个容易被忽略但很实际的细节。</p>
+        <div class="cons">代价：下游数值尺度需要自己消化。</div>
+      </div>
+    </div>
+
+    <div class="sub-h"><span class="t">式 3</span>latent 翻译：为什么要"翻译"而不是直接换码</div>
+    <div class="eq">
+      z_ex^WAN = T( z_ex^XN )                        <span class="cmt">← MLP：X-NeMo 表情空间 → Wan-Animate 表情空间</span>
+      z_raw^WAN = E^WAN( z_ex^WAN , z̄_cam^WAN )      <span class="cmt">← 配上"视角中性"的相机码（训练集相机 latent 的均值）</span>
+    </div>
+    <p style="font-size:13.8px;color:var(--ink2);margin-top:10px">
+      两个 latent 空间毫无关系，而目标是<b>尽量不扰动预训练权重空间</b>，所以不能直接把 X-NeMo 码塞进 Wan-Animate。
+      做法是：翻译到对方的<b>解缠</b>表情空间，再用<b>相机 latent 的均值</b>（视角中性）重新纠缠回 Wan-Animate 原生格式。
+      这样得到的是一个"格式合法、但不含视角信息"的码。
+    </p>
+
+    <h3 class="block-title c-indigo">微调范围：861.5 M 参数，<b>无 LoRA</b>，DiT 主干冻结</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>可训练模块</th><th class="num">参数量</th><th class="num">学习率</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr class="ours"><td>Face fusers B_face</td><td class="num">839.0 M</td><td class="num">5×10⁻⁶</td><td>与 DiT block 交错，注入表情 token</td></tr>
+          <tr><td>Face encoder P_face</td><td class="num">17.8 M</td><td class="num">10⁻⁵</td><td>把表情码映射为 face token</td></tr>
+          <tr><td>Translator（T 与 E^WAN 合并）</td><td class="num">3.1 M</td><td class="num">10⁻⁵</td><td>实现上是单个 MLP</td></tr>
+          <tr><td>D^XN 的表情 head</td><td class="num">0.8 M</td><td class="num">10⁻⁵</td><td>解缠器的表情分支</td></tr>
+          <tr><td>P_skel / P_mesh</td><td class="num">0.3 M 各</td><td class="num">5×10⁻⁵</td><td>P_mesh <b>零初始化</b>，训练起点时代理网格不起作用</td></tr>
+          <tr class="dim"><td>DiT blocks B / VAE / 图像与文本编码器</td><td class="num">冻结</td><td class="num">—</td><td>为最大程度保留视频先验</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">训练配置：AdamW、weight decay 10⁻³、grad clip 1.0、每步一个 81 帧 clip（其中 77 帧参与监督）、单张 A100 80 GB。两阶段：288×512 跑 5,000 步（25.8 h）→ 576×1024 跑 250 步（8.1 h），共 <b>34 小时</b>。推理 20 步欧拉采样。</p>
+  </div>
+</section>
+
+<!-- ⑤ Plücker 代理网格 -->
+<section id="pose">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 05 · 相机与姿态控制 ★</div>
+      <h2>Plücker 着色的代理网格：用"颜色对比"把相机和脖子分开</h2>
+      <p>这一节的巧思密度是全篇最高的。核心问题很具体：<b>怎么让一张 RGB 条件图同时编码"相机在哪"和"脖子转了多少"，且两者可分离？</b></p>
+    </div>
+
+    <div class="sub-h"><span class="t">式 7</span>着色公式：Lambertian 明暗 + 光线方向</div>
+    <div class="eq">
+      c(u) = ½ · g(u) + ½ · ½ ( Rᵀ d(u) + 1 )
+      <span class="cmt">g = Lambertian 明暗（主光在相机上方 25°）；d(u) = 像素 u 的世界空间光线方向（Plücker 坐标的方向部分）；R = 覆盖该像素的身体部件的局部坐标系</span>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 216" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="三种坐标系选择对可编码信息的影响">
+        <text x="14" y="16" font-size="11.5" font-weight="700" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">同一个着色公式，坐标系 R 怎么选，决定了能编码什么</text>
+
+        <rect x="14" y="28" width="200" height="86" rx="9" fill="#fdf2f2" stroke="#f5c9c4"/>
+        <text x="114" y="48" font-size="11.5" text-anchor="middle" fill="#c2410c" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">相机坐标系</text>
+        <text x="114" y="68" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">颜色只由像素位置决定</text>
+        <text x="114" y="84" font-size="10.5" text-anchor="middle" fill="#c2410c" font-family="Segoe UI,sans-serif">✕ 不含任何姿态信息</text>
+        <text x="114" y="102" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">换相机、转头，图都不变</text>
+
+        <rect x="228" y="28" width="200" height="86" rx="9" fill="#fdf2f2" stroke="#f5c9c4"/>
+        <text x="328" y="48" font-size="11.5" text-anchor="middle" fill="#c2410c" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">世界坐标系（整体）</text>
+        <text x="328" y="68" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">能编码相机位置</text>
+        <text x="328" y="84" font-size="10.5" text-anchor="middle" fill="#c2410c" font-family="Segoe UI,sans-serif">✕ 不含身体姿态</text>
+        <text x="328" y="102" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">头与躯干共用一个系</text>
+
+        <rect x="442" y="28" width="224" height="86" rx="9" fill="#eef4ff" stroke="#2563eb" stroke-width="1.8"/>
+        <text x="554" y="48" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">各部件局部系（本文）</text>
+        <text x="554" y="68" font-size="10.5" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">头用 R_h，躯干用 R_b</text>
+        <text x="554" y="84" font-size="10.5" text-anchor="middle" fill="#15803d" font-weight="700" font-family="Segoe UI,sans-serif">✓ 两者都可编码且可分离</text>
+        <text x="554" y="102" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">靠头/躯干的颜色差读颈部旋转</text>
+
+        <line x1="340" y1="124" x2="340" y2="140" stroke="#8494a9"/>
+        <rect x="228" y="142" width="438" height="60" rx="9" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="447" y="162" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">判别规则</text>
+        <text x="447" y="180" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">移动相机 → 头部与躯干的颜色<b>一起</b>变</text>
+        <text x="447" y="196" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">转动脖子 → 头部颜色相对躯干<b>单独</b>变</text>
+      </svg>
+      <div class="svg-cap">图：坐标系的选择直接决定"什么信息能被写进 RGB"。本文的答案是<b>按身体部件给各自的局部坐标系</b>。</div>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="method-card hl">
+        <h4><span class="cls">配套</span>骨盆锚定的运动学拟合</h4>
+        <p class="tagline">解决 SAM-3D-Body 逐帧估计的抖动与漂移</p>
+        <p>多视图人脸采集里受试者是<b>坐姿</b>，骨盆静止。于是用<b>一个</b>全局相似变换 W + 每帧 MHR 关节角 ϕ_t 联合求解（Adam，400 次迭代），而不是逐帧独立对齐。</p>
+        <ul class="tight" style="margin-top:8px">
+          <li>骨盆漂移中位数 <b>52–79 mm → 6–12 mm</b></li>
+          <li>肩部游走 <b>11.2 → 0.07 mm</b>，帧间抖动降 <b>14×</b></li>
+          <li>人脸残差仅 3.04 → 3.06 mm（最多 +0.8 mm）——<b>真实头部运动仍被跟踪</b>，被去掉的只是坐姿受试者根本没做过的运动</li>
+        </ul>
+        <div class="pros">验证用 NeRSemble EXP-1（头部旋转 37–56° 的大动作序列），专门用来暴露过度约束。</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls">为什么不用 2D 骨架</span>Wan-Animate 原生姿态信号的局限</h4>
+        <p class="tagline">ViTPose 2D 骨架无法迁移到新视角</p>
+        <p>Wan-Animate 原本靠 ViTPose 从 2D 预测骨架控姿态，这在<b> novel-view synthesis</b> 下失效——2D 检测绑死在输入视角上。本文换成 SAM-3D-Body 的 3D 骨架，但<b>保留 Wan-Animate 的骨架条件格式</b>以保 prior。</p>
+        <p style="margin-top:8px">消融证据（Table 5）：只给骨架、去掉代理网格 → PSNR 从 22.43 掉到 <b>18.34</b>（−4.1 dB），AKD 0.055 → 0.072；但 <b>Expr 几乎不变</b>（0.912 vs 0.920）。</p>
+        <div class="cons">说明代理网格贡献的是<b>相机与姿态精度</b>，不是表情保真。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ 相机三元组 -->
+<section id="triplet" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 06 · 训练策略 ★</div>
+      <h2>相机三元组：让"视角不变性"自己长出来</h2>
+      <p>这是我最欣赏的一节——它用一个<b>数据组织方式</b>解决了一个看起来需要专门模块的问题，而且论文诚实报告了"解缠模块其实没那么关键"。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:10px">训练样本的构造</h4>
+        <p style="font-size:13.8px;color:var(--ink2)">每个训练样本是一个<b>相机三元组 (π_ref, π_drv, π_tar)</b>，取自同一多视图片段的<b>三台不同相机</b>：</p>
+        <ul class="tight" style="margin-top:10px">
+          <li><b>参考图 I_ref</b> 来自 π_ref（给身份）</li>
+          <li><b>驱动片段 I_drv</b> 来自 π_drv（给表情）</li>
+          <li><b>目标片段 I_tar</b> 来自 π_tar（监督重建）</li>
+        </ul>
+        <p style="font-size:13.8px;color:var(--ink2);margin-top:10px">关键点：因为 π_drv ≠ π_tar，<b>表情码里携带的视角信息是"主动误导"的</b>——训练要想把损失降下去，就只能把这个信息压掉。</p>
+        <div class="callout ok" style="margin-top:14px">
+          这是一个<b>用监督结构逼出不变性</b>的设计，不是靠损失函数显式约束。它不需要额外标注，只需要多视图数据本来就有多台相机。
+        </div>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">涌现的视角不变性（附录 Figure 14）</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c6"></canvas></div>
+        <p class="chart-note">两组实验<b>只差一件事</b>：驱动表情码从哪台相机读。起点同为 0.244；cross-view 升到 0.792，self-driven 卡在 0.486，最终差 <b>0.288</b>。</p>
+      </div>
+    </div>
+
+    <div class="callout warn" style="margin-top:18px">
+      <b>本站判断：这篇论文最诚实的一处。</b>论文把"解缠"列为三大支柱之一，但 Table 5 的消融显示：
+      <b>去掉解缠</b>但保留相机三元组（no disent.†）PSNR 22.06，几乎追平 full 的 22.43；
+      而<b>把三元组换成单视角</b>（self-driven†）掉到 20.69。
+      换句话说，<b>三元组监督是必要条件，解缠模块是加分项</b>。论文自己在正文也写了 "Remarkably, triplet supervision alone enforces view-invariant expression codes" —— 但标题和摘要的叙事权重并不匹配这个结论。
+    </div>
+
+    <div class="sub-h"><span class="t">式 5</span>训练目标：rectified flow matching，<b>没有辅助损失</b></div>
+    <div class="eq">
+      x_σ = (1 − σ) x₀ + σ ε        <span class="cmt">x₀ = V_enc(I_tar)，ε 为高斯噪声</span>
+      L = 𝔼 ‖ w(σ) · ( v_θ(x_σ, σ ; z_ex, M_πtar, S_πtar, x_ref) − v ) ‖²        <span class="cmt">v = ε − x₀，w(σ) 为钟形权重、峰值在 σ=0.5</span>
+    </div>
+    <p style="font-size:13.8px;color:var(--ink2);margin-top:8px">
+      参考图 latent <code>x_ref</code> 拼在带噪 latent 上但<b>不计入损失</b>。推理时从 σ=1 积分到 0，再用 VAE 解码。
+      训练数据：4,696 个 81 帧片段 / 640 个身份（AVA-256 1,846 + NeRSemble 2,850），主要是表情与情绪序列。
+    </p>
+  </div>
+</section>
+
+<!-- ⑦ 主结果 -->
+<section id="exp">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 07 · 主结果</div>
+      <h2>三个数据集 + 一个多视图一致性探针</h2>
+      <p>评测协议刻意设计得<b>对视角最不友好</b>：参考图、驱动视频、目标视频分别来自不同相机，与训练时的三元组同构。所有像素指标在<b>脸部裁剪</b>上计算。</p>
+    </div>
+
+    <h3 class="block-title c-blue">Table 2：BecomingLit 自驱动（n=25）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th>类型</th><th class="num">PSNR↑</th><th class="num">LPIPS↓</th><th class="num">JOD↑</th><th class="num">ID↑</th><th class="num">Expr↑</th><th class="num">AKD↓</th></tr></thead>
+        <tbody>
+          <tr><td>LAM</td><td>3DGS avatar</td><td class="num">18.95</td><td class="num">0.408</td><td class="num">2.00</td><td class="num">0.295</td><td class="num">0.670</td><td class="num">0.103</td></tr>
+          <tr><td>FlexAvatar</td><td>3DGS avatar</td><td class="num">20.55</td><td class="num">0.327</td><td class="num">2.28</td><td class="num">0.624</td><td class="num">0.890</td><td class="num">0.086</td></tr>
+          <tr><td>UIKA</td><td>3DGS avatar</td><td class="num">20.37</td><td class="num">0.327</td><td class="num">2.34</td><td class="num">0.532</td><td class="num">0.865</td><td class="num">0.076</td></tr>
+          <tr><td>MMDM</td><td>扩散（CAP4D 组件）</td><td class="num">20.85</td><td class="num">0.283</td><td class="num">1.56</td><td class="num">0.555</td><td class="num">0.853</td><td class="num">0.058</td></tr>
+          <tr><td>MVP4D</td><td>视频扩散</td><td class="num">20.16</td><td class="num">0.282</td><td class="num">1.85</td><td class="num">0.490</td><td class="num">0.831</td><td class="num">0.063</td></tr>
+          <tr><td>CAP4D</td><td>蒸馏进 3DGS</td><td class="num">20.73</td><td class="num">0.322</td><td class="num">2.40</td><td class="num">0.562</td><td class="num">0.852</td><td class="num">0.059</td></tr>
+          <tr class="ours"><td><b>Ours（VDA）</b></td><td>VDM 即 avatar</td><td class="num"><b>22.43</b></td><td class="num"><b>0.202</b></td><td class="num"><b>3.99</b></td><td class="num"><b>0.699</b></td><td class="num"><b>0.920</b></td><td class="num"><b>0.055</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">摘要里的两个数字对得上：LPIPS 0.283 → 0.202 = <b>↓29%</b>（对比最强基线 MMDM）；JOD 2.40 → 3.99 = <b>↑66%</b>（对比最强基线 CAP4D）。注意 <b>JOD 上 MMDM 只有 1.56、MVP4D 1.85，明显低于 3DGS 路线的 2.28–2.40</b>——扩散方法在单帧指标上领先，在<b>视频级感知指标</b>上反而不如 3DGS，直到本文才反超。</p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">自驱动：像素质量 vs 感知质量</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c3"></canvas></div>
+        <p class="chart-note">柱：PSNR（左轴）；线：LPIPS×1000（右轴）。越低越好的是线，越高越好的是柱。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">自驱动：JOD 与身份保持</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c4"></canvas></div>
+        <p class="chart-note">柱：JOD（左轴，视频级感知质量）；线：ID 相似度 ×1000（右轴）。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">Table 3：VFHQ-test（n=44，in-the-wild 单视图，考验泛化）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">PSNR↑</th><th class="num">LPIPS↓</th><th class="num">ID↑</th><th class="num">Expr↑</th><th class="num">JOD↑</th><th class="num">AKD↓</th></tr></thead>
+        <tbody>
+          <tr><td>LAM</td><td class="num">20.4</td><td class="num">0.050</td><td class="num">0.605</td><td class="num">0.791</td><td class="num">3.0</td><td class="num">0.037</td></tr>
+          <tr><td>FlexAvatar</td><td class="num">22.2</td><td class="num">0.043</td><td class="num">0.804</td><td class="num">0.835</td><td class="num">3.3</td><td class="num">0.038</td></tr>
+          <tr><td>UIKA</td><td class="num">19.8</td><td class="num">0.053</td><td class="num">0.736</td><td class="num">0.842</td><td class="num">3.0</td><td class="num">0.043</td></tr>
+          <tr><td>MMDM</td><td class="num">22.2</td><td class="num">0.040</td><td class="num">0.793</td><td class="num">0.834</td><td class="num">3.3</td><td class="num">0.034</td></tr>
+          <tr><td>MVP4D</td><td class="num">22.2</td><td class="num">0.040</td><td class="num">0.749</td><td class="num">0.824</td><td class="num">3.4</td><td class="num">0.031</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>24.9</b></td><td class="num"><b>0.024</b></td><td class="num"><b>0.852</b></td><td class="num"><b>0.931</b></td><td class="num"><b>5.0</b></td><td class="num"><b>0.028</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">这个数据集<b>不在任何方法的训练分布内</b>（单视图、野外）。JOD 从 3.4 跳到 5.0，是本文跨数据集最大的一次领先——但要注意这里的像素指标是用<b>检测到的关键点对齐</b>（无 GT 3DMM 可对齐），与多视图集的口径不完全可比。</p>
+
+    <h3 class="block-title c-green">Table 4：3DGS 多视图一致性探针（n=13，静态 + 冻结表情）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">PSNR↑</th><th class="num">LPIPS↓</th><th class="num">ID↑</th><th class="num">Expr↑</th></tr></thead>
+        <tbody>
+          <tr><td>UIKA</td><td class="num">21.96</td><td class="num">0.244</td><td class="num">0.697</td><td class="num">0.868</td></tr>
+          <tr><td>FlexAvatar</td><td class="num">23.28</td><td class="num">0.203</td><td class="num">0.753</td><td class="num">0.941</td></tr>
+          <tr><td>MMDM</td><td class="num">23.28</td><td class="num">0.242</td><td class="num">0.722</td><td class="num">0.871</td></tr>
+          <tr><td>MVP4D</td><td class="num">21.99</td><td class="num">0.275</td><td class="num">0.687</td><td class="num">0.889</td></tr>
+          <tr><td>FaceCam</td><td class="num">18.86</td><td class="num">0.292</td><td class="num">0.731</td><td class="num">0.922</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>23.69</b></td><td class="num"><b>0.192</b></td><td class="num"><b>0.869</b></td><td class="num"><b>0.968</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">做法：让各方法沿一条闭合椭圆轨迹生成（方位 ±60°、仰角 +5° 到 −30°），拟合成<b>静态</b> 3DGS（20k 迭代、同一设置），再在 <b>16 台真实采集相机</b>上渲染并与实拍对比——这些相机<b>不在生成轨迹上</b>（距最近轨迹位姿 0.2–11.6°，中位 2.3°）。视图不一致的生成会把重建糊掉，所以这个分数真实反映多视图一致性。</p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">3DGS 探针：几何一致性</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c5"></canvas></div>
+        <p class="chart-note">柱：PSNR（左轴）；线：LPIPS×1000（右轴）。</p>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+        <h4 style="font-size:14.5px;margin-bottom:10px">为什么这个探针单独存在？</h4>
+        <p style="font-size:13.8px;color:var(--ink2)">因为主表的像素指标<b>都先做了 3DMM 对齐</b>，位姿误差被吸收掉了，无法反映"多视图是否自洽"。论文于是另设一个不需要对齐的探针。这是评测设计上的加分项。</p>
+        <p style="font-size:13.8px;color:var(--ink2);margin-top:10px">但本站要提醒：<b>这里 VDA 对 FlexAvatar 的优势（PSNR +0.41、LPIPS −0.011）远小于 Table 2 自驱动上的差距（+1.88、−0.125）。</b>静态几何一致性上，VDA 只是略胜。</p>
+        <div class="summary-box" style="margin-top:14px"><b>读法建议：</b>VDA 的核心优势在<b>动态与表情</b>（以及阴影/反射/头发这些 prior 带来的效果），不是静态几何精度。别把它当"更好的 3DGS 生成器"用。</div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-purple">交叉驱动（n=13，无 GT 目标，故不用像素指标）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">ID↑（对照参考身份）</th><th class="num">Expr↑（对照驱动者）</th><th class="num">AKD↓（对照驱动者）</th></tr></thead>
+        <tbody>
+          <tr><td>LAM</td><td class="num">0.314</td><td class="num">0.623</td><td class="num">0.091</td></tr>
+          <tr><td>FlexAvatar</td><td class="num">0.570</td><td class="num">0.700</td><td class="num">0.130</td></tr>
+          <tr><td>UIKA</td><td class="num">0.493</td><td class="num">0.775</td><td class="num">0.084</td></tr>
+          <tr><td>MMDM</td><td class="num">0.522</td><td class="num">0.780</td><td class="num">0.069</td></tr>
+          <tr><td>MVP4D</td><td class="num">0.480</td><td class="num">0.755</td><td class="num">0.074</td></tr>
+          <tr><td>CAP4D</td><td class="num">0.529</td><td class="num">0.770</td><td class="num">0.070</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>0.623</b></td><td class="num"><b>0.808</b></td><td class="num"><b>0.066</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">交叉驱动 = 用<b>另一个人</b>的表情驱动参考身份。ID 对照参考身份算，Expr 与 AKD 对照驱动者自己在 π_tar 下的视频算（驱动者表情和位姿都对，只是身份不对）。</p>
+  </div>
+</section>
+
+<!-- ⑧ 消融 -->
+<section id="abl" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 08 · 消融</div>
+      <h2>Table 5：每一个设计各值多少 dB</h2>
+      <p>全部在 BecomingLit v3（n=25）自驱动上做。前两行是<b>不微调</b>的冻结基线，用来定位"微调到底贡献了多少"。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>变体</th><th class="num">PSNR↑</th><th class="num">LPIPS↓</th><th class="num">JOD↑</th><th class="num">ID↑</th><th class="num">Expr↑</th><th class="num">AKD↓</th><th class="num">APD↓</th></tr></thead>
+        <tbody>
+          <tr class="dim"><td>Wan-A. 冻结（原生码 + 2D 骨架）</td><td class="num">16.87</td><td class="num">0.2582</td><td class="num">3.897</td><td class="num">0.5825</td><td class="num">0.8279</td><td class="num">0.0813</td><td class="num">6.06</td></tr>
+          <tr class="dim"><td>Wan-A. 冻结 + 解缠（仍不微调）</td><td class="num">17.03</td><td class="num">0.2584</td><td class="num">3.934</td><td class="num">0.6044</td><td class="num">0.8386</td><td class="num">0.0791</td><td class="num">5.72</td></tr>
+          <tr><td>Ours，改用 Wan-A. 原生表情码</td><td class="num">21.52</td><td class="num">0.2098</td><td class="num">4.438</td><td class="num">0.7012</td><td class="num">0.9115</td><td class="num">0.0532</td><td class="num">4.06</td></tr>
+          <tr><td>+ 冻结 face-fuser</td><td class="num">19.67</td><td class="num">0.2806</td><td class="num">4.052</td><td class="num">0.6534</td><td class="num">0.8175</td><td class="num">0.0808</td><td class="num">6.03</td></tr>
+          <tr><td>Ours，去掉解缠 †</td><td class="num">22.06</td><td class="num">0.2048</td><td class="num">4.608</td><td class="num">0.6927</td><td class="num">0.9099</td><td class="num">0.0550</td><td class="num">3.94</td></tr>
+          <tr><td>单视角自驱动 †</td><td class="num">20.69</td><td class="num">0.2207</td><td class="num">4.613</td><td class="num">0.6866</td><td class="num">0.8744</td><td class="num">0.0608</td><td class="num">4.51</td></tr>
+          <tr><td>Ours，去掉表情码（置零）</td><td class="num">21.61</td><td class="num">0.2052</td><td class="num">4.609</td><td class="num">0.6896</td><td class="num">0.8796</td><td class="num">0.0561</td><td class="num">3.96</td></tr>
+          <tr><td>Ours，去掉代理网格</td><td class="num">18.34</td><td class="num">0.2503</td><td class="num">4.196</td><td class="num">0.6840</td><td class="num">0.9124</td><td class="num">0.0722</td><td class="num">4.93</td></tr>
+          <tr><td>Ours，随机语料（非策展）</td><td class="num">21.71</td><td class="num">0.2487</td><td class="num">4.462</td><td class="num">0.6881</td><td class="num">0.8954</td><td class="num">0.0661</td><td class="num">4.75</td></tr>
+          <tr class="ours"><td><b>Ours（完整）</b></td><td class="num"><b>22.43</b></td><td class="num"><b>0.2021</b></td><td class="num">4.638</td><td class="num"><b>0.6989</b></td><td class="num"><b>0.9201</b></td><td class="num"><b>0.0549</b></td><td class="num">3.97</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">† 标记的两行只差"表情码从哪台相机读"，是定位相机三元组作用的对照实验。APD = 生成帧与 GT 帧的头部姿态平均角度误差（度），越小越好；AKD 为关键点距离（按瞳距归一化）。</p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">消融全景：PSNR 与姿态误差</h4>
+        <div class="chart-box" style="height:320px"><canvas id="c7"></canvas></div>
+        <p class="chart-note">柱：PSNR（左轴）；线：AKD×1000（右轴，越低越好）。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:10px">四条最值得记住的读数</h4>
+        <ul class="tight">
+          <li><b>微调不可省</b>：冻结 Wan-Animate 只有 16.87 dB，换成视角中性码也只到 17.03——<b>+0.16 dB</b>。解缠救不了不微调的模型。</li>
+          <li><b>face-fuser 必须微调</b>：冻结它 → 22.43 掉到 19.67（−2.76 dB），是所有单项里最贵的一处。</li>
+          <li><b>代理网格值 4.1 dB</b>，但 AKD 0.055→0.072、Expr 几乎不变 → 它贡献的是<b>相机/姿态精度</b>而非表情。</li>
+          <li><b>数据策展有价</b>：随机语料 PSNR 21.71 / LPIPS 0.2487，全面退化；LPIPS 退化幅度（+0.047）远大于 PSNR（−0.72）。</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="block-title c-orange">Table 6：与并发工作 FactorPortrait 的对比</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">LPIPS↓</th><th class="num">JOD↑</th><th class="num">AKD↓</th><th class="num">APD↓</th><th class="num">ID↑</th><th class="num">Expr↑</th></tr></thead>
+        <tbody>
+          <tr><td>FactorPortrait</td><td class="num">24.71</td><td class="num">0.712</td><td class="num">0.0208</td><td class="num">7.02</td><td class="num">0.0329</td><td class="num"><b>2.37</b></td><td class="num">0.747</td><td class="num">0.946</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>24.75</b></td><td class="num"><b>0.717</b></td><td class="num"><b>0.0190</b></td><td class="num"><b>7.14</b></td><td class="num"><b>0.0322</b></td><td class="num">2.94</td><td class="num"><b>0.803</b></td><td class="num"><b>0.969</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">在对方发布的示例上跑，设置<b>对 FactorPortrait 有利</b>（片段由对方挑选、来自其采集系统；我们只能单目估计相机，参考图还是从压缩网页视频里抠的）。八项里我们赢七项，<b>唯独 APD（头部姿态角误差）2.94 vs 2.37 落后</b>，论文未讨论。</p>
+  </div>
+</section>
+
+<!-- ⑨ 局限 -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 09 · 局限与后续</div>
+      <h2>论文自述的 5 条，与本站补充的 5 条</h2>
+      <p>前 5 条出自第 5 节 Limitations and Future Work（含流式蒸馏原型），后 5 条是本站判断，<b>不是论文原话</b>。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl">
+        <span class="n">论文原文 01</span>
+        <h4>推理按片段付费，长序列会时间漂移</h4>
+        <p>3DGS avatar 一旦建好可实时渲染；VDA <b>每一段都要跑一次 VDM 推理</b>——77 帧 576×1024 在单 A100 上约 <b>12 分钟</b>。</p>
+      </div>
+      <div class="concl">
+        <span class="n">论文原文 02</span>
+        <h4>光照被烤进参考图</h4>
+        <p>参考图的光照条件会被继承到生成结果中，<b>没有显式的重光照控制</b>。</p>
+      </div>
+      <div class="concl">
+        <span class="n">论文原文 03</span>
+        <h4>表情空间是固定的，没有端到端训练</h4>
+        <p>用的是现成的 X-NeMo 编码器 + 解缠，<b>没有把表情空间本身一起学</b>。</p>
+      </div>
+      <div class="concl">
+        <span class="n">论文原文 04</span>
+        <h4>recipe 锚定在 Wan-Animate-14B</h4>
+        <p>论文"期望"能迁移到其他 backbone，但<b>没有验证</b>。考虑到 861.5 M 可训练参数与特定的 face-fuser 结构，迁移成本未必低。</p>
+      </div>
+      <div class="concl c-green">
+        <span class="n">论文原文 05 · 已做的补救</span>
+        <h4>Self Forcing 蒸馏原型：4 步、4.8 fps</h4>
+        <p>蒸馏成因果四步学生（rank-128 LoRA，块因果注意力），288×512 下 <b>4.8 fps</b>、可稳定生成 1000+ 帧，41 秒视频约 4 分钟。代价：PSNR-F 22.43 → 21.81，JOD-F 3.99 → 3.57。<b>仍低于实时</b>，且训练要 60 A100 GPU 小时。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">本站 06 · 叙事与消融的落差</span>
+        <h4>解缠被列为支柱，消融里却是"锦上添花"</h4>
+        <p>见第 ⑥ 节。去掉解缠只掉 0.37 dB，把三元组换成单视角掉 1.74 dB。<b>论文摘要把 disentanglement 放在贡献 (b)，消融显示真正的必要条件是相机三元组监督。</b>引用时建议这么表述。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">本站 07 · 指标口径</span>
+        <h4>像素指标先做 3DMM 对齐，会掩盖位姿误差</h4>
+        <p>论文附录明说这是为了消除歧义，合理；但读者应知道 <b>Table 2 的差距里已经扣掉了一部分位姿误差</b>。真正的一致性数据在 Table 4，而那里优势小得多。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">本站 08 · 基准的适用边界</span>
+        <h4>DISTRACT 的 MLP probe 是 transductive 的</h4>
+        <p>probe 在 NeRSemble embedding 上拟合，而这些 embedding <b>包含 benchmark 自身的帧</b>。所以 98% 证明的是"latent 里有多少视角不变信息"，<b>不是"这个 probe 能用"</b>。论文自己点明了这一点，值得点赞，但也限制了结论的外推。</p>
+      </div>
+      <div class="concl c-indigo">
+        <span class="n">本站 09 · 部署视角</span>
+        <h4>成本结构与其他路线是<b>互补而非替代</b></h4>
+        <p>训练 34 h/单卡很便宜，但推理 12 min/77 帧。需要<b>实时交互</b>的场景仍应选 3DGS avatar（FlexAvatar/UIKA）；需要<b>最高画质 + 复杂光照/头发/反射</b>的离线内容生产才值得付这个推理成本。论文的蒸馏原型是朝实时走的信号，但离实时还有距离。</p>
+      </div>
+      <div class="concl c-blue">
+        <span class="n">本站 10 · 值得记一笔的透明度</span>
+        <h4>伦理声明与 AI 使用声明都写得很实</h4>
+        <p>论文明确：单图生成可控视频的能力<b>可直接用于冒充与未经同意的合成媒体</b>，且只在取得知情同意的数据集上训练（NeRSemble / AVA-256 / BecomingLit / Multiface + 公开 VFHQ）。AI 使用声明也如实披露用生成式 AI 写代码、草拟文字、生成合成参考肖像（<b>仅用于定性示例，不参与训练与任何定量评测</b>），并声明每个数字都对照源文件核对过。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">Table 9：全模型 vs 蒸馏学生（BecomingLit 自驱动，n=25，576×1024）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">步数</th><th class="num">每片段网络调用</th><th class="num">去噪时长</th><th class="num">PSNR-F↑</th><th class="num">LPIPS-F↓</th><th class="num">JOD-F↑</th><th class="num">ID↑</th><th class="num">Expr↑</th><th class="num">AKD↓</th></tr></thead>
+        <tbody>
+          <tr><td>Ours（全模型）</td><td class="num">20</td><td class="num">40</td><td class="num">21.2 min</td><td class="num"><b>22.43</b></td><td class="num"><b>0.202</b></td><td class="num"><b>3.99</b></td><td class="num">0.699</td><td class="num"><b>0.920</b></td><td class="num">0.055</td></tr>
+          <tr class="ours"><td>蒸馏（4 步学生）</td><td class="num">4</td><td class="num">4</td><td class="num"><b>1.9 min</b></td><td class="num">21.81</td><td class="num">0.217</td><td class="num">3.57</td><td class="num"><b>0.714</b></td><td class="num">0.917</td><td class="num"><b>0.051</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">去噪快约 <b>11×</b>，身份/表情/关键点精度基本持平（ID 甚至略高），画质有中等损失（JOD-F 3.99 → 3.57）。在 11 个留出对象的 41 秒视频上，身份与外观稳定到最后帧；而分块重叠生成会随时间退化。</p>
+
+    <div class="callout" style="margin-top:20px">
+      <b>一句话总结。</b>VDA 的核心赌注是：<b>与其把互联网级视频先验蒸馏进 3D 资产（必然损耗），不如直接把 VDM 变成 avatar，用条件注入换可控性。</b>
+      从 Table 2 / Table 3 看，这个赌注在<b>画质与表情保真</b>上赢了；从 Table 4 看，它在<b>静态多视图几何一致性</b>上只是略胜；从成本看，它把开销从"一次性构建"转移到了"每次生成"。
+      而 DISTRACT 与相机三元组这两件事，价值超出这篇论文本身——<b>任何想把 learned 表情/动作潜空间用于多视图任务的工作，都会遇到同一个视角偏差</b>。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>Video Diffusion Avatars: Taming Video Diffusion Models into Controllable 3D Avatars</b> ·
+      Simon Giebenhain, Tobias Kirschstein, Liam Schoneveld, Davide Davoli, Zhe Chen, Matthias Nießner ·
+      Technical University of Munich / Woven by Toyota / Toyota Motor Europe ·
+      arXiv:2610.23772v1（2026-10-16）
+    </p>
+    <p style="margin-top:8px">
+      本页所有数值均取自该论文正文与附录（Table 1–10、Figure 14、Section 5 / E / F / I / J / K、Limitations），未做外推。
+      标注「本站」「本站判断」的段落为本站读完全文后的分析，<b>不是论文原话</b>。
+      部分 PDF 抽取的数字（如蒸馏学生的网络调用次数）已按上下文核对后修正。
+    </p>
+    <p style="margin-top:8px">
+      <a href="https://arxiv.org/abs/2610.23772v1" target="_blank">arXiv:2610.23772v1</a> ·
+      <a href="https://simongiebenhain.github.io/video-diffusion-avatars/" target="_blank">项目页</a> ·
+      <a href="https://github.com/SimonGiebenhain/video-diffusion-avatars" target="_blank">代码（作者声明将开源）</a> ·
+      <a href="../3d-generation-2026/index.html">3D 生成前沿合集 →</a> ·
+      <a href="../index.html">返回首页</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  var C = (typeof Chart === 'undefined') ? null : Chart;
+  var FF = '"Segoe UI","PingFang SC",system-ui,sans-serif';
+  var GRID = '#eef2f8';
+
+  function mkAxis(extra){
+    var a = {ticks:{font:{size:11,family:FF}}, grid:{color:GRID}};
+    if (extra) { for (var k in extra) { a[k] = extra[k]; } }
+    if (extra && extra.position === 'right' && !extra.grid) { a.grid = {display:false}; }
+    return a;
+  }
+
+  function opts(yLeft, yRight){
+    var s = {
+      x:{ticks:{font:{size:10.5,family:FF}, autoSkip:false, maxRotation:34, minRotation:0}, grid:{display:false}},
+      y:mkAxis(yLeft)
+    };
+    if (yRight) { s.y1 = mkAxis(yRight); }
+    return {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{labels:{font:{size:11,family:FF}, boxWidth:12, boxHeight:12, usePointStyle:true}},
+        tooltip:{titleFont:{size:12.5,family:FF}, bodyFont:{size:12,family:FF}}
+      },
+      scales:s
+    };
+  }
+
+  function build(id, type, data, yLeft, yRight){
+    var el = document.getElementById(id);
+    if (!el) return;
+    new C(el, {type:type, data:data, options:opts(yLeft, yRight)});
+  }
+
+  if (C) {
+    // c1: DISTRACT 视角不变性
+    build('c1','bar',{
+      labels:['DECA (3DMM)','PD-FGC','Wan-Animate','X-NeMo'],
+      datasets:[
+        {label:'裸码 Rank-1 ↑', data:[61,8,21,18], backgroundColor:'#c7d7f7'},
+        {label:'+ 2 层 MLP probe ↑', data:[85,90,94,98], backgroundColor:'#2563eb'}
+      ]
+    }, {min:0, max:100});
+
+    // c2: DISTRACT 身份不变性
+    build('c2','bar',{
+      labels:['DECA (3DMM)','PD-FGC','Wan-Animate','X-NeMo'],
+      datasets:[
+        {label:'裸码 Rank-1 ↑', data:[34,7,14,14], backgroundColor:'#c7d7f7'},
+        {label:'+ 2 层 MLP probe ↑', data:[32,46,66,76], backgroundColor:'#6366f1'}
+      ]
+    }, {min:0, max:100});
+
+    // c3: Table 2 PSNR + LPIPS
+    build('c3','bar',{
+      labels:['LAM','FlexAvatar','UIKA','MMDM','MVP4D','CAP4D','Ours'],
+      datasets:[
+        {label:'PSNR ↑', data:[18.95,20.55,20.37,20.85,20.16,20.73,22.43],
+         backgroundColor:['#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#2563eb']},
+        {type:'line', label:'LPIPS ×1000 ↓', data:[408,327,327,283,282,322,202],
+         borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.3, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:18, max:23}, {position:'right', min:180, max:420});
+
+    // c4: Table 2 JOD + ID
+    build('c4','bar',{
+      labels:['LAM','FlexAvatar','UIKA','MMDM','MVP4D','CAP4D','Ours'],
+      datasets:[
+        {label:'JOD ↑', data:[2.00,2.28,2.34,1.56,1.85,2.40,3.99],
+         backgroundColor:['#dbe4f5','#dbe4f5','#dbe4f5','#f3c9a4','#f3c9a4','#dbe4f5','#2563eb']},
+        {type:'line', label:'ID ×1000 ↑', data:[295,624,532,555,490,562,699],
+         borderColor:'#0d9488', backgroundColor:'#0d9488', tension:.3, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:1.2, max:4.3}, {position:'right', min:260, max:720});
+
+    // c5: Table 4 3DGS 探针
+    build('c5','bar',{
+      labels:['UIKA','FlexAvatar','MMDM','MVP4D','FaceCam','Ours'],
+      datasets:[
+        {label:'PSNR ↑', data:[21.96,23.28,23.28,21.99,18.86,23.69],
+         backgroundColor:['#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#2563eb']},
+        {type:'line', label:'LPIPS ×1000 ↓', data:[244,203,242,275,292,192],
+         borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.3, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:18, max:24.5}, {position:'right', min:180, max:300});
+
+    // c6: 涌现的视角不变性
+    build('c6','bar',{
+      labels:['训练起点','单视角自驱动','相机三元组（本文）'],
+      datasets:[
+        {label:'DISTRACT 视角不变性 Rank-1 ↑', data:[0.244,0.486,0.792],
+         backgroundColor:['#dbe4f5','#f3c9a4','#2563eb']}
+      ]
+    }, {min:0.2, max:0.85});
+
+    // c7: 消融
+    build('c7','bar',{
+      labels:['Wan-A. 冻结','+解缠(仍冻结)','改 Wan-A. 码','冻结 fuser','去解缠†','单视角†','去表情码','去代理网格','随机语料','Ours(完整)'],
+      datasets:[
+        {label:'PSNR ↑', data:[16.87,17.03,21.52,19.67,22.06,20.69,21.61,18.34,21.71,22.43],
+         backgroundColor:['#e3e9f2','#e3e9f2','#c7d7f7','#c7d7f7','#c7d7f7','#f3c9a4','#c7d7f7','#c7d7f7','#c7d7f7','#2563eb']},
+        {type:'line', label:'AKD ×1000 ↓', data:[81.3,79.1,53.2,80.8,55.0,60.8,56.1,72.2,66.1,54.9],
+         borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.25, pointRadius:3.5, yAxisID:'y1'}
+      ]
+    }, {min:16, max:23}, {position:'right', min:50, max:85});
+  } else {
+    document.querySelectorAll('.chart-box').forEach(function(box){
+      var tip = document.createElement('p');
+      tip.className = 'chart-note';
+      tip.textContent = '图表需要联网加载 Chart.js，当前离线。所有数据见上方表格。';
+      box.appendChild(tip);
+    });
+  }
+})();
+</script>
+</body>
+</html>

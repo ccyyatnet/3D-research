@@ -262,6 +262,18 @@
         <div class="p-go">进入解读 →</div>
       </a>
 
+      <a class="p-card" href="./video-diffusion-avatars/index.html">
+        <div class="p-badges"><span class="p-badge b-survey">🔬 深度解读</span><span class="p-badge b-date">2026-11-03 上线</span></div>
+        <h3>Video Diffusion Avatars：avatar 不必是一个 3D 资产</h3>
+        <p class="p-desc">TUM × Woven by Toyota · arXiv:2610.23772 —— 主流做法要么用 3DMM 驱动 3DGS，要么把扩散输出蒸馏进 3DGS（CAP4D / MVP4D），两者都在<b>用照片级先验换显式资产</b>。VDA 反过来：<b>VDM 本身就是 avatar</b>，全程不建 3D 资产，阴影、反射、折射、头发动力学直接继承自视频先验。最值钱的是两个发现：learned 表情空间带严重<b>视角偏差</b>（X-NeMo 视角不变性 Rank-1 仅 18%，而 DECA 有 61%），以及<b>相机三元组监督能自己逼出视角不变性</b>（0.244 → 0.792）。</p>
+        <div class="p-meta">
+          <div><b>−29%</b>BecomingLit 脸部 LPIPS</div>
+          <div><b>+66%</b>感知质量 JOD</div>
+          <div><b>34 h</b>单 A100 训练（公开数据）</div>
+        </div>
+        <div class="p-go">进入解读 →</div>
+      </a>
+
       <div class="p-card soon">
         <div class="big">🚧</div>
         <div>更多论文解读筹备中<br>敬请期待</div>
