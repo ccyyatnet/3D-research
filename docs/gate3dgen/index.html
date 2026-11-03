@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gate3DGen 深度解读 · 给图生 3D 装一道「该不该修」的门 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#eafaf3 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#cfeedd;color:#15803d;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:31px;line-height:1.32;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--teal)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:940px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--teal);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  section.alt{background:#fbfcfe;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--teal);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:340px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e6f6f0;color:var(--teal);flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#a8ddc8;background:linear-gradient(180deg,#f2fbf7,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#eef8f4;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f6fbf9}
+  tr.ours td{background:#e8f7f0;font-weight:600}
+  tr.ours:hover td{background:#daF0e6}
+  tr.dim td{color:var(--ink3)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#eefaf4,#f0f8ff);border:1px:#c9e9d6;border:1px solid #c9e9d6;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .summary-box{background:#f4fbf8;border:1px solid #d5ece2;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#d7f0e5;color:#0f766e}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--teal);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl.c-indigo{border-left-color:var(--indigo)} .concl.c-indigo .n{color:var(--indigo)}
+  .concl.c-blue{border-left-color:var(--blue)} .concl.c-blue .n{color:var(--blue)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--teal)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#cfeedd;color:#15803d;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .cmp div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .cmp .who{font-size:12px;font-weight:700;color:var(--ink3)}
+  .cmp .act{font-size:13.5px;font-weight:700;margin-top:4px}
+  .cmp .d{font-size:12.5px;color:var(--ink2);margin-top:4px}
+  .cmp div.hl{border-color:#a8ddc8;background:linear-gradient(180deg,#f2fbf7,#fff)}
+  .quote{background:#f8fafc;border-left:3px solid var(--teal);border-radius:8px;padding:10px 16px;margin:10px 0;font-size:13.5px;color:var(--ink2)}
+  .quote .src{display:block;font-size:12px;color:var(--ink3);margin-top:4px}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#problem">② 问题</a>
+      <a href="#data">③ 数据引擎</a>
+      <a href="#router" style="font-weight:700;color:#0f766e">④ 路由器 ★</a>
+      <a href="#purifier" style="font-weight:700;color:#0f766e">⑤ 单步净化器 ★</a>
+      <a href="#res2d">⑥ 2D 结果</a>
+      <a href="#res3d" style="font-weight:700;color:#0f766e">⑦ 下游 3D ★</a>
+      <a href="#wild">⑧ 真实照片</a>
+      <a href="#limits">⑨ 局限</a>
+      <a href="../3d-generation-2026/index.html" style="font-weight:700;color:#0d9488">前沿合集 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-11-03 · arXiv:2610.31649 · 清华 × 华为 × 华科</span>
+    <h1>「看起来更好」不等于「3D 更好」<br><em>Gate3DGen</em>：给图生 3D 装一道"该不该修"的门</h1>
+    <p class="sub">
+      单图 3D 生成在策展基准上已经很能打，但真实照片（光照不均、模糊、前景遮挡）一进去就崩。
+      最自然的想法是"先用通用图像编辑修一修"，而这篇论文用数据把这个想法<b>证伪了</b>：
+      <b>7 个主流指令编辑器全部降低 PSNR 与 SSIM</b>，梯度 MAE 提高 17.8%–125.9%；下到 3D，
+      <b>6 个能降低网格距离，但 7 个全部把两个 F1 打到比"不修"还低</b>。
+      原因很直白：通用编辑为了"好看"会重画物体，而 3D 生成器恰恰是靠那些被改掉的高频明暗与轮廓线索推断形状的。
+      Gate3DGen 的做法是：<b>不重训 3D 生成器，只在它前面加一道门</b>——
+      一个退化感知路由器决定"这张要不要修"，一个单步净化器在 2.3 秒内把该修的修好，且用空间损失死守身份、轮廓与纹理线索。
+    </p>
+    <div class="meta">
+      <span class="pill">📄 13 页（正文 8 + 附录 5）· cs.CV · 2026-10-22</span>
+      <span class="pill">👥 Xiaolin Li¹˒²*, Zihao Huang²*, Fanpeng Meng², Chen Yang², Guanjun Wu³˒², Kai Zhang¹, Jiemin Fang²‡, Qi Tian²</span>
+      <span class="pill">🏢 ¹ 清华大学 · ² 华为 · ³ 华中科技大学</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2610.31649v1" target="_blank">arXiv:2610.31649v1</a></span>
+      <span class="pill">🌐 <a href="https://supra-3d.github.io/gate3dgen" target="_blank">项目页 supra-3d.github.io/gate3dgen</a></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>2.3 s</b><span>单图净化耗时（对比基线 15.6–100.8 s，最快者 6.8×）</span></div>
+      <div class="stat"><b>−61.5%</b><span>TRELLIS.2 全表面网格距离 MD（1.984 → 0.764）</span></div>
+      <div class="stat"><b>83.1%</b><span>闭合到 clean oracle 的 MD 差距（两个生成器平均 55.5%）</span></div>
+      <div class="stat"><b>88.45 / 93.47</b><span>路由 recall / specificity（合成集，%）</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ① 结论 -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 01 · TAKEAWAYS</div>
+      <h2>先把结论读完</h2>
+      <p>共 9 条。第 1–4 条出自论文，第 5–9 条是本站读完全文（含附录与全部表格）后的判断，<b>不是论文原话</b>。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl c-green">
+        <span class="n">结论 01 · 核心实证</span>
+        <h4>通用图像编辑对下游 3D <b>有害</b>，这不是直觉而是数据</h4>
+        <p>Table 2：7 个编辑器<b>全部</b>降低 PSNR 与 SSIM，梯度 MAE 提高 17.8%–125.9%，只有 FireRed 把 LPIPS 降了 0.0004（可忽略）。Table 3：6 个降低 MD，但<b>7 个全部把两个 F1 打到未编辑输入之下</b>。含义：<b>去掉了大伪影，却引入了局部几何偏差</b>。</p>
+      </div>
+      <div class="concl c-teal">
+        <span class="n">结论 02 · 目标定义</span>
+        <h4>要的是"同一物体的合适观测"，不是"更好看的图"</h4>
+        <p>论文把目标精确定义为：恢复同一物体的合适观测，<b>保留 3D 生成器用来推断形状与外观的可见结构证据</b>。这句话是全文的锚点——它解释了为什么"看起来更干净"的编辑反而更糟。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 03 · 门控</span>
+        <h4>干净的图<b>不能</b>送去净化——所以需要一个路由器</h4>
+        <p>净化一个本来就干净的输入会引入不必要的改变。路由器基于 Qwen2.5-VL，用 <b>PURIFY / KEEP 两个 token 的 logit 差</b>经 sigmoid 得到概率，而不是 greedy 解码。合成集上 recall 88.45% / accuracy 90.77% / H 89.59%，比最强基线 MANIQA 高 5.55 点。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">结论 04 · 速度与训练</span>
+        <h4>一步到位：训练和推理都固定在 flow matching 的 <b>t=1 端点</b></h4>
+        <p>z₁ 就是纯高斯噪声，所以 <b>一次前向</b> ẑ₀ = ε − v_θ(ε, E(x_o), h, 1) 再 VAE 解码即可，无需迭代去噪。这是 2.3 s 的来源（对比 FireRed 83.2 s，快 36.2×）。关键是<b>训练也在这个端点做</b>，不是训练多步再蒸馏。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 05 · 本站 · 最值得记住的一条</span>
+        <h4>消融直接证明：<b>2D 相似度不足以预测 3D 质量</b></h4>
+        <p>Table 5 的变体 A（去掉路由器特征与空间损失）拿到<b>最好的 2D LPIPS 0.1351</b> 和<b>最好的 F_all_1 12.06</b>，却同时拿到<b>最差的 MD 0.820 与最差的渲染 LPIPS 0.1794</b>。论文原话：<i>"image similarity alone is insufficient to predict 3D quality"</i>。这是本站第 4 次看到 2D/3D 指标脱钩。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 06 · 本站 · 论文的诚实自曝</span>
+        <h4>真实照片上，路由器<b>输给了"永远修"的平凡策略</b></h4>
+        <p>Table 1 右半：in-the-wild H 我们 70.56%，而 DepictQA-Wild 73.68%——它的 recall 100% / accuracy 58.33%，<b>正是"对所有输入都输出 PURIFY"</b>。论文直言 <i>"our router does not outperform this trivial strategy under the real-image proxy protocol"</i>，并归因于 D_route 的 KEEP 类用的是合成干净渲染。</p>
+      </div>
+      <div class="concl c-indigo">
+        <span class="n">结论 07 · 本站 · 评测口径</span>
+        <h4>in-the-wild 的路由标签是 <b>GPT-5 打的 proxy</b>，不是真值</h4>
+        <p>真实照片没有路由标签，论文让 GPT-5 agent 通过比较多视图渲染与无参考指标来打标签。所以 Table 1 右半测的是<b>与 proxy 的吻合度</b>，不能读成真实正确率。同理，Table 4 的 VLM 打分用 Qwen3.8-27B 做裁判。</p>
+      </div>
+      <div class="concl c-blue">
+        <span class="n">结论 08 · 本站 · 泛化边界</span>
+        <h4>只测了 2 个 3D 生成器，且 TRELLIS.2 上的大胜没完全迁移到 Pixal3D</h4>
+        <p>Table 7（Pixal3D）：我们 MD 1.091 最好、F_outer_1 0.9588 最好，但 <b>FireRed 的 PSNR-N（10.77 vs 10.36）与 shaded LPIPS（0.2759 vs 0.2796）都更好</b>，我们的 albedo LPIPS 只低 0.0002。论文自己也写"外观改善在 Pixal3D 上小于 TRELLIS.2"。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 09 · 本站 · 能力边界</span>
+        <h4>遮挡能"去掉"，但被挡住的几何<b>补不回来</b></h4>
+        <p>论文承认：对 oracle 的残差在 F_all_1 上最大（11.96 vs oracle 12.46），因为"被遮挡隐藏的几何从单视图只能部分恢复"。所以正确的期待是：<b>净化能移除遮挡物、避免它被融进网格，但不能凭空重建背面</b>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 问题 -->
+<section id="problem" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 02 · PROBLEM</div>
+      <h2>难点不在"怎么修"，而在"该不该修"</h2>
+      <p>论文把鲁棒单图 3D 生成重新表述为一个<b>选择性输入净化</b>问题——这个表述本身就是贡献。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:10px">现有输入预处理为什么不够</h4>
+        <ul class="tight">
+          <li><b>背景移除 + 重新居中</b>（TripoSR / InstantMesh 等开源 pipeline 常规操作）：不直接处理<b>光度退化</b>或<b>前景遮挡</b>。</li>
+          <li><b>去光照 / delighting</b>（SF3D、Hunyuan3D 2.5 一系）：只针对光照<b>单一因素</b>。</li>
+          <li><b>核心困境</b>：当多种退化共存时，<b>修好一个会留下其他歧义</b>。而通用编辑会"覆盖未损坏区域并模糊高频明暗线索"——恰恰是 3D 生成器依赖的东西。</li>
+        </ul>
+        <div class="summary-box" style="margin-top:14px">
+          <b>形式化</b>：G 是预训练生成器，x_c 是"居中、清晰、完全可见、均匀光照"的干净参考，满足 G(x_c) ≈ y；观测 x_o 可能干净也可能退化，退化会让 G(x_o) ≉ y。目标是学一个把 x_o 推向<b>与之匹配的</b> x_c 的净化器。
+        </div>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:10px">为什么必须"选择性"</h4>
+        <div class="eq" style="margin-top:0">
+          x̂_c = x_o,            若 b_γ = 0（KEEP）
+          x̂_c = C_θ(x_o),      若 b_γ = 1（PURIFY）
+          <span class="cmt">b_γ = 1[p ≥ τ]，p = σ(o_purify − o_keep)</span>
+        </div>
+        <p style="font-size:13.8px;color:var(--ink2);margin-top:10px">
+          两个理由逼出这道门：<br>
+          ① <b>净化一个本来就干净的输入会引入不必要的改变</b>（论文明确列为动机）；<br>
+          ② 真实图像的退化是<b>空间变化</b>的，需要输入自身的特征来引导净化——路由器顺带提供了这个特征 h。
+        </p>
+        <div class="callout ok" style="margin-top:14px">
+          注意一个容易漏的设计：<b>路由器不只是个分类器</b>。它在触发净化时输出 final hidden states h ∈ ℝ^(N×d)，<b>直接作为净化器的条件</b>。门控与条件化是同一个模块的两面。
+        </div>
+      </div>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 236" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gate3DGen 门控流程与两条路径的对比">
+        <defs>
+          <marker id="g1" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#8494a9"/>
+          </marker>
+          <marker id="g2" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d9488"/>
+          </marker>
+        </defs>
+
+        <text x="14" y="16" font-size="11.5" font-weight="700" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">Gate3DGen：下游 3D 生成器全程冻结，只在前面加一道门</text>
+
+        <rect x="14" y="28" width="104" height="44" rx="9" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="66" y="47" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">观测图 x_o</text>
+        <text x="66" y="63" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">真实照片</text>
+        <line x1="118" y1="50" x2="146" y2="50" stroke="#8494a9" marker-end="url(#g1)"/>
+
+        <rect x="148" y="22" width="132" height="56" rx="9" fill="#e8f7f0" stroke="#0d9488" stroke-width="1.8"/>
+        <text x="214" y="42" font-size="11.5" text-anchor="middle" fill="#0f766e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">退化感知路由器 R_ϕ</text>
+        <text x="214" y="58" font-size="10.5" text-anchor="middle" fill="#0f766e" font-family="Segoe UI,sans-serif">Qwen2.5-VL + LoRA</text>
+        <text x="214" y="72" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">输出 (p, h)</text>
+
+        <line x1="280" y1="38" x2="316" y2="38" stroke="#0d9488" marker-end="url(#g2)"/>
+        <rect x="318" y="20" width="118" height="36" rx="9" fill="#fff" stroke="#0d9488" stroke-dasharray="4 3" stroke-width="1.6"/>
+        <text x="377" y="42" font-size="11" text-anchor="middle" fill="#0f766e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">b_γ = 0 · KEEP</text>
+
+        <line x1="280" y1="62" x2="316" y2="62" stroke="#0d9488" marker-end="url(#g2)"/>
+        <rect x="318" y="44" width="118" height="36" rx="9" fill="#e8f7f0" stroke="#0d9488" stroke-width="1.6"/>
+        <text x="377" y="66" font-size="11" text-anchor="middle" fill="#0f766e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">b_γ = 1 · PURIFY</text>
+
+        <line x1="280" y1="84" x2="440" y2="84" stroke="#0d9488" stroke-dasharray="3 3"/>
+        <line x1="440" y1="84" x2="440" y2="104" stroke="#0d9488" stroke-dasharray="3 3" marker-end="url(#g2)"/>
+        <text x="352" y="98" font-size="10" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">特征 h 作为条件</text>
+
+        <rect x="318" y="106" width="176" height="50" rx="9" fill="#eef4ff" stroke="#2563eb" stroke-width="1.6"/>
+        <text x="406" y="126" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">单步净化器 C_θ</text>
+        <text x="406" y="142" font-size="10.5" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">t=1 端点，一次前向</text>
+        <text x="406" y="153" font-size="10" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">2.3 s · 空间损失守轮廓</text>
+
+        <line x1="494" y1="131" x2="524" y2="131" stroke="#2563eb" marker-end="url(#g2)"/>
+        <rect x="526" y="106" width="140" height="50" rx="9" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="596" y="126" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">冻结的 3D 生成器</text>
+        <text x="596" y="142" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">TRELLIS.2 / Pixal3D</text>
+        <text x="596" y="153" font-size="10" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">❄ 不重训、无梯度</text>
+
+        <line x1="596" y1="156" x2="596" y2="180" stroke="#2563eb" marker-end="url(#g2)"/>
+        <text x="600" y="196" font-size="11" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">3D 资产</text>
+
+        <line x1="436" y1="38" x2="500" y2="38" stroke="#0d9488"/>
+        <line x1="500" y1="38" x2="500" y2="180" stroke="#0d9488"/>
+        <line x1="500" y1="180" x2="470" y2="180" stroke="#0d9488" marker-end="url(#g2)"/>
+        <text x="470" y="196" font-size="10.5" text-anchor="middle" fill="#0f766e" font-family="Segoe UI,sans-serif">原样通过</text>
+
+        <rect x="14" y="206" width="652" height="24" rx="7" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="340" y="222" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">干净参考 x_c 与前景掩码只在训练中使用；推理只用观测图与路由器特征</text>
+      </svg>
+      <div class="svg-cap">图：门控流程。虚线是"原样通过"路径，实线是"净化"路径；h 只在 PURIFY 分支中被提取并用作条件。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ③ 数据引擎 -->
+<section id="data">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 03 · 数据</div>
+      <h2>合成数据引擎：用 3D 资产反推出「退化 ↔ 干净」配对</h2>
+      <p>真实照片既没有匹配的干净对照，也没有"该不该修"的标签。论文的解决办法是<b>反过来造</b>：从 3D 资产渲染干净视图，再合成退化。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4><span class="cls">步骤 1</span>锚点视图选择</h4>
+        <p class="tagline">3,961 个 TexVerse 3D 资产</p>
+        <p>每个资产在<b>均匀光照</b>下渲染 8 个视图，由 VLM 按<b>几何可见性与自遮挡程度</b>排序，取信息量最大的 4 个视图作为多视图锚点，同时即匹配干净参考 x_c。</p>
+        <div class="pros">这一步决定了"干净参考"的质量——不是随便选视角。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">步骤 2</span>退化合成</h4>
+        <p class="tagline">复合退化，而非单一因素</p>
+        <p>对每个锚点用<b>指令引导编辑</b>生成匹配观测 x_o，退化包括<b>光照不均、模糊、遮挡</b>的组合。每对再经 <b>Qwen3-VL 审计结构一致性</b>，RMBG-2.0 从 x_c 提取软前景掩码 m。</p>
+        <div class="cons">代价：合成退化与真实退化的分布差距未量化。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">产出</span>两组数据 + 一个基准</h4>
+        <p class="tagline">训练与评测资产<b>不相交</b></p>
+        <ul class="tight" style="margin-top:4px">
+          <li><b>D_train</b>：43,936 对齐图像对 (x_o, x_c, m)，供净化器</li>
+          <li><b>D_route</b>：100k 路由对 (x, γ)，γ=1 PURIFY / γ=0 KEEP</li>
+          <li><b>评测集</b>：1,082 held-out DTC 案例，带 <b>3D 真值</b>与同相机位姿的干净参考</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>与本站其他页面的交叉：</b>这里的 3D 资产来源是 <b>TexVerse</b>（Zhang et al., 2025）——正是本站 <a href="../ultratex/index.html">UltraTex 专题页</a>所用 G-buffer TexVerse 数据集的同一来源。
+      同一批高质量带纹理资产，在 UltraTex 里用来训练 2048 分辨率纹理生成，在这里被反过来用作"干净真值工厂"。这是一个很经济的复用思路。
+    </div>
+  </div>
+</section>
+
+<!-- ④ 路由器 -->
+<section id="router" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 04 · 门控 ★</div>
+      <h2>退化感知路由器：两个 token 的 logit 差，顺带产出条件特征</h2>
+      <p>两个细节值得学：① 用 logit 差而不是 greedy 解码得到概率；② 同一个模块兼作门控与条件提取。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">为什么"无参考质量指标"做不了这件事</h4>
+        <p style="font-size:13.8px;color:var(--ink2)">Table 1 给了很干脆的证据。NIQE、mPLUG-Owl2、DepictQA-Wild 的 recall 都超过 98%，但 accuracy 全都贴着 <b>53.7%</b>——也就是"对所有输入都输出 PURIFY"的平凡策略水平，H 只有 69.19–70.23%。</p>
+        <p style="font-size:13.8px;color:var(--ink2);margin-top:10px">MANIQA 反过来：accuracy 89.04% 很高，recall 只有 79.57%。<b>本文两个都要</b>：88.45% / 90.77%。</p>
+        <div class="callout warn" style="margin-top:14px">
+          <b>读法提醒：</b>这些"基线"并非同类方法——它们原本不是为 3D 生成路由设计的。Table 1 说明的是"<b>现成的质量信号不能直接当路由器用</b>"，而不是"本文击败了若干竞争对手"。
+        </div>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">训练细节（附录 A）</h4>
+        <dl class="kv">
+          <dt>基座</dt><dd>Qwen2.5-VL</dd>
+          <dt>可训练</dt><dd>language-transformer 第 24–27 层 + 最终 language normalization</dd>
+          <dt>冻结</dt><dd>LM head、视觉骨干（<b>除</b> vision blocks 28–31 的 rank-16 LoRA）</dd>
+          <dt>监督</dt><dd>token 级，<b>决策 token 与 EOS 权重更高</b></dd>
+          <dt>样本加权</dt><dd>稀有退化族、<b>细微退化</b>样本权重更高</dd>
+          <dt>阈值 τ</dt><dd>在开发集上确定后冻结</dd>
+        </dl>
+        <p style="font-size:13.5px;color:var(--ink2);margin-top:12px">"细微退化加权更高"这一条很关键——难例恰恰是容易被漏掉的那些。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-teal">Table 1：路由结果（%）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">合成 Recall↑</th><th class="num">合成 Acc↑</th><th class="num">合成 H↑</th><th class="num">真实 Recall↑</th><th class="num">真实 Acc↑</th><th class="num">真实 H↑</th></tr></thead>
+        <tbody>
+          <tr><td>mPLUG-Owl2</td><td class="num">100.00</td><td class="num">54.12</td><td class="num">70.23</td><td class="num">0.00</td><td class="num">41.67</td><td class="num">0.00</td></tr>
+          <tr><td>DepictQA-Wild</td><td class="num">99.54</td><td class="num">53.42</td><td class="num">69.53</td><td class="num">100.00</td><td class="num">58.33</td><td class="num"><b>73.68</b></td></tr>
+          <tr><td>LIQE-MIX</td><td class="num">51.66</td><td class="num">65.48</td><td class="num">57.75</td><td class="num">17.86</td><td class="num">48.96</td><td class="num">26.17</td></tr>
+          <tr><td>NIQE</td><td class="num">98.52</td><td class="num">53.32</td><td class="num">69.19</td><td class="num">75.00</td><td class="num">54.17</td><td class="num">62.91</td></tr>
+          <tr><td>Qwen2.5-VL（零样本）</td><td class="num">83.64</td><td class="num">74.21</td><td class="num">78.64</td><td class="num">14.29</td><td class="num">43.75</td><td class="num">21.54</td></tr>
+          <tr><td>MANIQA</td><td class="num">79.57</td><td class="num">89.04</td><td class="num">84.04</td><td class="num">12.50</td><td class="num">45.83</td><td class="num">19.64</td></tr>
+          <tr><td>GPT-5</td><td class="num">72.27</td><td class="num">77.58</td><td class="num">74.83</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>88.45</b></td><td class="num"><b>90.77</b></td><td class="num"><b>89.59</b></td><td class="num">89.29</td><td class="num">58.33</td><td class="num">70.56</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">合成集：1,082 退化 + 934 干净输入。H = 2·Recall·Accuracy/(Recall+Accuracy)。摘要报的 specificity 93.47% 与表中 accuracy 90.77% 不矛盾：按 934 干净 / 1,082 退化反推，TN = 0.9077×2016 − 0.8845×1082 ≈ 873，873/934 = <b>93.47%</b> ✓。</p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">合成集：Recall / Accuracy / H</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c5"></canvas></div>
+        <p class="chart-note">注意 mPLUG-Owl2 / DepictQA-Wild / NIQE 的 recall 都接近 100% 而 accuracy 只有 53% 左右——典型的"全部判为需净化"。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Table 6：路由器消融（合成集）</h4>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>变体</th><th class="num">Recall↑</th><th class="num">Accuracy↑</th></tr></thead>
+            <tbody>
+              <tr><td>VAE latent 上的 MLP</td><td class="num">53.42</td><td class="num">71.48</td></tr>
+              <tr><td>去掉 vision LoRA</td><td class="num">97.04</td><td class="num">75.30</td></tr>
+              <tr class="ours"><td><b>完整路由器</b></td><td class="num"><b>88.45</b></td><td class="num"><b>90.77</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13.5px;color:var(--ink2);margin-top:12px">去掉 vision LoRA → recall 飙到 97.04% 但 accuracy 掉到 75.30%，即<b>更强的 PURIFY 偏置</b>。vision LoRA 的作用正是<b>在保持高 recall 的同时压掉这个偏置</b>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ 净化器 -->
+<section id="purifier">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 05 · 净化器 ★</div>
+      <h2>一步到位的净化器 + 3D 导向的空间损失</h2>
+      <p>两个设计各自解决一个问题：<b>t=1 端点</b>解决速度，<b>空间损失</b>解决"修了但把物体改了"。</p>
+    </div>
+
+    <div class="sub-h"><span class="t">式 5–6</span>把 flow matching 的训练和推理都钉在 t=1</div>
+    <div class="eq">
+      z_t = (1 − t) z₀ + t ε                          <span class="cmt">标准线性概率路径，z₀ = E(x_c)</span>
+      ẑ₀ = ε − v_θ( ε, E(x_o), h, 1 )                 <span class="cmt">t = 1 时 z₁ = ε，纯高斯噪声</span>
+      x̂_c = D( ẑ₀ )                                   <span class="cmt">冻结的 VAE 解码器</span>
+    </div>
+    <div class="callout ok">
+      <b>为什么这一步值得单独讲：</b>通常做法是训练多步 flow matching、再靠蒸馏压步数（会有质量损失）。
+      这里<b>训练目标本身就定义在 t=1 端点</b>——在这个点上带噪 latent 只有高斯噪声，全部图像特定信息都来自观测 latent E(x_o) 与路由器特征 h 的条件化。
+      速度优势（2.3 s）是<b>训练与推理一致</b>换来的，不是蒸馏换来的。
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="method-card hl">
+        <h4><span class="cls">损失 1</span>区域加权重建 L_region</h4>
+        <p class="tagline">两项<b>独立归一化</b>，各管一件事</p>
+        <div class="eq" style="margin:8px 0;font-size:13.5px">
+          L_region = ℓ(δ, m) + ℓ(δ, r)
+          <span class="cmt">δ = x̂_c − x_c；m = 前景掩码；r = 退化图</span>
+        </div>
+        <p>第一项用前景掩码 <b>m</b> 监督整个主体；第二项用退化图 <b>r</b> 聚焦真正被退化影响的区域。<b>两项各自除以自己的权重和</b>，避免主体项被退化项稀释。</p>
+        <div class="pros">退化图 r = |x_o − x_c|/2 在 RGB 上平均后做 7×7 平均池化。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">损失 2</span>边缘损失 L_edge</h4>
+        <p class="tagline">直接约束"轮廓别动"</p>
+        <div class="eq" style="margin:8px 0;font-size:13.5px">
+          L_edge = ½ [ ℓ(D_u δ, m_u) + ℓ(D_v δ, m_v) ]
+          <span class="cmt">D_u / D_v 为一像素前向差分；m_u / m_v 为相邻两个主体掩码值的乘积</span>
+        </div>
+        <p>沿水平/垂直轴匹配有限差分，权重取<b>相邻两个主体掩码值的乘积</b>——只有两边都在主体内时该边缘才计入，避免在物体边界外产生虚假梯度。</p>
+        <div class="pros">这条损失是"轮廓保真"的直接来源，也解释了为什么 Full 比变体 B 更能保留轮廓。</div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-indigo">训练配置（附录 A）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>项目</th><th>取值</th></tr></thead>
+        <tbody>
+          <tr><td>初始化</td><td>FireRed-Image-Edit-1.1 公开 checkpoint</td></tr>
+          <tr><td>冻结 / 更新</td><td>image-transformer blocks 1–28 冻结；<b>29–49 更新</b>，连同接收 h 的 cross-attention 投影层</td></tr>
+          <tr><td>损失权重</td><td>λ_lat = 0.1，λ_1 = 1，λ_lpips = 0.5，λ_region = 1，λ_edge = 1</td></tr>
+          <tr><td>分辨率 / 步数</td><td>1024×1024，15,000 updates</td></tr>
+          <tr><td>算力</td><td>32 GPUs，global batch 32，BF16，AdamW，cosine，peak lr 5×10⁻⁷</td></tr>
+          <tr><td>推理</td><td>单前向，guidance scale 1.0，空 negative prompt，<b>固定随机种子</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ 2D 结果 -->
+<section id="res2d" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 06 · 2D 结果</div>
+      <h2>Table 2：七条通用编辑路径，没有一条是安全的</h2>
+      <p>这是全文最有说服力的一张表——它不是"我们更好"，而是"<b>现有做法普遍有害</b>"。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">耗时 (s)↓</th><th class="num">LPIPS↓</th><th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">梯度 MAE↓</th><th class="num">前景 IoU↑</th></tr></thead>
+        <tbody>
+          <tr class="dim"><td>退化输入（不修）</td><td class="num">–</td><td class="num">0.2262</td><td class="num">20.254</td><td class="num">0.8323</td><td class="num">0.0584</td><td class="num">0.9537</td></tr>
+          <tr><td>FLUX.1</td><td class="num">30.2</td><td class="num">0.2577</td><td class="num">17.992</td><td class="num">0.7907</td><td class="num">0.0688</td><td class="num">0.9373</td></tr>
+          <tr><td>OmniGen2</td><td class="num">84.9</td><td class="num">0.4166</td><td class="num">13.491</td><td class="num">0.6478</td><td class="num">0.1123</td><td class="num">0.6238</td></tr>
+          <tr><td>Step1X</td><td class="num">100.8</td><td class="num">0.2426</td><td class="num">18.828</td><td class="num">0.7761</td><td class="num">0.0781</td><td class="num">0.8971</td></tr>
+          <tr><td>Qwen-Edit</td><td class="num">81.5</td><td class="num">0.2389</td><td class="num">18.710</td><td class="num">0.7812</td><td class="num">0.0727</td><td class="num">0.9537</td></tr>
+          <tr><td>Mage-Flow</td><td class="num">15.6</td><td class="num">0.2418</td><td class="num">19.175</td><td class="num">0.7755</td><td class="num">0.0835</td><td class="num">0.9530</td></tr>
+          <tr><td>GPT Image-2.5 Flare <span class="badge-tag tag-mid">闭源</span></td><td class="num">–</td><td class="num">0.2710</td><td class="num">16.571</td><td class="num">0.7020</td><td class="num">0.1319</td><td class="num">0.9189</td></tr>
+          <tr><td>FireRed</td><td class="num">83.2</td><td class="num">0.2258</td><td class="num">15.868</td><td class="num">0.7677</td><td class="num">0.0814</td><td class="num">0.9604</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>2.3</b></td><td class="num"><b>0.1378</b></td><td class="num"><b>22.514</b></td><td class="num"><b>0.8708</b></td><td class="num"><b>0.0488</b></td><td class="num"><b>0.9758</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">
+      逐条核对论文的三个断言：<b>①</b> 七个编辑器<b>全部</b>降低 PSNR 与 SSIM（对比未编辑的 20.254 / 0.8323，最高只到 19.175 / 0.7907）；
+      <b>②</b> 梯度 MAE 提高 17.8%–125.9%（0.0584 → 0.0688 … 0.1319）；
+      <b>③</b> 只有 FireRed 把 LPIPS 降了，幅度 <b>0.0004</b>（0.2262 → 0.2258），可忽略。
+      OmniGen2 还把前景 IoU 从 0.9537 拉到 0.6238——<b>轮廓被改掉了</b>。
+    </p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">2D 保真度：LPIPS 与 PSNR</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c1"></canvas></div>
+        <p class="chart-note">柱：LPIPS×1000（左轴，越低越好）；线：PSNR（右轴，越高越好）。灰色为未编辑输入，可作基线参考。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">推理耗时（秒，对数更易读但此处线性）</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c2"></canvas></div>
+        <p class="chart-note">本文 2.3 s；最快基线 Mage-Flow 15.6 s（6.8×），FireRed 83.2 s（36.2×）。GPT Image-2.5 Flare 为闭源 API，未报耗时。</p>
+      </div>
+    </div>
+
+    <div class="callout warn" style="margin-top:18px">
+      <b>关于 2.3 s 这个数字，本站想补一句口径。</b>基线都是多步扩散编辑器（数十步采样），而本文是<b>单步</b>。
+      这个"快"主要来自"一步 vs 多步"的架构选择——这确实是本文的设计贡献，也确实有代价（见 Table 5：变体 A 的 2D LPIPS 更好但 3D 更差）。
+      但如果把基线也做单步蒸馏，差距会显著缩小。<b>引用时建议说"单步设计带来 2.3 s"，而不是"比同类方法快一个数量级"。</b>
+    </div>
+  </div>
+</section>
+
+<!-- ⑦ 下游 3D -->
+<section id="res3d">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 07 · 下游 3D ★</div>
+      <h2>Table 3 / Table 7：真正的裁判在这里</h2>
+      <p>2D 指标只是手段。<b>这篇文章的立论基础是：净化好不好，要看下游 3D 几何与渲染，而不是看图有多像。</b></p>
+    </div>
+
+    <h3 class="block-title c-blue">Table 3：下游 3D 指标（TRELLIS.2，1,082 例）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">MD↓</th><th class="num">F_all_1↑</th><th class="num">CD↓</th><th class="num">F_outer_1↑</th><th class="num">PSNR-N↑</th><th class="num">渲染 LPIPS↓</th><th class="num">Albedo LPIPS↓</th></tr></thead>
+        <tbody>
+          <tr class="dim"><td>干净参考（Oracle）</td><td class="num">0.517</td><td class="num">12.46</td><td class="num">0.517</td><td class="num">1.1586</td><td class="num">16.36</td><td class="num">0.1548</td><td class="num">0.1575</td></tr>
+          <tr class="dim"><td>退化输入（不修）</td><td class="num">1.984</td><td class="num">11.52</td><td class="num">1.985</td><td class="num">1.0531</td><td class="num">15.26</td><td class="num">0.1857</td><td class="num">0.1916</td></tr>
+          <tr><td>FLUX.1</td><td class="num">1.528</td><td class="num">11.06</td><td class="num">1.528</td><td class="num">1.0238</td><td class="num">15.35</td><td class="num">0.1864</td><td class="num">0.1935</td></tr>
+          <tr><td>OmniGen2</td><td class="num">3.485</td><td class="num">6.88</td><td class="num">3.485</td><td class="num">0.6407</td><td class="num">13.11</td><td class="num">0.2362</td><td class="num">0.2411</td></tr>
+          <tr><td>Step1X</td><td class="num">1.228</td><td class="num">10.48</td><td class="num">1.229</td><td class="num">0.9637</td><td class="num">15.25</td><td class="num">0.1803</td><td class="num">0.1861</td></tr>
+          <tr><td>Qwen-Image-Edit</td><td class="num">1.047</td><td class="num">10.81</td><td class="num">1.047</td><td class="num">1.0123</td><td class="num">15.69</td><td class="num">0.1780</td><td class="num">0.1859</td></tr>
+          <tr><td>Mage-Flow</td><td class="num">1.386</td><td class="num">11.42</td><td class="num">1.386</td><td class="num">1.0422</td><td class="num">15.39</td><td class="num">0.1797</td><td class="num">0.1855</td></tr>
+          <tr><td>GPT Image-2.5 Flare <span class="badge-tag tag-mid">闭源</span></td><td class="num">1.179</td><td class="num">10.39</td><td class="num">1.179</td><td class="num">0.9720</td><td class="num">15.29</td><td class="num">0.1792</td><td class="num">0.1859</td></tr>
+          <tr><td>FireRed</td><td class="num">0.835</td><td class="num">10.58</td><td class="num">0.835</td><td class="num">0.9889</td><td class="num">15.82</td><td class="num">0.1701</td><td class="num">0.1781</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>0.764</b></td><td class="num"><b>11.96</b></td><td class="num"><b>0.765</b></td><td class="num"><b>1.1205</b></td><td class="num"><b>15.98</b></td><td class="num"><b>0.1654</b></td><td class="num"><b>0.1714</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">
+      MD 与 CD、F_all_1 为 ×10⁻³，F_outer_1 为 ×10⁻¹。
+      <b>关键对照</b>：对比未编辑输入（F_all_1 11.52、F_outer_1 1.0531），<b>七个编辑器全部把两个 F1 打下去了</b>——最高的也只到 11.42 / 1.0422。
+      只有 Gate3DGen 同时改善 MD 与两个 F1。<b>MD 闭合到 oracle 的比例</b>：(1.984 − 0.764)/(1.984 − 0.517) = <b>83.1%</b> ✓
+    </p>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 208" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="通用编辑与 Gate3DGen 对下游 3D 的不同影响">
+        <text x="14" y="16" font-size="11.5" font-weight="700" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">同一个退化输入，两条不同的"修法"导致相反的 3D 结果</text>
+
+        <rect x="14" y="28" width="316" height="80" rx="9" fill="#fdf2f2" stroke="#f5c9c4"/>
+        <text x="172" y="48" font-size="11.5" text-anchor="middle" fill="#c2410c" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">通用图像编辑</text>
+        <text x="172" y="66" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">为了"好看"重画物体 → 身份/轮廓被改</text>
+        <text x="172" y="82" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">高频明暗线索被抹平</text>
+        <text x="172" y="98" font-size="10.5" text-anchor="middle" fill="#c2410c" font-weight="700" font-family="Segoe UI,sans-serif">MD ↓（大伪影没了）但两个 F1 也 ↓</text>
+
+        <rect x="350" y="28" width="316" height="80" rx="9" fill="#e8f7f0" stroke="#0d9488" stroke-width="1.6"/>
+        <text x="508" y="48" font-size="11.5" text-anchor="middle" fill="#0f766e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">Gate3DGen</text>
+        <text x="508" y="66" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">保留身份、轮廓、纹理线索</text>
+        <text x="508" y="82" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">只改退化区域（区域加权 + 边缘损失）</text>
+        <text x="508" y="98" font-size="10.5" text-anchor="middle" fill="#15803d" font-weight="700" font-family="Segoe UI,sans-serif">MD ↓ 且两个 F1 都 ↑</text>
+
+        <rect x="14" y="118" width="652" height="34" rx="8" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="340" y="140" font-size="11" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">论文 Figure 3 的实例：未编辑输入把手<b>融进</b>玩偶；FireRed 保留遮挡物或给茶壶换色；GPT Image-2.5 去掉了退化但<b>重新合成了物体</b></text>
+
+        <rect x="14" y="160" width="652" height="40" rx="8" fill="#eef4ff" stroke="#b9cdf5"/>
+        <text x="340" y="178" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">方法论结论：净化必须以下游表面几何、渲染外观与物体保真度来评价</text>
+        <text x="340" y="194" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">而不能只看图像相似度或视觉质量（论文 Conclusion 原话）</text>
+      </svg>
+      <div class="svg-cap">图：两条路径的分野。这是全文最重要的一张概念图。</div>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">TRELLIS.2：网格距离与外表面 F1</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c3"></canvas></div>
+        <p class="chart-note">柱：MD×1000（左轴，越低越好）；线：F_outer_1（右轴，越高越好）。灰=未编辑输入，绿=Ours。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Pixal3D：网格距离与外表面 F1</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c4"></canvas></div>
+        <p class="chart-note">同结构，但生成器换成 Pixal3D。注意这里 Ours 的 MD 优势明显收窄（1.221→1.091）。</p>
+      </div>
+    </div>
+
+    <h3 class="block-title c-green">Table 7：下游 3D 指标（Pixal3D，附录 D）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">MD↓</th><th class="num">F_all_1↑</th><th class="num">CD↓</th><th class="num">F_outer_1↑</th><th class="num">PSNR-N↑</th><th class="num">渲染 LPIPS↓</th><th class="num">Albedo LPIPS↓</th></tr></thead>
+        <tbody>
+          <tr class="dim"><td>干净参考（Oracle）</td><td class="num">0.753</td><td class="num">10.75</td><td class="num">0.753</td><td class="num">1.0086</td><td class="num">10.42</td><td class="num">0.2760</td><td class="num">0.2713</td></tr>
+          <tr class="dim"><td>退化输入（不修）</td><td class="num">1.221</td><td class="num">9.37</td><td class="num">1.221</td><td class="num">0.8821</td><td class="num">10.31</td><td class="num">0.2824</td><td class="num">0.2805</td></tr>
+          <tr><td>FLUX.1</td><td class="num">1.214</td><td class="num">9.06</td><td class="num">1.214</td><td class="num">0.8582</td><td class="num">10.26</td><td class="num">0.2916</td><td class="num">0.2906</td></tr>
+          <tr><td>Mage-Flow</td><td class="num">1.259</td><td class="num">8.88</td><td class="num">1.259</td><td class="num">0.8428</td><td class="num">10.30</td><td class="num">0.2883</td><td class="num">0.2864</td></tr>
+          <tr><td>OmniGen2</td><td class="num">3.204</td><td class="num">6.00</td><td class="num">3.204</td><td class="num">0.5700</td><td class="num">10.03</td><td class="num">0.3051</td><td class="num">0.3047</td></tr>
+          <tr><td>Step1X</td><td class="num">1.411</td><td class="num">8.79</td><td class="num">1.412</td><td class="num">0.8289</td><td class="num">10.20</td><td class="num">0.2911</td><td class="num">0.2897</td></tr>
+          <tr><td>GPT Image-2.5 Flare <span class="badge-tag tag-mid">闭源</span></td><td class="num">1.467</td><td class="num">8.29</td><td class="num">1.468</td><td class="num">0.7864</td><td class="num">10.53</td><td class="num">0.2825</td><td class="num">0.2836</td></tr>
+          <tr><td>Qwen-Image-Edit</td><td class="num">1.150</td><td class="num">9.29</td><td class="num">1.150</td><td class="num">0.8757</td><td class="num">10.31</td><td class="num">0.2889</td><td class="num">0.2883</td></tr>
+          <tr><td>FireRed</td><td class="num">1.148</td><td class="num">9.12</td><td class="num">1.149</td><td class="num">0.8639</td><td class="num"><b>10.77</b></td><td class="num"><b>0.2759</b></td><td class="num">0.2775</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>1.091</b></td><td class="num"><b>10.16</b></td><td class="num"><b>1.091</b></td><td class="num"><b>0.9588</b></td><td class="num">10.36</td><td class="num">0.2796</td><td class="num"><b>0.2773</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">
+      几何指标（MD / CD / F_all_1 / F_outer_1）我们最好；但<b>渲染指标上 FireRed 反超</b>：PSNR-N 10.77 vs 10.36，shaded LPIPS 0.2759 vs 0.2796，我们的 albedo LPIPS 只低 0.0002。
+      论文自己写明"外观改善在 Pixal3D 上小于 TRELLIS.2"。
+      <b>MD 闭合比例</b>：(1.221 − 1.091)/(1.221 − 0.753) = <b>27.8%</b>——与 TRELLIS.2 的 83.1% 平均即摘要的 <b>55.5%</b> ✓
+    </p>
+  </div>
+</section>
+
+<!-- ⑧ 真实照片 -->
+<section id="wild" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 08 · 真实照片与消融</div>
+      <h2>Table 4 / Table 5：没有 3D 真值时怎么评，以及消融暴露的真相</h2>
+      <p>96 张手机与网络照片，无 GT mesh，靠 VLM 打分 + 人类偏好 + FD-DINOv2。消融则给出了本文最有价值的方法论警告。</p>
+    </div>
+
+    <h3 class="block-title c-teal">Table 4：in-the-wild 对比（96 张照片）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">FD↓ (Pixal3D)</th><th class="num">FD↓ (TRELLIS.2)</th><th class="num">VLM 身份↑</th><th class="num">VLM 净化↑</th><th class="num">VLM 质量↑</th><th class="num">人类 身份↑</th><th class="num">人类 净化↑</th><th class="num">人类 质量↑</th></tr></thead>
+        <tbody>
+          <tr><td>FLUX.1</td><td class="num">0.795</td><td class="num">0.790</td><td class="num">7.31</td><td class="num">6.22</td><td class="num">6.24</td><td class="num">77.5%</td><td class="num">81.0%</td><td class="num">72.1%</td></tr>
+          <tr><td>OmniGen2</td><td class="num">0.893</td><td class="num">0.902</td><td class="num">5.43</td><td class="num">4.51</td><td class="num">4.72</td><td class="num">86.0%</td><td class="num">93.2%</td><td class="num">92.3%</td></tr>
+          <tr><td>Step1X</td><td class="num">0.788</td><td class="num">0.789</td><td class="num">7.91</td><td class="num">7.09</td><td class="num">5.98</td><td class="num">81.8%</td><td class="num">83.3%</td><td class="num">86.8%</td></tr>
+          <tr><td>Qwen-Image-Edit</td><td class="num">0.792</td><td class="num">0.810</td><td class="num">8.09</td><td class="num">6.99</td><td class="num">6.60</td><td class="num">91.7%</td><td class="num">94.6%</td><td class="num">82.1%</td></tr>
+          <tr><td>Mage-Flow</td><td class="num">0.739</td><td class="num">0.769</td><td class="num">8.50</td><td class="num">7.55</td><td class="num">6.22</td><td class="num">84.2%</td><td class="num">88.1%</td><td class="num">80.0%</td></tr>
+          <tr><td>GPT Image-2.5 Flare <span class="badge-tag tag-mid">闭源</span></td><td class="num">0.733</td><td class="num"><b>0.722</b></td><td class="num">6.95</td><td class="num">6.31</td><td class="num"><b>6.92</b></td><td class="num">58.5%</td><td class="num">57.1%</td><td class="num">57.5%</td></tr>
+          <tr><td>FireRed</td><td class="num">0.771</td><td class="num">0.796</td><td class="num">8.00</td><td class="num">7.08</td><td class="num"><b>6.92</b></td><td class="num">66.7%</td><td class="num">63.6%</td><td class="num">63.6%</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>0.716</b></td><td class="num">0.757</td><td class="num"><b>8.62</b></td><td class="num"><b>8.00</b></td><td class="num">6.58</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">
+      人类研究为 341 份有效评分的两两比较，数值是"偏好 Gate3DGen 而非该基线"的比例——<b>对所有基线的三个标准都 &gt;50%</b>，最低是对 GPT Image-2.5 Flare（58.5% / 57.1% / 57.5%）。
+      注意两处：<b>① VLM 质量分我们不是最高</b>（6.58 vs FireRed/GPT 的 6.92）；<b>② FD-DINOv2 上没有任何方法超过未编辑输入</b>，论文自己提醒这个指标不能直接衡量退化去除或逐物体保真度。
+    </p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">VLM 三项打分（0–10）</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c6"></canvas></div>
+        <p class="chart-note">身份与净化我们最高；质量落后于 FireRed 与 GPT Image-2.5 Flare。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Table 5：净化器消融 —— 本文最重要的一张表</h4>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>变体</th><th class="num">2D LPIPS↓</th><th class="num">2D PSNR↑</th><th class="num">MD↓</th><th class="num">F_all_1↑</th><th class="num">渲染 LPIPS↓</th></tr></thead>
+            <tbody>
+              <tr><td>A（无 h、无空间损失）</td><td class="num"><b>0.1351</b></td><td class="num">22.292</td><td class="num">0.820</td><td class="num"><b>12.06</b></td><td class="num">0.1794</td></tr>
+              <tr><td>B（仅 +h）</td><td class="num">0.1363</td><td class="num"><b>22.572</b></td><td class="num"><b>0.755</b></td><td class="num">11.96</td><td class="num">0.1658</td></tr>
+              <tr class="ours"><td><b>Full（+h +空间损失）</b></td><td class="num">0.1378</td><td class="num">22.514</td><td class="num">0.764</td><td class="num">11.96</td><td class="num"><b>0.1654</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warn" style="margin-top:14px">
+          <b>变体 A 拿到最好的 2D LPIPS（0.1351）和最好的 F_all_1（12.06），却是 MD 最差（0.820）、渲染 LPIPS 最差（0.1794）。</b>
+          论文原话：<i>"image similarity alone is insufficient to predict 3D quality"</i>。
+          <b>如果只盯 2D 指标调参，会选中 A。</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:18px">
+      <b>为什么 Full 而不是 B？</b>Full 的 MD 略差（0.764 vs 0.755）、2D PSNR 略低，但 <b>shaded 与 albedo LPIPS 都最低</b>（0.1654 / 0.1714 vs 0.1658 / 0.1716），且<b>轮廓保真更好</b>——这正是边缘损失的直接作用。这是一个用"外观 + 轮廓"换"一点点网格距离"的取舍，论文选了前者并给出了理由。
+    </div>
+  </div>
+</section>
+
+<!-- ⑨ 局限 -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 09 · 局限</div>
+      <h2>论文没有 Limitations 章节——以下 9 条由本站整理</h2>
+      <p>需要说明：这篇 13 页的论文<b>没有独立的 Limitations 章节</b>。下列 1–3 条是论文在正文/附录中主动承认的，4–9 条是本站从实验设计中读出的边界。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl c-red">
+        <span class="n">边界 01 · 论文自承</span>
+        <h4>真实照片上，路由器输给了平凡策略</h4>
+        <p>in-the-wild H 70.56% vs DepictQA-Wild 73.68%，而后者就是"永远 PURIFY"（recall 100% / accuracy 58.33%）。原文：<i>"our router does not outperform this trivial strategy under the real-image proxy protocol"</i>。归因：D_route 的 KEEP 类用的是<b>合成干净渲染</b>，与真实照片分布不同；是否加入真实照片有待验证。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">边界 02 · 论文自承</span>
+        <h4>FD-DINOv2 上没有任何方法超过未编辑输入</h4>
+        <p>论文明确说明该指标比较的是输入与渲染的特征分布，<b>不直接衡量退化去除或逐物体保真度</b>，建议与 VLM 打分、人类偏好一起解读。所以 Table 4 的 FD 排名（我们 Pixal3D 第一、TRELLIS.2 第二）不应单独引用。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">边界 03 · 论文自承</span>
+        <h4>遮挡几何只能部分恢复</h4>
+        <p>对 oracle 的残差在 F_all_1 上最大（11.96 vs 12.46），因为"被遮挡隐藏的几何从单视图只能部分恢复"。净化能<b>移除遮挡物</b>（避免它被融进网格），但<b>补不回背面</b>。</p>
+      </div>
+      <div class="concl c-indigo">
+        <span class="n">边界 04 · 本站</span>
+        <h4>in-the-wild 的"标签"是 proxy，不是真值</h4>
+        <p>路由标签由 <b>GPT-5 agent</b> 通过比较多视图渲染与无参考指标给出；VLM 打分由 Qwen3.8-27B 担任裁判。两者都不是 ground truth，且<b>用另一个大模型评判本文方法</b>存在系统性偏好风险。</p>
+      </div>
+      <div class="concl c-blue">
+        <span class="n">边界 05 · 本站</span>
+        <h4>只测了 2 个 3D 生成器</h4>
+        <p>TRELLIS.2 与 Pixal3D。而这两个上的结果<b>不一致</b>：TRELLIS.2 上 MD 闭合 83.1%，Pixal3D 上只有 27.8%；Pixal3D 上渲染指标还被 FireRed 反超。对 Hunyuan3D / TripoSG / 其他生成器的迁移性<b>完全未验证</b>。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">边界 06 · 本站</span>
+        <h4>退化是合成的，分布差距未量化</h4>
+        <p>观测图由<b>指令引导编辑</b>生成（再经 Qwen3-VL 审计结构一致性）。合成退化与真实退化的差距、以及"用编辑模型造退化、再用另一个模型修退化"是否引入系统性偏差，论文没有分析。这是合成数据方案的共性风险。</p>
+      </div>
+      <div class="concl c-green">
+        <span class="n">边界 07 · 本站</span>
+        <h4>2.3 s 的优势主要来自"单步 vs 多步"</h4>
+        <p>基线都是多步扩散编辑器。这个对比证明了<b>单步设计可用</b>，但若基线也做单步蒸馏，差距会显著缩小。引用时建议说"单步设计带来 2.3 s"，而非"比同类快一个数量级"。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">边界 08 · 本站</span>
+        <h4>VLM 与人类在"质量"上的判断不一致</h4>
+        <p>VLM 给 FireRed / GPT Image-2.5 的质量分（6.92）高于我们（6.58）；而人类研究中我们对这两者的质量偏好是 63.6% / 57.5%（仍过半但明显偏低）。<b>"资产质量"这个维度本身缺乏可靠裁判</b>，论文坦承了两者的分歧。</p>
+      </div>
+      <div class="concl c-teal">
+        <span class="n">边界 09 · 本站 · 定位</span>
+        <h4>它是个 pre-processor，不是 3D 方法</h4>
+        <p>Gate3DGen 不产出任何 3D 表示，也不改 3D 生成器。它的价值完全取决于下游模型——目前只在 2 个生成器上验证。<b>与本站 Channel Match 专题页构成有趣对照：一个是"输入侧门控"，一个是"流水线内部 latent 校准"，都是不动下游模型的即插即用修复。</b></p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:20px">
+      <b>一句话总结。</b>这篇论文的贡献不在"又训了一个图像修复模型"，而在于<b>用一组干净的实验把"先修图再生成 3D"这个想当然的做法证伪了</b>，并给出了替代方案。
+      最值得带走的是 Table 5 暴露的那件事：<b>2D LPIPS 最好的变体，3D 网格距离最差</b>。
+      这与本站此前反复观察到的现象一致——ULIP 分辨力弱（DHO / GATOR / Channel Match）、3DMM 对齐会掩盖位姿误差（Video Diffusion Avatars）——
+      <b>2D/3D 指标的脱钩已经不是个例，而是这个领域的系统性问题</b>。任何做"图像侧改进以服务 3D"的工作，都必须在 3D 指标上验证，不能止步于图像相似度。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>Gate3DGen: A Pre-processing Model that Selectively Purifies Real-World Images for 3D Generation</b> ·
+      Xiaolin Li, Zihao Huang, Fanpeng Meng, Chen Yang, Guanjun Wu, Kai Zhang, Jiemin Fang, Qi Tian ·
+      清华大学 / 华为 / 华中科技大学 · arXiv:2610.31649v1（2026-10-22）
+    </p>
+    <p style="margin-top:8px">
+      本页所有数值均取自该论文正文与补充材料（Table 1–7、Figure 1–4、Section 3–4、Appendix A–D），未做外推；
+      文中标注 ✓ 的换算（如 83.1%、55.5%、93.47%）为本站按表中原始数字交叉复核的结果。
+      标注「本站」的段落为读完全文后的分析，<b>不是论文原话</b>。该论文<b>没有独立的 Limitations 章节</b>，第 ⑨ 节由本站整理。
+    </p>
+    <p style="margin-top:8px">
+      <a href="https://arxiv.org/abs/2610.31649v1" target="_blank">arXiv:2610.31649v1</a> ·
+      <a href="https://supra-3d.github.io/gate3dgen" target="_blank">项目页</a> ·
+      <a href="../ultratex/index.html">UltraTex 专题页（同一 TexVerse 数据集）</a> ·
+      <a href="../3d-generation-2026/index.html">3D 生成前沿合集 →</a> ·
+      <a href="../index.html">返回首页</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  var C = (typeof Chart === 'undefined') ? null : Chart;
+  var FF = '"Segoe UI","PingFang SC",system-ui,sans-serif';
+  var GRID = '#eef2f8';
+
+  function mkAxis(extra){
+    var a = {ticks:{font:{size:11,family:FF}}, grid:{color:GRID}};
+    if (extra) { for (var k in extra) { a[k] = extra[k]; } }
+    if (extra && extra.position === 'right' && !extra.grid) { a.grid = {display:false}; }
+    return a;
+  }
+
+  function opts(yLeft, yRight){
+    var s = {
+      x:{ticks:{font:{size:10.5,family:FF}, autoSkip:false, maxRotation:34, minRotation:0}, grid:{display:false}},
+      y:mkAxis(yLeft)
+    };
+    if (yRight) { s.y1 = mkAxis(yRight); }
+    return {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{labels:{font:{size:11,family:FF}, boxWidth:12, boxHeight:12, usePointStyle:true}},
+        tooltip:{titleFont:{size:12.5,family:FF}, bodyFont:{size:12,family:FF}}
+      },
+      scales:s
+    };
+  }
+
+  function build(id, type, data, yLeft, yRight){
+    var el = document.getElementById(id);
+    if (!el) return;
+    new C(el, {type:type, data:data, options:opts(yLeft, yRight)});
+  }
+
+  if (C) {
+    // c1: Table 2 2D LPIPS + PSNR
+    build('c1','bar',{
+      labels:['退化输入','FLUX.1','OmniGen2','Step1X','Qwen-Edit','Mage-Flow','GPT-2.5','FireRed','Ours'],
+      datasets:[
+        {label:'LPIPS ×1000 ↓', data:[226.2,257.7,416.6,242.6,238.9,241.8,271.0,225.8,137.8],
+         backgroundColor:['#c9d2de','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#0d9488']},
+        {type:'line', label:'PSNR ↑', data:[20.254,17.992,13.491,18.828,18.710,19.175,16.571,15.868,22.514],
+         borderColor:'#2563eb', backgroundColor:'#2563eb', tension:.25, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:120, max:430}, {position:'right', min:13, max:23});
+
+    // c2: 耗时
+    build('c2','bar',{
+      labels:['Ours','Mage-Flow','FLUX.1','Qwen-Edit','FireRed','OmniGen2','Step1X'],
+      datasets:[{label:'单图耗时 (s) ↓', data:[2.3,15.6,30.2,81.5,83.2,84.9,100.8],
+        backgroundColor:['#0d9488','#c7d7f7','#c7d7f7','#c7d7f7','#c7d7f7','#c7d7f7','#c7d7f7']}]
+    }, {min:0, max:110});
+
+    // c3: TRELLIS.2 MD + F_outer_1
+    build('c3','bar',{
+      labels:['Oracle','退化输入','FLUX.1','OmniGen2','Step1X','Qwen-Edit','Mage-Flow','GPT-2.5','FireRed','Ours'],
+      datasets:[
+        {label:'MD ×1000 ↓', data:[0.517,1.984,1.528,3.485,1.228,1.047,1.386,1.179,0.835,0.764],
+         backgroundColor:['#bfe0d0','#c9d2de','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#0d9488']},
+        {type:'line', label:'F_outer_1 ↑', data:[1.1586,1.0531,1.0238,0.6407,0.9637,1.0123,1.0422,0.9720,0.9889,1.1205],
+         borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.25, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:0.4, max:3.6}, {position:'right', min:0.6, max:1.2});
+
+    // c4: Pixal3D MD + F_outer_1
+    build('c4','bar',{
+      labels:['Oracle','退化输入','FLUX.1','Mage-Flow','OmniGen2','Step1X','GPT-2.5','Qwen-Edit','FireRed','Ours'],
+      datasets:[
+        {label:'MD ×1000 ↓', data:[0.753,1.221,1.214,1.259,3.204,1.411,1.467,1.150,1.148,1.091],
+         backgroundColor:['#bfe0d0','#c9d2de','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#dbe4f5','#0d9488']},
+        {type:'line', label:'F_outer_1 ↑', data:[1.0086,0.8821,0.8582,0.8428,0.5700,0.8289,0.7864,0.8757,0.8639,0.9588],
+         borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.25, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:0.5, max:3.3}, {position:'right', min:0.5, max:1.05});
+
+    // c5: 路由
+    build('c5','bar',{
+      labels:['mPLUG-Owl2','DepictQA','LIQE-MIX','NIQE','Qwen2.5-VL','MANIQA','GPT-5','Ours'],
+      datasets:[
+        {label:'Recall ↑', data:[100.00,99.54,51.66,98.52,83.64,79.57,72.27,88.45], backgroundColor:'#c7d7f7'},
+        {label:'Accuracy ↑', data:[54.12,53.42,65.48,53.32,74.21,89.04,77.58,90.77], backgroundColor:'#7fb3e8'},
+        {label:'H ↑', data:[70.23,69.53,57.75,69.19,78.64,84.04,74.83,89.59], backgroundColor:'#0d9488'}
+      ]
+    }, {min:40, max:100});
+
+    // c6: VLM 打分
+    build('c6','bar',{
+      labels:['FLUX.1','OmniGen2','Step1X','Qwen-Edit','Mage-Flow','GPT-2.5','FireRed','Ours'],
+      datasets:[
+        {label:'身份 Identity ↑', data:[7.31,5.43,7.91,8.09,8.50,6.95,8.00,8.62], backgroundColor:'#7fb3e8'},
+        {label:'净化 Purification ↑', data:[6.22,4.51,7.09,6.99,7.55,6.31,7.08,8.00], backgroundColor:'#3f7fc4'},
+        {label:'质量 Quality ↑', data:[6.24,4.72,5.98,6.60,6.22,6.92,6.92,6.58], backgroundColor:'#c7d7f7'}
+      ]
+    }, {min:4, max:9});
+  } else {
+    document.querySelectorAll('.chart-box').forEach(function(box){
+      var tip = document.createElement('p');
+      tip.className = 'chart-note';
+      tip.textContent = '图表需要联网加载 Chart.js，当前离线。所有数据见上方表格。';
+      box.appendChild(tip);
+    });
+  }
+})();
+</script>
+</body>
+</html>

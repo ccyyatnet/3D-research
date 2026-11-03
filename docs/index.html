@@ -274,6 +274,18 @@
         <div class="p-go">进入解读 →</div>
       </a>
 
+      <a class="p-card" href="./gate3dgen/index.html">
+        <div class="p-badges"><span class="p-badge b-survey">🔬 深度解读</span><span class="p-badge b-date">2026-11-03 上线</span></div>
+        <h3>Gate3DGen：「看起来更好」不等于「3D 更好」</h3>
+        <p class="p-desc">清华 × 华为 · arXiv:2610.31649 —— 真实照片一进图生 3D 就崩，最自然的想法是"先修图"，而这篇<b>用数据把这个想法证伪了</b>：7 个主流指令编辑器<b>全部降低 PSNR 与 SSIM</b>，且下到 3D 时<b>全部把两个 F1 打到比"不修"还低</b>——去掉大伪影的同时引入了局部几何偏差。Gate3DGen 在冻结的 3D 生成器前加一道门：路由器决定"这张要不要修"，单步净化器在 <b>2.3 秒</b>内修好，并用区域加权与边缘损失死守身份、轮廓与纹理线索。TRELLIS.2 网格距离 <b>↓61.5%</b>，闭合到 clean oracle 差距的 <b>83.1%</b>。</p>
+        <div class="p-meta">
+          <div><b>2.3 s</b>单图净化（基线 15.6–100.8 s）</div>
+          <div><b>−61.5%</b>TRELLIS.2 网格距离 MD</div>
+          <div><b>88.45%</b>路由 recall / 93.47% specificity</div>
+        </div>
+        <div class="p-go">进入解读 →</div>
+      </a>
+
       <div class="p-card soon">
         <div class="big">🚧</div>
         <div>更多论文解读筹备中<br>敬请期待</div>
