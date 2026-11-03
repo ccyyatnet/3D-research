@@ -298,6 +298,18 @@
         <div class="p-go">进入解读 →</div>
       </a>
 
+      <a class="p-card" href="./texture-consolidation/index.html">
+        <div class="p-badges"><span class="p-badge b-survey">🔬 深度解读</span><span class="p-badge b-date">2026-11-03 上线</span></div>
+        <h3>Texture Consolidation：不训练任何网络，把互相矛盾的渲染缝成一张纹理图</h3>
+        <p class="p-desc">JHU × Adobe Research × Adobe Firefly Foundry · arXiv:2610.36098 —— 给定一个带纹理图集的网格和一组已知相机的生成渲染，合成一张全局一致的纹理图。本文最值钱的观察是一个反直觉的事实：<b>真实拍摄里数据越多越好，生成视图里多生成一张就多引入一份不一致</b>，于是"视图增广"变成了取舍。做法分三步且全程<b>不含神经网络</b>：反投影出带置信度的颜色并做光照归一化 → 在<b>曲面域</b>解光流逐次对齐 → 用<b>置信度感知的梯度域缝合</b>融合。技术上最可迁移的是<b>求积积分</b>——它让低频的形变场（网格分辨率 ~20K 顶点）与高频的颜色信号（texel 分辨率 ~700K）在同一个变分问题里共存，只要求函数"可查询"。</p>
+        <div class="p-meta">
+          <div><b>−13.0%</b>Instant3D LPIPS（0.192 → 0.167）</div>
+          <div><b>6 / 6</b>LPIPS 与 ECD 全部第一</div>
+          <div><b>0 参数</b>纯变分求解，无训练</div>
+        </div>
+        <div class="p-go">进入解读 →</div>
+      </a>
+
       <div class="p-card soon">
         <div class="big">🚧</div>
         <div>更多论文解读筹备中<br>敬请期待</div>
