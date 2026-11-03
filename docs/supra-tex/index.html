@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SUPRA-Tex 深度解读 · 把材质观测先钉在表面上，再让 3D 生成器补全 · 3D-Research</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1a2332; --ink2:#4b5a6e; --ink3:#8494a9;
+    --line:#e3e9f2; --blue:#2563eb; --indigo:#6366f1; --orange:#ea8a3c; --teal:#0d9488;
+    --purple:#8b5cf6; --red:#dc4c4c; --green:#16a34a; --gold:#d97706;
+    --shadow:0 1px 3px rgba(20,40,80,.06),0 6px 18px rgba(20,40,80,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:56px}
+  nav .brand{font-weight:700;font-size:15px}
+  nav .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  nav .links a:hover{background:#eef2fb;color:var(--blue);text-decoration:none}
+  .hero{padding:56px 0 40px;background:linear-gradient(180deg,#f1eeff 0%,var(--bg) 100%)}
+  .hero .tag{display:inline-block;background:#e3dcfb;color:#6d28d9;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  .hero h1{font-size:31px;line-height:1.32;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--indigo)}
+  .hero .sub{color:var(--ink2);font-size:15.5px;margin-top:10px;max-width:940px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .meta span.pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink2);box-shadow:var(--shadow)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;color:var(--indigo);letter-spacing:-.5px}
+  .stat span{font-size:13px;color:var(--ink3)}
+  section{padding:44px 0}
+  section.alt{background:#fbfcfe;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:26px}
+  .sec-head .kicker{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--indigo);text-transform:uppercase}
+  .sec-head h2{font-size:26px;margin-top:4px;letter-spacing:-.3px}
+  .sec-head p{color:var(--ink2);font-size:14.5px;margin-top:6px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+  h3.block-title{font-size:17px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h3.block-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--blue)}
+  h3.block-title.c-indigo::before{background:var(--indigo)}
+  h3.block-title.c-orange::before{background:var(--orange)}
+  h3.block-title.c-teal::before{background:var(--teal)}
+  h3.block-title.c-purple::before{background:var(--purple)}
+  h3.block-title.c-red::before{background:var(--red)}
+  h3.block-title.c-green::before{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .chart-box{position:relative;height:340px}
+  .chart-note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+  .method-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .method-card h4{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .method-card .cls{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#eceafe;color:#6d28d9;flex-shrink:0}
+  .method-card .tagline{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+  .method-card p{font-size:13.5px;color:var(--ink2)}
+  .method-card .pros{font-size:12.5px;color:#15803d;margin-top:6px}
+  .method-card .cons{font-size:12.5px;color:#c2410c;margin-top:2px}
+  .method-card.hl{border-color:#c4b5fd;background:linear-gradient(180deg,#f8f6ff,#fff)}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--card)}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f2effd;color:var(--ink2);font-weight:700;font-size:12.5px;white-space:nowrap}
+  tr:hover td{background:#f9f8ff}
+  tr.ours td{background:#ede9fe;font-weight:600}
+  tr.ours:hover td{background:#e2dcfb}
+  tr.dim td{color:var(--ink3)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .badge-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .tag-good{background:#e4f7ec;color:#15803d}
+  .tag-bad{background:#ffe4e0;color:#c2410c}
+  .tag-mid{background:#fff4e0;color:#b45309}
+  .callout{background:linear-gradient(90deg,#f3f0ff,#eef5ff);border:1px solid #ddd6fb;border-radius:12px;padding:16px 20px;font-size:14px;color:var(--ink2);margin-top:16px}
+  .callout b{color:var(--ink)}
+  .callout.warn{background:linear-gradient(90deg,#fff6ec,#fdf2f2);border-color:#f5d9c0}
+  .callout.ok{background:linear-gradient(90deg,#eefaf2,#f0f8ff);border-color:#c9e9d6}
+  .summary-box{background:#f7f5ff;border:1px solid #e2dcfb;border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .summary-box b{color:var(--ink)}
+  .sub-h{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .sub-h .t{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#e0d9fb;color:#5b21b6}
+  .svg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .svg-card svg{display:block;max-width:100%;height:auto}
+  .svg-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;text-align:center}
+  .eq{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;color:var(--ink);overflow-x:auto;line-height:2}
+  .eq .cmt{font-family:inherit;color:var(--ink3);font-size:12.5px}
+  .concl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--indigo);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .concl .n{display:inline-block;font-size:12px;font-weight:700;color:var(--indigo);margin-bottom:6px}
+  .concl.c-red{border-left-color:var(--red)} .concl.c-red .n{color:var(--red)}
+  .concl.c-purple{border-left-color:var(--purple)} .concl.c-purple .n{color:var(--purple)}
+  .concl.c-green{border-left-color:var(--green)} .concl.c-green .n{color:var(--green)}
+  .concl.c-orange{border-left-color:var(--orange)} .concl.c-orange .n{color:var(--orange)}
+  .concl.c-teal{border-left-color:var(--teal)} .concl.c-teal .n{color:var(--teal)}
+  .concl.c-blue{border-left-color:var(--blue)} .concl.c-blue .n{color:var(--blue)}
+  .concl h4{font-size:15px;margin-bottom:6px}
+  .concl p{font-size:13.5px;color:var(--ink2)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--ink3);white-space:nowrap}
+  .kv dd{color:var(--ink2)}
+  .takeaway{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-top:3px solid var(--indigo)}
+  .takeaway h4{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .takeaway .idx{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#e3dcfb;color:#6d28d9;font-size:12px;font-weight:700;flex-shrink:0}
+  .takeaway p{font-size:13.5px;color:var(--ink2)}
+  .takeaway .why{font-size:12.5px;color:var(--ink3);margin-top:6px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px}
+  code{background:#eef2fb;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Monaco,monospace}
+  ul.tight{margin-left:20px}
+  ul.tight li{margin-bottom:7px;font-size:13.8px;color:var(--ink2)}
+  ul.tight li b{color:var(--ink)}
+  .cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .cmp div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .cmp .who{font-size:12px;font-weight:700;color:var(--ink3)}
+  .cmp .act{font-size:13.5px;font-weight:700;margin-top:4px}
+  .cmp .d{font-size:12.5px;color:var(--ink2);margin-top:4px}
+  .cmp div.hl{border-color:#c4b5fd;background:linear-gradient(180deg,#f8f6ff,#fff)}
+  .quote{background:#f8fafc;border-left:3px solid var(--indigo);border-radius:8px;padding:10px 16px;margin:10px 0;font-size:13.5px;color:var(--ink2)}
+  .quote .src{display:block;font-size:12px;color:var(--ink3);margin-top:4px}
+  @media (max-width:960px){.grid2,.grid3,.grid4,.stats,.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">3D<span>-Research</span> · 论文深度解读</div>
+    <div class="links">
+      <a href="../index.html" style="font-weight:700;color:#2563eb">← 返回首页</a>
+      <a href="#conclusion">① 结论</a>
+      <a href="#problem">② 为什么要解耦</a>
+      <a href="#translator">③ 2D 材质估计</a>
+      <a href="#native" style="font-weight:700;color:#6d28d9">④ 原生观测编码 ★</a>
+      <a href="#interleaved" style="font-weight:700;color:#6d28d9">⑤ 交错流 Transformer ★</a>
+      <a href="#tex">⑥ 给定几何</a>
+      <a href="#e2e">⑦ 端到端与商用</a>
+      <a href="#abl">⑧ 消融</a>
+      <a href="#limits">⑨ 局限</a>
+      <a href="../3d-generation-2026/index.html" style="font-weight:700;color:#0d9488">前沿合集 →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">🔬 论文深度解读 · 2026-11-03 · arXiv:2610.22352 · 华为 × 上海交大 × 华科</span>
+    <h1>别再让 3D 生成器去猜材质<br><em>SUPRA-Tex</em>：把已对齐的 PBR 观测钉在表面上，再谈补全</h1>
+    <p class="sub">
+      单图 3D 生成要给网格穿上<b>可重光照材质</b>，同时忠实保留参考图细节。两条主流路线各有硬伤：
+      多视图合成再融合 → 跨视图不一致导致接缝与鬼影，融合冲突预测会<b>模糊锐利的参考细节</b>；
+      原生 3D 生成（TRELLIS.2 一类）→ 图像 cross-attention 不提供细节与表面位置的显式对应，模型得自己学"细节该放哪"。
+      即便像 Pixal3D 那样把图像特征按相机投影搬到 3D，这些条件<b>仍然是视觉特征而不是材质观测</b>——3D 生成器要同时承担「从视觉特征推断 PBR」「在对应位置重建细节」「合成未见区域」三件异构的事。
+      本文的论点是：<b>3D 数据本来就稀缺，不该让 3D 模型联合学这些</b>。
+      做法是在 3D 生成<b>之前</b>先把可见证据翻译成 <b>native material observations</b>（用预训练材质 VAE 编码、与生成目标同 latent 空间、可直接解码），再围绕这个已落地的证据组织全表面补全。
+    </p>
+    <div class="meta">
+      <span class="pill">📄 30 页（正文 12 + 附录 18）· cs.CV · 2026-10-15</span>
+      <span class="pill">👥 Chen Yang¹*, Jiemin Fang¹*†, Fanpeng Meng¹*, Zihao Huang¹, Jichen Pang², Guanjun Wu³, Zhikuan Bao¹, Qi Tian¹</span>
+      <span class="pill">🏢 ¹ 华为 · ² 上海交通大学 · ³ 华中科技大学</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2610.22352v1" target="_blank">arXiv:2610.22352v1</a></span>
+      <span class="pill">🌐 <a href="https://supra-3d.github.io/supratex" target="_blank">项目页（代码与权重已开源）</a></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>+1.7 dB</b><span>给定几何 shaded PSNR（vs Pixal3D⋆，DTC-Tex）</span></div>
+      <div class="stat"><b>25.37 dB</b><span>参考视图 PSNR_fg（vs Pixal3D⋆ 21.84）</span></div>
+      <div class="stat"><b>−64.8%</b><span>端到端 LPIPS（vs Pixal3D⋆，DTC-Tex）</span></div>
+      <div class="stat"><b>51.1–84.8%</b><span>对 5 个商业系统的人类偏好胜率</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ① 结论 -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 01 · TAKEAWAYS</div>
+      <h2>先把结论读完</h2>
+      <p>共 9 条。第 1–4 条出自论文，第 5–9 条是本站读完全文（含附录 A–H 与全部表格）后的判断，<b>不是论文原话</b>。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl c-indigo">
+        <span class="n">结论 01 · 核心论点</span>
+        <h4>三件异构的事不该压在一个 3D 生成器身上</h4>
+        <p>现有方法让 3D 模型同时做：① 从视觉特征推断 PBR 属性；② 在对应表面位置重建参考细节；③ 合成未见区域材质。论文的核心判断是——<b>3D 训练数据本就稀缺，联合学这些异构任务会加重学习负担</b>。应把 ① 卸载给 2D 先验、把 ② 交给相机投影显式对齐，只留 ③ 给 3D 模型。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">结论 02 · 关键手段</span>
+        <h4>喂进去的是<b>材质观测</b>，不是视觉特征</h4>
+        <p>把参考视图的 PBR 估计投影到可见表面，用<b>预训练材质 VAE 编码器</b>压成 latent——它与生成目标<b>共享 latent 空间</b>、且能被预训练解码器直接解码。这叫 native observation latents。差别在于：视觉特征还需要 3D 模型"翻译"成材质，而材质观测已经是答案本身。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 03 · 一个容易忽略的细节</span>
+        <h4>未观测区域<b>不填零</b>，而是直接省略</h4>
+        <p>零填充会给缺失区域赋予具体语义（如黑色 albedo）。附录 E.3 给了实证：零填充版本让计算器背面<b>近乎全黑</b>、盘子红色侧面出现深色斑驳。本文利用编码器本身的<b>稀疏坐标架构</b>直接省略未观测体素。这个选择看起来小，影响很大。</p>
+      </div>
+      <div class="concl c-green">
+        <span class="n">结论 04 · 架构</span>
+        <h4>只读锚点 + 交替更新：算力向"没有观测的地方"倾斜</h4>
+        <p>观测流 <b>O 全程只读</b>（不出 query、不更新，只给每层供 K/V）；生成流 X 的查询坐标在 60 个 block 间交替——偶数块只 query 未观测 cells U，奇数块 query 全表面 S。结果：<b>U 中的状态被更新 60 次，S_o 中只有 30 次</b>。附带收益是 query token 少了 17.5%，采样快 1.20×。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 05 · 本站 · 消融读法</span>
+        <h4>交错了不起的那点增益：<b>0.02 dB</b></h4>
+        <p>Table 5：Ours 的 shaded PSNR_fg 在 DTC-Tex 上 22.34 vs Joint-update attention 22.32（<b>+0.02</b>），Complex-Tex 上 20.64 vs 20.63（<b>+0.01</b>）。论文的用词是 "matches"，很诚实。真正的差异在 albedo（+0.15 / +0.16 dB）、MR MAE 与 1.20× 的速度。<b>所以"交错更新"主要是一个效率与材质属性的改进，不是 shaded 保真度的突破。</b></p>
+      </div>
+      <div class="concl c-blue">
+        <span class="n">结论 06 · 本站 · 真正的证据在附录</span>
+        <h4>Figure 10：300 步 vs 1500 步，差距 10.74 dB</h4>
+        <p>同样初始化、同样训练数据：本文用 GT PBR 观测，Pixal3D⋆ 用对应的 shaded RGB 图像特征。step 300 时 <b>29.46 vs 18.72 dB</b>；step 1500 时 30.86 vs 20.89 dB，SSIM 0.9938 vs 0.9557，LPIPS 0.00436 vs 0.03996。<b>这才是"native observation 降低学习负担"最有力的证据</b>——但只在 TeaPot 单个物体上做，且论文自己声明没有隔离架构与优化差异。</p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">结论 07 · 本站 · 瓶颈在哪</span>
+        <h4>2D 材质估计本身只有 ~19–20 dB</h4>
+        <p>附录 D.1：F_2D 独立评估的前景 PSNR 只有 19–20 dB，论文直言"these results do not establish near-ground-truth observation accuracy"。而换成 Oracle PBR 能再带来 <b>2.31 / 1.12 dB</b>（shaded PSNR_fg）。换更强的 2D 先验（Qwen-Image-2.1，即 Ours‡）把差距缩到 0.98 / 0.47 dB。<b>下一步的收益明显在 2D 侧。</b></p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">结论 08 · 本站 · 商业对比的两处口径</span>
+        <h4>我们用了双视图，商业系统只用单视图；且 VLM 与人类结论打架</h4>
+        <p>Table 4：Hi3D 3.0 的 <b>VLM Align 得分 8.19 高于我们的 8.08</b>，但人类偏好只有 <b>51.1%</b>（接近抛硬币）——论文没有讨论这个矛盾。另外商业对比时我们额外合成了背面视图做条件，而商业系统只收到原始参考图，论文说明了但不改变"不完全对等"的事实。</p>
+      </div>
+      <div class="concl c-teal">
+        <span class="n">结论 09 · 本站 · 定位</span>
+        <h4>它是 TRELLIS.2 生态上的一次"分工重构"</h4>
+        <p>几何与材质 latent 都用 TRELLIS.2 的 O-Voxel 表示与稀疏 VAE，自注意力也从 TRELLIS.2 初始化。本文没有换底座，而是<b>重新划分了 2D 与 3D 的职责</b>。这与本站 Channel Match 页（TRELLIS.2 少步蒸馏）共享同一底座，两页可以对照读。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 问题 -->
+<section id="problem" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 02 · MOTIVATION</div>
+      <h2>两条路线的共同病灶：3D 模型被迫"猜材质"</h2>
+      <p>理解 SUPRA-Tex 的关键，是看清它<b>移走了什么</b>——不是换了个更强的网络，而是把两件本不属于 3D 模型的事搬走了。</p>
+    </div>
+
+    <div class="cmp">
+      <div>
+        <div class="who">路线 A</div>
+        <div class="act">多视图合成 → 投影融合</div>
+        <div class="d">Hunyuan3D / MVPainter / MV-Adapter 一系。跨视图不一致会产生<b>接缝与鬼影</b>；把冲突预测做混合会<b>模糊锐利的参考细节</b>——而那些细节正是"超对齐"要保的东西。</div>
+      </div>
+      <div>
+        <div class="who">路线 B</div>
+        <div class="act">原生 3D 生成 + 图像条件</div>
+        <div class="d">TRELLIS.2 用 3D 材质 VAE 把表面 PBR 压成 latent 再生成。其图像 cross-attention <b>不提供图像细节与 3D 表面位置的显式对应</b>，模型得自己学细节该放哪。</div>
+      </div>
+      <div>
+        <div class="who">路线 C</div>
+        <div class="act">显式空间对齐的图像特征</div>
+        <div class="d">Pixal3D / CUPID 把高分辨率图像特征按相机投影搬到 3D。对应关系是有了，但条件<b>仍是视觉特征而非材质观测</b>——3D 模型还是得先把它翻译成 PBR。</div>
+      </div>
+      <div class="hl">
+        <div class="who">本文</div>
+        <div class="act">先落地材质观测，再补全</div>
+        <div class="d">把可见材质估计与表面对齐<b>从 3D 生成中分离出去</b>，交给 2D 先验与相机投影；3D 模型只负责"锚定已有证据 + 补全未见表面"。容量集中在真正需要生成的地方。</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>论文原话的精准表述值得引用：</b>"Rather than forcing the 3D model to infer physical materials from abstract visual features, this formulation enables the generator to <b>anchor directly on established material evidence</b>, preserving reference details while focusing more of its capacity on completing unobserved surfaces."
+      <span class="src">来源：Section 1 Introduction</span>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 252" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SUPRA-Tex 三阶段流水线">
+        <defs>
+          <marker id="sp1" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#8494a9"/>
+          </marker>
+          <marker id="sp2" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#6366f1"/>
+          </marker>
+        </defs>
+
+        <text x="14" y="16" font-size="11.5" font-weight="700" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">三阶段：材质估计 → 原生观测编码 → 观测引导的补全</text>
+
+        <!-- 阶段 1 -->
+        <rect x="14" y="28" width="196" height="96" rx="10" fill="#f3f5f9" stroke="#e3e9f2"/>
+        <text x="112" y="48" font-size="11.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">① 图 → 材质（2D）</text>
+        <text x="112" y="66" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">MLLM 图像编辑模型 F_2D</text>
+        <text x="112" y="82" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">单步 DiT · 1.2 s · 1024²</text>
+        <text x="112" y="98" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">输出 albedo / MR / normal</text>
+        <text x="112" y="114" font-size="10" text-anchor="middle" fill="#6d28d9" font-family="Segoe UI,sans-serif">光照已被分离</text>
+        <line x1="210" y1="76" x2="238" y2="76" stroke="#8494a9" marker-end="url(#sp1)"/>
+
+        <!-- 阶段 2 -->
+        <rect x="240" y="28" width="196" height="96" rx="10" fill="#f8f6ff" stroke="#c4b5fd" stroke-width="1.7"/>
+        <text x="338" y="48" font-size="11.5" text-anchor="middle" fill="#6d28d9" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">② 原生观测编码</text>
+        <text x="338" y="66" font-size="10.5" text-anchor="middle" fill="#6d28d9" font-family="Segoe UI,sans-serif">按相机投影到可见表面</text>
+        <text x="338" y="82" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">冻结的材质 VAE 编码器</text>
+        <text x="338" y="98" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">省略未观测体素（不填零）</text>
+        <text x="338" y="114" font-size="10" text-anchor="middle" fill="#6d28d9" font-family="Segoe UI,sans-serif">+ 覆盖率 ρ 与边界距离 d</text>
+        <line x1="436" y1="76" x2="464" y2="76" stroke="#6366f1" marker-end="url(#sp2)"/>
+
+        <!-- 阶段 3 -->
+        <rect x="466" y="28" width="200" height="96" rx="10" fill="#eef4ff" stroke="#2563eb" stroke-width="1.7"/>
+        <text x="566" y="48" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">③ 观测引导的补全</text>
+        <text x="566" y="66" font-size="10.5" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">交错流 Transformer</text>
+        <text x="566" y="82" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">观测流只读 · 生成流交替</text>
+        <text x="566" y="98" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">25 Euler 步 · 无 CFG</text>
+        <text x="566" y="114" font-size="10" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">冻结解码器 → 全表面 PBR</text>
+
+        <!-- 底部：条件与产出 -->
+        <rect x="14" y="142" width="196" height="34" rx="8" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="112" y="163" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">输入：参考图 + 网格 M + 相机 π</text>
+
+        <rect x="240" y="142" width="196" height="34" rx="8" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="338" y="163" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">观测编码只做一次，采样中固定不变</text>
+
+        <rect x="466" y="142" width="200" height="34" rx="8" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="566" y="163" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">几何 latent G 全程作为条件</text>
+
+        <rect x="14" y="190" width="652" height="52" rx="9" fill="#f3f0ff" stroke="#ddd6fb"/>
+        <text x="340" y="210" font-size="11" text-anchor="middle" fill="#6d28d9" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">关键：观测 latent 与生成目标共享同一 latent 空间，且可被预训练材质解码器直接解码</text>
+        <text x="340" y="228" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">所以它不是"需要被翻译的抽象特征"，而是已经可用的物理材质证据</text>
+      </svg>
+      <div class="svg-cap">图：三阶段流水线。中间那一步是本文的原创贡献所在。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ③ 2D 材质估计 -->
+<section id="translator">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 03 · STAGE 1</div>
+      <h2>图 → 材质：把光照从材质里分离出来</h2>
+      <p>第一步就把"光照分离"做掉，后面 3D 模型看到的才是物理材质而不是一张带阴影的照片。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="method-card hl">
+        <h4><span class="cls">设计</span>单步、联合、全分辨率</h4>
+        <p class="tagline">FireRed-Image-Edit-1.1 适配而来</p>
+        <p>模型 F_2D 一次前向同时预测 <b>albedo</b>、<b>metallic-roughness (MR)</b> 与辅助的 <b>normal</b>。为复用 3 通道预训练图像 VAE，把 m 与 r 和常量通道打包成 3 通道图——顺带也满足了预训练材质编码器的输入格式。</p>
+        <div class="pros">推理 1.2 s（单张 H800），1024×1024 输出，无需迭代去噪。</div>
+      </div>
+      <div class="method-card">
+        <h4><span class="cls">机制</span>factorized modality-axis joint attention</h4>
+        <p class="tagline">在 block 29 / 39 / 49 / 59 插入，rank 256，4 头</p>
+        <p>把 batch 维折叠，让 albedo / MR / normal 三条流并行处理，再在<b>相同空间坐标</b>上跨模态轴交换特征。这样既协调了通道间预测，又保留了预训练图像先验。</p>
+        <div class="cons">代价：只在 4 个 block 上做跨模态交换，交互密度有限。</div>
+      </div>
+    </div>
+
+    <h3 class="block-title c-purple">训练要点与 2D 侧的真实精度（附录 B.2 / D.1）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>项目</th><th>取值 / 结果</th></tr></thead>
+        <tbody>
+          <tr><td>训练数据</td><td>Objaverse 渲染的 RGB 与 GT 材质 / 法线图</td></tr>
+          <tr><td>目标</td><td>latent flow-matching，锚定在固定最大噪声端点 <b>σ = 1.0</b>（与推理同端点）</td></tr>
+          <tr><td>损失</td><td>outlier-masked MSE：绝对值 &gt; 50 的残差贡献零损失，但仍留在平均分母里</td></tr>
+          <tr><td>优化</td><td>适配器 lr 2×10⁻⁴，backbone blocks 29–49 lr 5×10⁻⁷；VAE 与文本编码器冻结</td></tr>
+          <tr class="ours"><td><b>独立精度（DTC-Tex / Complex-Tex）</b></td><td>前景 PSNR ≈ <b>19–20 dB</b>；全图 PSNR 28.25 / 28.19 dB</td></tr>
+          <tr class="dim"><td>论文自评</td><td><i>"these results do not establish near-ground-truth observation accuracy"</i></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">注意最后一行：论文明确承认 2D 估计远未达到接近真值的精度。这也解释了为什么 Table 5 里换成 <b>Oracle PBR</b> 还能再带来 2.31 / 1.12 dB——<b>瓶颈在 2D 侧，且论文把这条路线图直接给了出来</b>（换 Qwen-Image-2.1 即 Ours‡ 后差距缩到 0.98 / 0.47 dB）。</p>
+  </div>
+</section>
+
+<!-- ④ 原生观测编码 -->
+<section id="native" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 04 · STAGE 2 ★</div>
+      <h2>原生观测编码：本文真正的原创贡献</h2>
+      <p>三个设计决定合起来才成立：投影要过滤、未观测区域<b>不填零</b>、还要把"观测到什么程度"也编码进去。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="method-card hl">
+        <h4><span class="cls">1</span>过滤后的表面投影</h4>
+        <p>每个前景像素 u 经相机投影 π 关联到<b>第一个可见表面命中点</b> p。推理时再加两道过滤去除不可靠边界对应：</p>
+        <ul class="tight" style="margin-top:8px">
+          <li><b>前景掩码腐蚀</b>：去掉轮廓上的混合像素</li>
+          <li><b>局部深度不连续过滤</b>：邻域可见深度差超阈则拒绝（小投影误差就会把观测挪到别的表面上）</li>
+        </ul>
+        <div class="pros">所有材质通道共享同一保留下来的观测支撑。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">2</span>不填零，直接省略</h4>
+        <p>零填充会给未观测区域赋予<b>具体材质语义</b>（例如黑色 albedo）。</p>
+        <p style="margin-top:8px">附录 E.3 的实证：零填充版本下<b>计算器背面近乎全黑</b>且残留正面的字符，盘子红色侧面出现<b>深色斑驳</b>；本文的 observed-support-only 编码则产出绿色背面、保住红白配色。</p>
+        <div class="cons">代价：必须依赖编码器的稀疏坐标架构。</div>
+      </div>
+      <div class="method-card hl">
+        <h4><span class="cls">3</span>空间元数据</h4>
+        <p>一个 latent cell 聚合多个表面体素，单视角很少能全覆盖。所以要告诉生成器"这个 cell 观测得有多全、离未观测区多近"：</p>
+        <div class="eq" style="margin:8px 0;font-size:13px">
+          ρ_s = |V_s ∩ V_o| / |V_s|      <span class="cmt">覆盖率</span>
+          d_s = min dist_GS(s, q)        <span class="cmt">六邻域图上的边界距离，不可达则 −1</span>
+        </div>
+        <div class="pros">覆盖率用去重后的体素集合算，避免重复像素投影抬高数值。</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>一个容易漏读的限定：</b>论文明确说明 ρ_s 与 d_s 描述的是<b>观测的范围</b>，不是 2D 估计的<b>准确度</b>。
+      另外，S_o（有观测的 cell）里的 cell 也可能含有未见体素，所以 U = S \ S_o 指的是"完全没有任何观测的 cell"，<b>不是"所有未见表面"</b>。引用口径时要注意。
+    </div>
+
+    <h3 class="block-title c-indigo">Partial 编码 ≠ Complete 编码的一个切片（Figure 5）</h3>
+    <p style="font-size:13.8px;color:var(--ink2)">
+      共用同一个编码器，并不代表"部分观测"能得到"完整材质 latent"的对应切片。论文用 GT 几何 / 相机 / PBR（绕开 2D 预测与流生成）在 Complex-Tex 上隔离验证：
+      <b>标准化 latent RMS 平均 0.713</b>（95% bootstrap 区间 0.684–0.742，中位数 0.680），而同一输入重复编码的差为 0。
+      解码重建的三个例子（10th / 50th / 90th 百分位）full/partial PSNR 分别为 <b>43.39 / 29.67</b>、<b>40.68 / 26.52</b>、<b>27.41 / 24.37</b> dB。
+    </p>
+    <div class="callout">
+      论文对这张图的自我限定很到位：<i>"These three examples demonstrate decodable material content with imperfect fidelity; they are <b>not a cohort-wide reconstruction estimate</b>."</i>
+      也就是说——<b>部分编码确实改变了表示，重建可用但不完美，且这三个例子不能当整体估计。</b>
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ 交错流 Transformer -->
+<section id="interleaved">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 05 · STAGE 3 ★</div>
+      <h2>交错流 Transformer：只读锚点与交替更新</h2>
+      <p>对比 Pixal3D⋆ 的做法（把投影图像特征通过加性残差注入、<b>每层更新所有表面 token</b>），本文改了两件事：观测<b>只读</b>，查询坐标<b>交替</b>。</p>
+    </div>
+
+    <div class="svg-card">
+      <svg viewBox="0 0 680 236" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="交错流 Transformer 的双流与交替更新机制">
+        <text x="14" y="16" font-size="11.5" font-weight="700" fill="#8494a9" font-family="Segoe UI,PingFang SC,sans-serif">60 个 block = 30 组"未观测更新 + 全表面更新"交替对</text>
+
+        <!-- 观测流 -->
+        <rect x="14" y="28" width="150" height="120" rx="10" fill="#fdf3e9" stroke="#f2c49b" stroke-width="1.6"/>
+        <text x="89" y="48" font-size="11.5" text-anchor="middle" fill="#b45309" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">观测流 O（只读）</text>
+        <text x="89" y="66" font-size="10.5" text-anchor="middle" fill="#b45309" font-family="Segoe UI,sans-serif">只覆盖 S_o（有观测的 cell）</text>
+        <text x="89" y="84" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">· 不产生 query</text>
+        <text x="89" y="100" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">· 不接收残差 / FFN 更新</text>
+        <text x="89" y="116" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">· O^(ℓ+1) = O（跨 block 不变）</text>
+        <text x="89" y="134" font-size="10.5" text-anchor="middle" fill="#b45309" font-family="Segoe UI,sans-serif">· 固定 clean-time 指示 t = 0</text>
+
+        <!-- 箭头：O 供 K/V -->
+        <line x1="164" y1="70" x2="220" y2="70" stroke="#ea8a3c" stroke-width="1.6"/>
+        <text x="192" y="62" font-size="10" text-anchor="middle" fill="#b45309" font-family="Segoe UI,sans-serif">K, V</text>
+        <line x1="164" y1="100" x2="220" y2="100" stroke="#ea8a3c" stroke-width="1.6"/>
+        <text x="192" y="118" font-size="10" text-anchor="middle" fill="#b45309" font-family="Segoe UI,sans-serif">K, V</text>
+
+        <!-- block 序列 -->
+        <rect x="222" y="30" width="130" height="52" rx="9" fill="#e8f7f0" stroke="#0d9488" stroke-width="1.6"/>
+        <text x="287" y="50" font-size="11" text-anchor="middle" fill="#0f766e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">偶数块 ℓ = 0, 2, …</text>
+        <text x="287" y="66" font-size="10.5" text-anchor="middle" fill="#0f766e" font-family="Segoe UI,sans-serif">J_ℓ = U（未观测 cell）</text>
+        <text x="287" y="78" font-size="10" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">只更新没有观测的地方</text>
+
+        <rect x="222" y="94" width="130" height="52" rx="9" fill="#eef4ff" stroke="#2563eb" stroke-width="1.6"/>
+        <text x="287" y="114" font-size="11" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">奇数块 ℓ = 1, 3, …</text>
+        <text x="287" y="130" font-size="10.5" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">J_ℓ = S（全表面）</text>
+        <text x="287" y="142" font-size="10" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">保持全局一致性</text>
+
+        <text x="368" y="62" font-size="14" fill="#8494a9" font-family="Segoe UI,sans-serif">⎫</text>
+        <text x="368" y="126" font-size="14" fill="#8494a9" font-family="Segoe UI,sans-serif">⎭</text>
+        <text x="392" y="96" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">×30 组</text>
+
+        <!-- 生成流 -->
+        <rect x="414" y="28" width="150" height="120" rx="10" fill="#eef4ff" stroke="#2563eb" stroke-width="1.6"/>
+        <text x="489" y="48" font-size="11.5" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">生成流 X（动态）</text>
+        <text x="489" y="66" font-size="10.5" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">覆盖全表面 S</text>
+        <text x="489" y="84" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">· U 中的状态被更新 <b>60 次</b></text>
+        <text x="489" y="102" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">· S_o 中的状态被更新 <b>30 次</b></text>
+        <text x="489" y="120" font-size="10.5" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,sans-serif">→ 算力向未见区域倾斜</text>
+        <text x="489" y="138" font-size="10" text-anchor="middle" fill="#4b5a6e" font-family="Segoe UI,sans-serif">输出投影给出全 S 的速度场</text>
+
+        <line x1="564" y1="88" x2="600" y2="88" stroke="#2563eb" stroke-width="1.6"/>
+        <rect x="602" y="66" width="64" height="44" rx="9" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="634" y="84" font-size="10.5" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,sans-serif">速度场</text>
+        <text x="634" y="100" font-size="10" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">N × 32</text>
+
+        <rect x="14" y="164" width="652" height="62" rx="9" fill="#f8fafc" stroke="#e3e9f2"/>
+        <text x="340" y="184" font-size="11" text-anchor="middle" fill="#4b5a6e" font-weight="700" font-family="Segoe UI,PingFang SC,sans-serif">规格：60 block · hidden 1536 · 12 头 · d_h = 128 · 3D RoPE 用于 Q/K（V 不旋转）</text>
+        <text x="340" y="202" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">观测 token 额外加上 W_meta([ρ; d]) 与零初始化的 role bias b_o；自注意力从 TRELLIS.2 初始化，其余随机</text>
+        <text x="340" y="218" font-size="10.5" text-anchor="middle" fill="#8494a9" font-family="Segoe UI,sans-serif">推理：25 Euler 步、无 CFG、时间网格 t_j = 3u_j/(1+2u_j)；观测流 K/V 可跨步缓存复用</text>
+      </svg>
+      <div class="svg-cap">图：双流与交替更新。橙色为只读的观测流，蓝/青为动态的生成流。</div>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">训练目标（式 9–10）</h4>
+        <div class="eq" style="margin-top:0">
+          Z_t = (1 − t) Z_gt + [σ_min + (1 − σ_min) t] ε        <span class="cmt">σ_min = 10⁻⁵</span>
+          v* = (1 − σ_min) ε − Z_gt
+          L_FM = 𝔼[ MSE( v_θ(Z_t, t; O, G), v* ) ]
+        </div>
+        <p style="font-size:13.5px;color:var(--ink2);margin-top:10px">
+          损失<b>包括观测坐标在内的所有有效 token</b>——也就是说，生成器被要求在有观测的地方也要能重建出完整材质，而不只是补全空洞。
+          观测表示<b>不沿流路径加噪</b>，始终作为条件输入。
+        </p>
+        <div class="summary-box">
+          训练时以 <b>3% 概率丢弃整个观测条件</b>（保留几何条件），避免模型把观测当成必然存在的东西。训练时间采样 t = sigmoid(ξ)，ξ ~ N(1,1)。
+        </div>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">算力与优化（附录 B.3）</h4>
+        <dl class="kv">
+          <dt>步数 / 批量</dt><dd>30,000 steps · global batch <b>576</b></dd>
+          <dt>算力</dt><dd>最终阶段 <b>64 GPUs</b> + FlashAttention-3，BF16</dd>
+          <dt>优化器</dt><dd>AdamW，β₁=0.9，β₂=0.95，wd=0.01，seed 42</dd>
+          <dt>学习率</dt><dd>150 步 warmup 到 1e-4 → cosine 衰减（20,000 步 horizon，min 1e-5）；<b>step 15,000 处再延长一段 cosine 到 30,000</b></dd>
+          <dt>梯度裁剪</dt><dd>自适应裁剪，max norm 1.0，95 分位阈值</dd>
+          <dt>冻结</dt><dd>材质编码器 E_mat 与解码器 D_mat 全程冻结</dd>
+        </dl>
+        <p style="font-size:13.5px;color:var(--ink2);margin-top:12px">训练数据全部是<b>公开数据集</b>：TexVerse、Objaverse-XL、ABO、HSSD、开源合成 3D 集合，以及 4D-Dress、Human4DiT、THuman2.1、X-Humans 的人体扫描。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ 给定几何 -->
+<section id="tex">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 06 · 实验一</div>
+      <h2>给定几何的纹理生成：10 个基线全指标领先</h2>
+      <p>每个方法拿到 GT 网格 + 单张前向光照参考图，然后在<b>相同的相机与光照</b>下渲染 16 个视角（参考视图 + 15 个新视图）与 GT 比。这样把材质质量从几何、位姿、光照差异中隔离出来。</p>
+    </div>
+
+    <h3 class="block-title c-blue">Table 1（DTC-Tex，100 个纹理丰富的产品扫描）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">Shaded PSNR↑</th><th class="num">PSNR fg↑</th><th class="num">LPIPS↓</th><th class="num">CLIP-I↑</th><th class="num">FD↓</th><th class="num">Alb. PSNR fg↑</th><th class="num">Met.↓</th><th class="num">Rough.↓</th></tr></thead>
+        <tbody>
+          <tr><td>Step1X-3D</td><td class="num">23.12</td><td class="num">14.21</td><td class="num">0.083</td><td class="num">0.851</td><td class="num">33.30</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>MV-Adapter</td><td class="num">24.64</td><td class="num">15.73</td><td class="num">0.077</td><td class="num">0.858</td><td class="num">33.17</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>Ink3D</td><td class="num">25.82</td><td class="num">17.08</td><td class="num">0.076</td><td class="num">0.859</td><td class="num">35.01</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>UniTEX</td><td class="num">25.42</td><td class="num">16.54</td><td class="num">0.071</td><td class="num">0.877</td><td class="num">29.24</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>MVPainter</td><td class="num">26.44</td><td class="num">17.59</td><td class="num">0.077</td><td class="num">0.856</td><td class="num">33.40</td><td class="num">15.30</td><td class="num">0.121</td><td class="num">0.119</td></tr>
+          <tr><td>TEXGen</td><td class="num">27.24</td><td class="num">18.33</td><td class="num">0.072</td><td class="num">0.848</td><td class="num">51.11</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>LumiTex</td><td class="num">28.29</td><td class="num">19.38</td><td class="num">0.062</td><td class="num">0.892</td><td class="num">24.42</td><td class="num">17.39</td><td class="num">0.352</td><td class="num">0.098</td></tr>
+          <tr><td>Hunyuan3D 2.1</td><td class="num">26.80</td><td class="num">17.89</td><td class="num">0.070</td><td class="num">0.877</td><td class="num">28.18</td><td class="num">15.09</td><td class="num">0.142</td><td class="num">0.079</td></tr>
+          <tr><td>TRELLIS.2</td><td class="num">28.60</td><td class="num">19.73</td><td class="num">0.062</td><td class="num">0.880</td><td class="num">32.73</td><td class="num">16.90</td><td class="num">0.063</td><td class="num">0.059</td></tr>
+          <tr><td>Pixal3D⋆</td><td class="num">29.19</td><td class="num">20.47</td><td class="num">0.050</td><td class="num">0.908</td><td class="num">20.35</td><td class="num">17.60</td><td class="num">0.051</td><td class="num">0.076</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>30.89</b></td><td class="num"><b>22.34</b></td><td class="num"><b>0.042</b></td><td class="num"><b>0.927</b></td><td class="num"><b>16.51</b></td><td class="num"><b>19.55</b></td><td class="num"><b>0.043</b></td><td class="num"><b>0.041</b></td></tr>
+          <tr class="ours"><td>Ours‡（换 Qwen 2D 先验）</td><td class="num"><b>32.08</b></td><td class="num"><b>23.67</b></td><td class="num">0.042</td><td class="num"><b>0.928</b></td><td class="num"><b>16.31</b></td><td class="num"><b>21.14</b></td><td class="num"><b>0.033</b></td><td class="num"><b>0.038</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="block-title c-teal">Table 1（Complex-Tex，110 个 Sketchfab 网格：更密的铭文与更细的图案）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>方法</th><th class="num">Shaded PSNR↑</th><th class="num">PSNR fg↑</th><th class="num">LPIPS↓</th><th class="num">CLIP-I↑</th><th class="num">FD↓</th><th class="num">Alb. PSNR fg↑</th><th class="num">Met.↓</th><th class="num">Rough.↓</th></tr></thead>
+        <tbody>
+          <tr><td>Step1X-3D</td><td class="num">23.61</td><td class="num">13.97</td><td class="num">0.066</td><td class="num">0.848</td><td class="num">30.93</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>MV-Adapter</td><td class="num">24.59</td><td class="num">14.95</td><td class="num">0.064</td><td class="num">0.849</td><td class="num">31.19</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>Ink3D</td><td class="num">26.15</td><td class="num">16.69</td><td class="num">0.060</td><td class="num">0.864</td><td class="num">30.86</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>UniTEX</td><td class="num">25.78</td><td class="num">16.19</td><td class="num">0.056</td><td class="num">0.872</td><td class="num">27.42</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>MVPainter</td><td class="num">25.72</td><td class="num">16.19</td><td class="num">0.067</td><td class="num">0.846</td><td class="num">33.87</td><td class="num">13.51</td><td class="num">0.228</td><td class="num">0.188</td></tr>
+          <tr><td>TEXGen</td><td class="num">27.90</td><td class="num">18.25</td><td class="num">0.053</td><td class="num">0.871</td><td class="num">32.89</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td>LumiTex</td><td class="num">27.77</td><td class="num">18.21</td><td class="num">0.051</td><td class="num">0.887</td><td class="num">23.29</td><td class="num">15.68</td><td class="num">0.256</td><td class="num">0.181</td></tr>
+          <tr><td>Hunyuan3D 2.1</td><td class="num">25.83</td><td class="num">16.19</td><td class="num">0.063</td><td class="num">0.857</td><td class="num">31.05</td><td class="num">13.25</td><td class="num">0.247</td><td class="num">0.156</td></tr>
+          <tr><td>TRELLIS.2</td><td class="num">27.97</td><td class="num">18.41</td><td class="num">0.051</td><td class="num">0.876</td><td class="num">27.42</td><td class="num">16.17</td><td class="num">0.131</td><td class="num">0.111</td></tr>
+          <tr><td>Pixal3D⋆</td><td class="num">28.84</td><td class="num">19.44</td><td class="num">0.046</td><td class="num">0.899</td><td class="num">19.50</td><td class="num">17.25</td><td class="num">0.145</td><td class="num">0.122</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td class="num"><b>30.05</b></td><td class="num"><b>20.64</b></td><td class="num"><b>0.039</b></td><td class="num"><b>0.915</b></td><td class="num"><b>17.36</b></td><td class="num"><b>18.12</b></td><td class="num"><b>0.109</b></td><td class="num"><b>0.084</b></td></tr>
+          <tr class="ours"><td>Ours‡（换 Qwen 2D 先验）</td><td class="num"><b>30.66</b></td><td class="num"><b>21.29</b></td><td class="num"><b>0.038</b></td><td class="num"><b>0.921</b></td><td class="num"><b>16.08</b></td><td class="num"><b>18.27</b></td><td class="num">0.115</td><td class="num"><b>0.076</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">相对 Pixal3D⋆：shaded PSNR +1.70 / +1.21 dB，albedo PSNR_fg +1.95 / +0.87 dB，LPIPS 0.050→0.042 与 0.046→0.039。<b>注意 TEXGen 的 FD 高达 51.11 / 32.89</b>——它在像素指标上不差（27.24 / 27.90），但分布指标崩了，这又是一次 2D 指标与分布质量脱钩的例子。</p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">参考视图 vs 新视图保真度（Table 2，DTC-Tex）</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c1"></canvas></div>
+        <p class="chart-note">参考视图（1 个）与新视图（15 个）分开统计。本文在参考视图上的领先远大于新视图——这正是"super-alignment"的直接体现。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Table 2 原文（两个数据集 × 两个视图划分）</h4>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>数据集 / 视图</th><th>方法</th><th class="num">Shaded PSNR fg↑</th><th class="num">LPIPS↓</th></tr></thead>
+            <tbody>
+              <tr><td>DTC 参考</td><td>Pixal3D⋆</td><td class="num">21.837</td><td class="num">0.0304</td></tr>
+              <tr class="ours"><td>DTC 参考</td><td><b>Ours</b></td><td class="num"><b>25.372</b></td><td class="num"><b>0.0132</b></td></tr>
+              <tr><td>DTC 新视图</td><td>Pixal3D⋆</td><td class="num">20.377</td><td class="num">0.0510</td></tr>
+              <tr class="ours"><td>DTC 新视图</td><td><b>Ours</b></td><td class="num"><b>22.134</b></td><td class="num"><b>0.0444</b></td></tr>
+              <tr><td>Complex 参考</td><td>Pixal3D⋆</td><td class="num">20.062</td><td class="num">0.0389</td></tr>
+              <tr class="ours"><td>Complex 参考</td><td><b>Ours</b></td><td class="num"><b>22.927</b></td><td class="num"><b>0.0202</b></td></tr>
+              <tr><td>Complex 新视图</td><td>Pixal3D⋆</td><td class="num">19.402</td><td class="num">0.0461</td></tr>
+              <tr class="ours"><td>Complex 新视图</td><td><b>Ours</b></td><td class="num"><b>20.488</b></td><td class="num"><b>0.0401</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13.5px;color:var(--ink2);margin-top:12px">DTC-Tex 参考视图领先 <b>+3.54 dB</b>，新视图只领先 <b>+1.76 dB</b>。这个落差很说明问题：<b>优势主要集中在"看得见的地方"</b>，未见区域的补全是另一回事。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑦ 端到端与商用 -->
+<section id="e2e" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 07 · 实验二 / 三</div>
+      <h2>端到端生成，以及与五个商业系统的对比</h2>
+      <p>端到端时几何也是预测的，观测锚点要落到<b>预测网格 + 预测相机</b>上——这是本文的观测接口暴露最充分的地方。</p>
+    </div>
+
+    <h3 class="block-title c-green">Table 3：端到端单图→3D（9 项指标全领先）</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>数据集</th><th>方法</th><th class="num">PSNR↑</th><th class="num">PSNR fg↑</th><th class="num">SSIM↑</th><th class="num">LPIPS↓</th><th class="num">CLIP-I↑</th><th class="num">FD↓</th><th class="num">FID↓</th><th class="num">CMMD↓</th></tr></thead>
+        <tbody>
+          <tr><td>DTC-Tex</td><td>Step1X-3D</td><td class="num">19.70</td><td class="num">12.00</td><td class="num">0.894</td><td class="num">0.115</td><td class="num">0.844</td><td class="num">33.4</td><td class="num">33.5</td><td class="num">14.40</td></tr>
+          <tr><td>DTC-Tex</td><td>Hunyuan3D 2.1</td><td class="num">21.97</td><td class="num">14.52</td><td class="num">0.904</td><td class="num">0.095</td><td class="num">0.835</td><td class="num">34.8</td><td class="num">33.6</td><td class="num">12.78</td></tr>
+          <tr><td>DTC-Tex</td><td>TRELLIS.2†</td><td class="num">22.59</td><td class="num">15.71</td><td class="num">0.907</td><td class="num">0.098</td><td class="num">0.816</td><td class="num">41.7</td><td class="num">32.2</td><td class="num">16.63</td></tr>
+          <tr><td>DTC-Tex</td><td>Pixal3D⋆</td><td class="num">26.88</td><td class="num">19.90</td><td class="num">0.945</td><td class="num">0.071</td><td class="num">0.910</td><td class="num">27.2</td><td class="num">26.0</td><td class="num">8.29</td></tr>
+          <tr class="ours"><td>DTC-Tex</td><td><b>Ours</b></td><td class="num"><b>28.65</b></td><td class="num"><b>20.79</b></td><td class="num"><b>0.967</b></td><td class="num"><b>0.025</b></td><td class="num"><b>0.971</b></td><td class="num"><b>21.1</b></td><td class="num"><b>23.0</b></td><td class="num"><b>4.97</b></td></tr>
+          <tr><td>Complex-Tex</td><td>Step1X-3D</td><td class="num">20.66</td><td class="num">12.36</td><td class="num">0.900</td><td class="num">0.099</td><td class="num">0.882</td><td class="num">26.3</td><td class="num">31.4</td><td class="num">8.73</td></tr>
+          <tr><td>Complex-Tex</td><td>Hunyuan3D 2.1</td><td class="num">21.87</td><td class="num">13.83</td><td class="num">0.908</td><td class="num">0.087</td><td class="num">0.843</td><td class="num">31.2</td><td class="num">35.5</td><td class="num">11.39</td></tr>
+          <tr><td>Complex-Tex</td><td>TRELLIS.2†</td><td class="num">22.22</td><td class="num">14.32</td><td class="num">0.909</td><td class="num">0.087</td><td class="num">0.830</td><td class="num">32.6</td><td class="num">32.0</td><td class="num">10.49</td></tr>
+          <tr><td>Complex-Tex</td><td>Pixal3D⋆</td><td class="num">26.24</td><td class="num">18.64</td><td class="num">0.940</td><td class="num">0.070</td><td class="num">0.909</td><td class="num">22.9</td><td class="num">25.8</td><td class="num">5.96</td></tr>
+          <tr class="ours"><td>Complex-Tex</td><td><b>Ours</b></td><td class="num"><b>28.73</b></td><td class="num"><b>20.24</b></td><td class="num"><b>0.963</b></td><td class="num"><b>0.029</b></td><td class="num"><b>0.968</b></td><td class="num"><b>19.4</b></td><td class="num">23.3</td><td class="num"><b>4.00</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">† 表示评分前对 GT 网格做了相似度对齐（不参与生成）。SUPRA-Tex 与 Pixal3D⋆ <b>共享同一套预测几何</b>，所以这里的差距纯粹来自外观流水线——这是本文一个设计得很好的对照。LPIPS 0.071→0.025 即 <b>−64.8%</b> ✓；Complex-Tex 0.070→0.029 即 <b>−58.6%</b> ✓</p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">端到端：重建质量与感知距离</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c2"></canvas></div>
+        <p class="chart-note">柱：PSNR_fg（左轴）；线：LPIPS×1000（右轴）。深紫为本文。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Table 4：对商业系统（45 张图，512 份有效配对评估）</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c3"></canvas></div>
+        <p class="chart-note">柱为人类偏好胜率（%），线为 VLM 打分（0–10）。注意 Hi3D 3.0 的 VLM Align 8.19 高于我们的 8.08。</p>
+      </div>
+    </div>
+
+    <div class="table-scroll" style="margin-top:18px">
+      <table>
+        <thead><tr><th>商业系统</th><th class="num">对齐 胜率↑</th><th class="num">PBR 胜率↑</th><th class="num">质量 胜率↑</th><th class="num">VLM 对齐</th><th class="num">VLM PBR</th><th class="num">VLM 质量</th></tr></thead>
+        <tbody>
+          <tr><td>Hunyuan3D v3.1</td><td class="num"><b>84.7%</b></td><td class="num"><b>85.1%</b></td><td class="num"><b>84.8%</b></td><td class="num">6.77</td><td class="num">8.67</td><td class="num">8.32</td></tr>
+          <tr><td>Rodin 2.5 (Hyper3D)</td><td class="num">75.8%</td><td class="num">72.3%</td><td class="num">75.5%</td><td class="num">6.81</td><td class="num">8.64</td><td class="num">8.38</td></tr>
+          <tr><td>Tripo H3.1</td><td class="num">71.6%</td><td class="num">62.9%</td><td class="num">67.8%</td><td class="num">7.71</td><td class="num">8.53</td><td class="num">8.28</td></tr>
+          <tr><td>Meshy v7.1</td><td class="num">60.8%</td><td class="num">54.7%</td><td class="num">57.6%</td><td class="num">7.74</td><td class="num">8.61</td><td class="num">8.34</td></tr>
+          <tr><td>Hi3D 3.0</td><td class="num">51.1%</td><td class="num">44.9%</td><td class="num">51.1%</td><td class="num"><b>8.19</b></td><td class="num">8.67</td><td class="num"><b>8.37</b></td></tr>
+          <tr class="ours"><td><b>Ours（VLM 得分）</b></td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">8.08</td><td class="num">8.67</td><td class="num">8.34</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">胜率 = 本文胜出票数 ÷ （总票数 − 平票）。本文只用了公开数据训练。</p>
+
+    <div class="callout warn">
+      <b>本站提醒两处口径：</b>① 商业对比时本文额外用<b>合成的背面视图</b>做条件（two-view conditioning），而商业系统只收到原始参考图——论文说明了，但这不是对等比较。
+      ② <b>Hi3D 3.0 的 VLM Align 得分 8.19 高于本文的 8.08</b>，但人类偏好只有 51.1%（几乎抛硬币），而 PBR 胜率 44.9% 甚至低于半数。VLM 与人类在这个系统上结论相反，论文未讨论。
+      <b>本站此前在 Hi3D 3.0 专题页里也记录过一件事：它的铭文召回是竞品最高，但那是另一套评测。</b>
+    </div>
+  </div>
+</section>
+
+<!-- ⑧ 消融 -->
+<section id="abl">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 08 · 消融</div>
+      <h2>Table 5：贡献到底来自哪一块</h2>
+      <p>所有架构变体共享训练数据、初始化协议、优化设置、训练预算与选点规则；同一几何、相机、观测支撑与采样种子。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>变体</th><th>观测内容</th><th>条件架构</th><th class="num">DTC Shad.↑</th><th class="num">DTC Alb.↑</th><th class="num">DTC MR↓</th><th class="num">Cpx Shad.↑</th><th class="num">Cpx Alb.↑</th><th class="num">Cpx MR↓</th></tr></thead>
+        <tbody>
+          <tr><td>Residual injection</td><td>预测 PBR</td><td>观测 latent 以逐层残差相加</td><td class="num">21.47</td><td class="num">18.81</td><td class="num">0.086</td><td class="num">20.35</td><td class="num">17.18</td><td class="num">0.136</td></tr>
+          <tr><td>Joint-update attention</td><td>预测 PBR</td><td>观测状态在部分层更新，生成状态每层更新</td><td class="num">22.32</td><td class="num">19.40</td><td class="num">0.043</td><td class="num">20.63</td><td class="num">17.96</td><td class="num">0.097</td></tr>
+          <tr><td>Fixed MR</td><td>albedo + M=0, R=0.5</td><td>同本文架构</td><td class="num">21.90</td><td class="num">19.53</td><td class="num">0.064</td><td class="num">19.95</td><td class="num">18.15</td><td class="num">0.189</td></tr>
+          <tr><td>Dataset-mean MR</td><td>albedo + 数据集均值 M/R</td><td>同本文架构</td><td class="num">22.08</td><td class="num">19.53</td><td class="num">0.232</td><td class="num">20.07</td><td class="num">18.13</td><td class="num">0.258</td></tr>
+          <tr class="ours"><td><b>Ours</b></td><td>预测 PBR</td><td>只读观测 + 交错更新</td><td class="num"><b>22.34</b></td><td class="num"><b>19.55</b></td><td class="num"><b>0.042</b></td><td class="num"><b>20.64</b></td><td class="num"><b>18.12</b></td><td class="num"><b>0.096</b></td></tr>
+          <tr class="dim"><td>Oracle PBR (GT)</td><td>GT PBR</td><td>同本文架构（材质质量参考）</td><td class="num">24.65</td><td class="num">22.17</td><td class="num">0.011</td><td class="num">21.76</td><td class="num">20.63</td><td class="num">0.030</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">消融：保真度与材质误差</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c4"></canvas></div>
+        <p class="chart-note">柱：DTC-Tex shaded PSNR_fg（左轴）；线：DTC-Tex MR MAE×1000（右轴，越低越好）。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:10px">四条读数</h4>
+        <ul class="tight">
+          <li><b>交错的独立增益很小</b>：vs Joint-update，DTC shaded +0.02 dB、Complex +0.01 dB。论文的用词是 "matches"。收益在 albedo（+0.15 / +0.16 dB）、MR MAE 与 <b>1.20× / 1.18× 的速度</b>。</li>
+          <li><b>Residual injection 明显最差</b>（21.47 vs 22.34，−0.87 dB）→ 用注意力而不是加性残差来消费观测，这个选择是对的。</li>
+          <li><b>预测的 MR 确实有用</b>：相对固定 M=0/R=0.5 提升 0.44 / 0.69 dB；相对数据集均值提升 0.26 / 0.57 dB，且 MR MAE 明显更低。</li>
+          <li><b>Oracle PBR 还有 2.31 / 1.12 dB 的空间</b> → 2D 估计是明确瓶颈；换 Qwen-Image-2.1（Ours‡）把差距缩到 0.98 / 0.47 dB。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">Table 6：采样时间与显存（H800，210 例）</h4>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>配置</th><th class="num">采样 (s)↓</th><th class="num">加速</th><th class="num">峰值均值 GiB</th><th class="num">峰值最大 GiB</th></tr></thead>
+            <tbody>
+              <tr><td>DTC · Joint-update</td><td class="num">10.103</td><td class="num">1.000×</td><td class="num">12.586</td><td class="num">13.757</td></tr>
+              <tr class="ours"><td>DTC · Ours</td><td class="num"><b>8.440</b></td><td class="num">1.197×</td><td class="num">12.255</td><td class="num">13.794</td></tr>
+              <tr class="ours"><td>DTC · Ours + KV cache</td><td class="num"><b>7.909</b></td><td class="num">1.277×</td><td class="num">14.191</td><td class="num">16.978</td></tr>
+              <tr><td>Cpx · Joint-update</td><td class="num">9.970</td><td class="num">1.000×</td><td class="num">12.562</td><td class="num">14.293</td></tr>
+              <tr class="ours"><td>Cpx · Ours</td><td class="num"><b>8.440</b></td><td class="num">1.181×</td><td class="num">12.243</td><td class="num">14.699</td></tr>
+              <tr class="ours"><td>Cpx · Ours + KV cache</td><td class="num"><b>7.931</b></td><td class="num">1.257×</td><td class="num">14.049</td><td class="num">17.340</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13.5px;color:var(--ink2);margin-top:10px">KV cache 换来 ~6% 速度，代价是峰值显存 <b>+1.94 / +1.81 GiB</b>，但每个 Euler 步的 latent 输出完全一致。交错调度让 query token 减少 <b>17.54% / 16.91%</b>——论文特别说明"these are not total FLOP reductions"。</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14.5px;margin-bottom:8px">附录 E.4：早期学习曲线（TeaPot，oracle 材质）</h4>
+        <div class="chart-box" style="height:300px"><canvas id="c5"></canvas></div>
+        <p class="chart-note">同样初始化于 TRELLIS.2、同样训练数据；本文用 GT PBR 观测，Pixal3D⋆ 用对应 shaded RGB 图像特征。</p>
+        <div class="callout" style="margin-top:12px">
+          step 300：<b>29.46 vs 18.72 dB</b>；step 1500：30.86 vs 20.89 dB、SSIM 0.9938 vs 0.9557、LPIPS 0.00436 vs 0.03996。
+          <b>本文绝大部分提升发生在前 300 步</b>。但论文自己声明：这没有隔离条件化形式与两者的架构/优化差异，且只在单个物体上做。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑨ 局限 -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SECTION 09 · 局限</div>
+      <h2>论文 4 条 + 本站补充 5 条</h2>
+      <p>前 4 条出自第 5 节 Limitations（含 Figure 6 的失败案例），后 5 条是本站判断，<b>不是论文原话</b>。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="concl">
+        <span class="n">论文原文 01</span>
+        <h4>图像与几何差异过大时，观测会落到错误的表面位置</h4>
+        <p>端到端用 Pixal3D⋆ 预测的几何。形状或位姿差异大，投影的材质观测就会错位。对应过滤能去掉一部分不可靠观测，<b>但无法修正底层的几何</b>——而几何在材质生成期间是固定的。</p>
+      </div>
+      <div class="concl">
+        <span class="n">论文原文 02</span>
+        <h4>上游几何在未见区域的"幻觉结构"去不掉</h4>
+        <p>即便可见形状对得上，Pixal3D⋆ 也可能生成不可信的未见结构。SUPRA-Tex 的条件是<b>固定几何</b>，无法移除这些结构，只能让它们的存在降低最终资产质量。</p>
+      </div>
+      <div class="concl">
+        <span class="n">论文原文 03</span>
+        <h4>跨可见性边界的补全会不一致</h4>
+        <p>文字或图案延伸到可见区之外时（例如罐身上只露出一半的字母），模型可能保住了可见片段，<b>却无法把笔画与布局连贯地延续到背面</b>。</p>
+      </div>
+      <div class="concl">
+        <span class="n">论文原文 04</span>
+        <h4>2D 材质估计错误会被保留下来</h4>
+        <p>例如给非金属的漆木表面赋了高 metallic。3D 生成器会保留这个错误，在渲染或重光照下产生不合理的反射。<b>"准确传递参考细节"不等于"正确分解材质"</b>。</p>
+      </div>
+      <div class="concl c-indigo">
+        <span class="n">论文原文 05 · 诚实度</span>
+        <h4>失败案例没有做对照实验</h4>
+        <p>论文明确：<i>"These are qualitative cases, without corrected-geometry controls or measured unseen-surface ground truth."</i> 也就是说 Figure 6 展示的是现象描述，<b>不是量化归因</b>。同一段还提到背面视图可能改善最后一例，但"we report no paired two-view result"。</p>
+      </div>
+      <div class="concl c-red">
+        <span class="n">本站 06</span>
+        <h4>交错架构的独立贡献被高估了</h4>
+        <p>见第 ⑧ 节：vs Joint-update attention，shaded PSNR_fg 只差 0.02 / 0.01 dB。真正的差异化在 albedo、MR MAE 与 1.20× 速度。<b>引用"交错流 Transformer"时应说清它带来的主要是什么。</b></p>
+      </div>
+      <div class="concl c-orange">
+        <span class="n">本站 07</span>
+        <h4>优势集中在"看得见的地方"</h4>
+        <p>Table 2：DTC-Tex 参考视图领先 +3.54 dB，新视图只有 +1.76 dB；Complex-Tex 是 +2.87 与 +1.09。这正是 super-alignment 设计的预期结果，但也意味着<b>未见区域的补全优势要小得多</b>——它仍是生成问题，不是对齐问题。</p>
+      </div>
+      <div class="concl c-purple">
+        <span class="n">本站 08</span>
+        <h4>MAE 口径不是物理线性误差</h4>
+        <p>附录 D.1 明确：metallic / roughness MAE 是在<b>存储的 PNG 编码</b>上计算的，测的是编码值差异而非物理线性材质误差。<b>跨论文的 Met./Rough. MAE 数字不能直接比。</b></p>
+      </div>
+      <div class="concl c-teal">
+        <span class="n">本站 09</span>
+        <h4>算力门槛，与同组工作的定位</h4>
+        <p>3D 生成器 30,000 步、global batch 576、<b>64 GPUs</b>——这不是小团队能复现的规模（对比同组 Gate3DGen 的 32 GPU / 15,000 步）。好消息是<b>代码与权重已开源</b>。与 <a href="../gate3dgen/index.html">Gate3DGen</a>（同一批作者、同一 supra-3d 项目页）构成上下游互补：一个管"输入该不该修"，一个管"材质怎么落位"。</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:20px">
+      <b>一句话总结。</b>SUPRA-Tex 的价值不在"又一个更强的纹理模型"，而在于它把一个常被默认的前提拆开重新问了一遍：
+      <b>3D 生成器真的需要自己从视觉特征里推断材质吗？</b>
+      答案是把材质估计交给 2D 先验、把对齐交给相机投影，只留补全给 3D 模型——然后用一个<b>与生成目标同 latent 空间、可直接解码的原生观测</b>把两者接起来。
+      证据链里最硬的一条不在主表，而在附录 Figure 10：<b>300 步就到 29.46 dB，而视觉特征条件化的对照 1500 步才 20.89 dB</b>。
+      限制也很清楚——它建立在 TRELLIS.2 的几何与材质 VAE 之上，几何错了材质就跟着错，而 2D 估计本身还只有 19–20 dB，离 Oracle 还有 2 dB 的空间。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>SUPRA-Tex: 3D Generation with Super-Aligned Texture</b> ·
+      Chen Yang, Jiemin Fang, Fanpeng Meng, Zihao Huang, Jichen Pang, Guanjun Wu, Zhikuan Bao, Qi Tian ·
+      华为 / 上海交通大学 / 华中科技大学 · arXiv:2610.22352v1（2026-10-15）
+    </p>
+    <p style="margin-top:8px">
+      本页所有数值均取自该论文正文与补充材料（Table 1–9、Figure 1–11、Section 3–5、Appendix A–H），未做外推；
+      文中标注 ✓ 的换算（如 −64.8%、−58.6%）为本站按表中原始数字交叉复核的结果。
+      标注「本站」的段落为读完全文后的分析，<b>不是论文原话</b>。
+    </p>
+    <p style="margin-top:8px">
+      <a href="https://arxiv.org/abs/2610.22352v1" target="_blank">arXiv:2610.22352v1</a> ·
+      <a href="https://supra-3d.github.io/supratex" target="_blank">项目页（代码与权重）</a> ·
+      <a href="../gate3dgen/index.html">Gate3DGen 专题页（同组工作）</a> ·
+      <a href="../channel-match/index.html">Channel Match 专题页（同为 TRELLIS.2 底座）</a> ·
+      <a href="../pbr-materials/index.html">PBR 材质论文调研</a> ·
+      <a href="../3d-generation-2026/index.html">3D 生成前沿合集 →</a> ·
+      <a href="../index.html">返回首页</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  var C = (typeof Chart === 'undefined') ? null : Chart;
+  var FF = '"Segoe UI","PingFang SC",system-ui,sans-serif';
+  var GRID = '#eef2f8';
+
+  function mkAxis(extra){
+    var a = {ticks:{font:{size:11,family:FF}}, grid:{color:GRID}};
+    if (extra) { for (var k in extra) { a[k] = extra[k]; } }
+    if (extra && extra.position === 'right' && !extra.grid) { a.grid = {display:false}; }
+    return a;
+  }
+
+  function opts(yLeft, yRight){
+    var s = {
+      x:{ticks:{font:{size:10.5,family:FF}, autoSkip:false, maxRotation:34, minRotation:0}, grid:{display:false}},
+      y:mkAxis(yLeft)
+    };
+    if (yRight) { s.y1 = mkAxis(yRight); }
+    return {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{labels:{font:{size:11,family:FF}, boxWidth:12, boxHeight:12, usePointStyle:true}},
+        tooltip:{titleFont:{size:12.5,family:FF}, bodyFont:{size:12,family:FF}}
+      },
+      scales:s
+    };
+  }
+
+  function build(id, type, data, yLeft, yRight){
+    var el = document.getElementById(id);
+    if (!el) return;
+    new C(el, {type:type, data:data, options:opts(yLeft, yRight)});
+  }
+
+  if (C) {
+    // c1: Table 2 参考 vs 新视图
+    build('c1','bar',{
+      labels:['Step1X-3D','MV-Adapter','Ink3D','UniTEX','MVPainter','TEXGen','LumiTex','HY3D 2.1','TRELLIS.2','Pixal3D⋆','Ours'],
+      datasets:[
+        {label:'参考视图 PSNR_fg ↑', data:[14.288,16.079,16.365,16.132,16.789,22.814,18.598,16.553,18.609,21.837,25.372],
+         backgroundColor:['#dcd9f5','#dcd9f5','#dcd9f5','#dcd9f5','#dcd9f5','#c9c2f0','#dcd9f5','#dcd9f5','#dcd9f5','#b6acec','#6366f1']},
+        {type:'line', label:'新视图 PSNR_fg ↑', data:[14.207,15.706,17.128,16.572,17.640,18.029,19.434,17.979,19.803,20.377,22.134],
+         borderColor:'#0d9488', backgroundColor:'#0d9488', tension:.25, pointRadius:3.5}
+      ]
+    }, {min:13, max:26});
+
+    // c2: 端到端
+    build('c2','bar',{
+      labels:['Step1X-3D','HY3D 2.1','UniLat3D','CUPID','TRELLIS.2','Pixal3D⋆','Ours'],
+      datasets:[
+        {label:'DTC PSNR_fg ↑', data:[12.00,14.52,11.89,12.38,15.71,19.90,20.79],
+         backgroundColor:['#dcd9f5','#dcd9f5','#dcd9f5','#dcd9f5','#dcd9f5','#b6acec','#6366f1']},
+        {type:'line', label:'DTC LPIPS ×1000 ↓', data:[115,95,105,93,98,71,25],
+         borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.25, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:10, max:22}, {position:'right', min:20, max:120});
+
+    // c3: 商业对比
+    build('c3','bar',{
+      labels:['HY3D v3.1','Rodin 2.5','Tripo H3.1','Meshy 7.1','Hi3D 3.0'],
+      datasets:[
+        {label:'对齐 胜率 % ↑', data:[84.7,75.8,71.6,60.8,51.1], backgroundColor:'#b6acec'},
+        {label:'PBR 胜率 % ↑', data:[85.1,72.3,62.9,54.7,44.9], backgroundColor:'#8b7ff0'},
+        {label:'质量 胜率 % ↑', data:[84.8,75.5,67.8,57.6,51.1], backgroundColor:'#6366f1'},
+        {type:'line', label:'VLM 对齐 (0–10)', data:[6.77,6.81,7.71,7.74,8.19],
+         borderColor:'#ea8a3c', backgroundColor:'#ea8a3c', tension:.2, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:40, max:90}, {position:'right', min:6, max:9});
+
+    // c4: 消融
+    build('c4','bar',{
+      labels:['Residual','Joint-update','Fixed MR','Mean MR','Ours','Oracle GT'],
+      datasets:[
+        {label:'DTC Shaded PSNR_fg ↑', data:[21.47,22.32,21.90,22.08,22.34,24.65],
+         backgroundColor:['#dcd9f5','#c9c2f0','#dcd9f5','#dcd9f5','#6366f1','#bfe0d0']},
+        {type:'line', label:'DTC MR MAE ×1000 ↓', data:[86,43,64,232,42,11],
+         borderColor:'#dc4c4c', backgroundColor:'#dc4c4c', tension:.2, pointRadius:4, yAxisID:'y1'}
+      ]
+    }, {min:21, max:25}, {position:'right', min:0, max:240});
+
+    // c5: 早期学习
+    build('c5','bar',{
+      labels:['step 300','step 1500'],
+      datasets:[
+        {label:'Ours（GT PBR 观测）↑', data:[29.46,30.86], backgroundColor:'#6366f1'},
+        {label:'Pixal3D⋆（shaded RGB 特征）↑', data:[18.72,20.89], backgroundColor:'#c9c2f0'}
+      ]
+    }, {min:16, max:32});
+  } else {
+    document.querySelectorAll('.chart-box').forEach(function(box){
+      var tip = document.createElement('p');
+      tip.className = 'chart-note';
+      tip.textContent = '图表需要联网加载 Chart.js，当前离线。所有数据见上方表格。';
+      box.appendChild(tip);
+    });
+  }
+})();
+</script>
+</body>
+</html>

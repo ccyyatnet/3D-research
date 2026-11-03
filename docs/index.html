@@ -286,6 +286,18 @@
         <div class="p-go">进入解读 →</div>
       </a>
 
+      <a class="p-card" href="./supra-tex/index.html">
+        <div class="p-badges"><span class="p-badge b-survey">🔬 深度解读</span><span class="p-badge b-date">2026-11-03 上线</span></div>
+        <h3>SUPRA-Tex：未观测区域，就不要填零</h3>
+        <p class="p-desc">华为 × 上海交大 × 华科 · arXiv:2610.22352 —— 主流 PBR 生成把"可见材质估计、表面对齐、3D 补全"三件事塞进一个模型里做，而这篇把它们<b>拆开</b>：先用 MLLM 图像编辑模型<b>单步</b>预测参考视图的 albedo / MR / normal（1.2 s，1024²），再把这份预测按相机投影到可见表面、用<b>冻结的材质 VAE 编码器</b>压成与生成目标同一 latent 空间的观测——<b>未观测区域直接省略，不填零、不填占位</b>，只附覆盖率与边界距离两个标量。随后的交错流 Transformer 让观测流<b>全程只读</b>当锚点，生成流在 60 个 block 间交替查询未观测与全表面。</p>
+        <div class="p-meta">
+          <div><b>28.65</b>DTC-Tex PSNR（Pixal3D⋆ 26.88）</div>
+          <div><b>1.2 s</b>单步参考视图 PBR 估计</div>
+          <div><b>85.1%</b>对 Hunyuan3D v3.1 的 PBR 胜率</div>
+        </div>
+        <div class="p-go">进入解读 →</div>
+      </a>
+
       <div class="p-card soon">
         <div class="big">🚧</div>
         <div>更多论文解读筹备中<br>敬请期待</div>
