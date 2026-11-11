@@ -52,6 +52,40 @@
   .p-card.soon .big{font-size:30px;margin-bottom:8px}
   footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px;text-align:center}
   @media (max-width:860px){.cards{grid-template-columns:1fr}.hero h1{font-size:28px}}
+
+  /* === 单篇论文专题折叠模块（新增） === */
+  .recent{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:22px 0 16px;font-size:13px}
+  .recent-label{font-weight:700;color:var(--ink2);font-size:12.5px;margin-right:2px}
+  .recent a{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);
+    border-radius:99px;padding:5px 12px;font-size:12.5px;color:var(--ink2);box-shadow:var(--shadow)}
+  .recent a:hover{border-color:#b9cdf5;color:var(--blue);text-decoration:none}
+  .recent a small{color:var(--ink3);font-size:11px}
+  .fold{margin-top:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+    box-shadow:var(--shadow);overflow:hidden}
+  .fold-sum{display:flex;align-items:center;gap:14px;padding:20px 24px;cursor:pointer;list-style:none;user-select:none}
+  .fold-sum::-webkit-details-marker{display:none}
+  .fold-sum:hover{background:#fafbff}
+  .fold-ico{font-size:24px;line-height:1}
+  .fold-text{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+  .fold-title{font-size:18px;font-weight:700;letter-spacing:-.2px}
+  .fold-num{display:inline-block;margin-left:8px;font-size:12px;font-weight:700;color:#6d28d9;
+    background:#ede9fe;border-radius:99px;padding:2px 10px;vertical-align:2px}
+  .fold-hint{font-size:12.5px;color:var(--ink3)}
+  .fold-act{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap;
+    background:#eef2fb;border-radius:99px;padding:7px 14px}
+  .fold-act .txt-o{display:none}
+  .fold[open] .fold-act .txt-c{display:none}
+  .fold[open] .fold-act .txt-o{display:inline}
+  .fold[open] .fold-sum{border-bottom:1px solid var(--line)}
+  .fold-cards{padding:18px;gap:14px}
+  .fold-cards .p-card{padding:18px 20px;border-radius:12px}
+  .fold-cards .p-card h3{font-size:16.5px}
+  .fold-cards .p-card .p-desc{font-size:13px}
+  .fold-cards .p-meta{margin-top:10px;gap:12px}
+  .fold-cards .p-meta b{font-size:15px}
+  .fold-cards .p-go{margin-top:12px;font-size:13px}
+  .p-card.soon{grid-column:1/-1;min-height:110px}
+  @media (max-width:860px){.fold-sum{padding:16px}.fold-act{display:none}.fold-cards{padding:12px}}
 </style>
 </head>
 <body>
@@ -81,19 +115,6 @@
     <h2 class="sec-title">内容导航</h2>
     <p class="sec-sub">持续更新中 · 点击卡片进入对应页面</p>
     <div class="cards">
-
-      <a class="p-card" href="./buffalo/index.html">
-        <div class="p-badges"><span class="p-badge b-deep">论文深度解读</span><span class="p-badge b-date">2026-08-06 上线</span></div>
-        <h3>Hunyuan3D-Buffalo 1.0：统一的可扩展 3D 生成、理解与编辑多模态模型</h3>
-        <p class="p-desc">腾讯混元 · arXiv:2608.02711 —— 单架构统一 3D 理解 / 文生 3D / 指令编辑 / 部件生成；87M 训练语料与 Nano3D-v2 数据引擎全解析。</p>
-        <div class="p-meta">
-          <div><b>87M</b>训练语料</div>
-          <div><b>4 in 1</b>统一架构</div>
-          <div><b>−86.7%</b>编辑 CD 降幅</div>
-        </div>
-        <div class="p-go">进入阅读 →</div>
-      </a>
-
       <a class="p-card" href="./3d-generation-2026/index.html">
         <div class="p-badges"><span class="p-badge b-track">前沿追踪合集</span><span class="p-badge b-date">2026-10-30 更新</span></div>
         <h3>2026 年 6 月以来 3D 生成论文速览</h3>
@@ -104,30 +125,6 @@
           <div><b>161 篇</b>FF-3DGS 重建</div>
         </div>
         <div class="p-go">进入速览 →</div>
-      </a>
-
-      <a class="p-card" href="./trellis2/index.html">
-        <div class="p-badges"><span class="p-badge b-deep">论文深度解读</span><span class="p-badge b-date">2026-08-06 上线</span></div>
-        <h3>TRELLIS 2：原生且紧凑的结构化 3D 潜空间生成</h3>
-        <p class="p-desc">清华 + Microsoft · arXiv:2512.14692 —— O-Voxel 全向体素（任意拓扑 + PBR 含透明度）+ SC-VAE 16× 压缩 + 4B flow-matching DiT，重建与生成双 SOTA，全量开源。</p>
-        <div class="p-meta">
-          <div><b>16×</b>空间压缩率</div>
-          <div><b>0.971</b>重建 MD F1</div>
-          <div><b>66.5%</b>生成用户偏好</div>
-        </div>
-        <div class="p-go">进入阅读 →</div>
-      </a>
-
-      <a class="p-card" href="./editflow3d/index.html">
-        <div class="p-badges"><span class="p-badge b-deep">论文深度解读</span><span class="p-badge b-date">2026-08-06 上线</span></div>
-        <h3>EditFlow3D：轨迹保持的 3D 资产生成自动化局部编辑</h3>
-        <p class="p-desc">北航 + 上海交大 + 拓竹 · arXiv:2608.03179 —— 免训练免反转局部编辑：VLM 自动构建引导图 + 精修 3D mask，DFG + TPG 软约束流编辑，另建 EditFlow-Bench 基准。</p>
-        <div class="p-meta">
-          <div><b>36.53</b>EditFlow-Bench PSNR</div>
-          <div><b>57%</b>视觉质量用户偏好</div>
-          <div><b>&lt;1min</b>每资产编辑耗时</div>
-        </div>
-        <div class="p-go">进入阅读 →</div>
       </a>
 
       <a class="p-card" href="./transparent-materials/index.html">
@@ -152,6 +149,73 @@
           <div><b>6/9</b>glTF 通道空白</div>
         </div>
         <div class="p-go">进入梳理 →</div>
+      </a>
+
+      <a class="p-card" href="./native-3d-texture/index.html">
+        <div class="p-badges"><span class="p-badge b-survey">📋 调研资料</span><span class="p-badge b-date">2026-11-11 上线</span></div>
+        <h3>原生 3D 纹理生成 · 9 篇论文研究资料</h3>
+        <p class="p-desc">调研人 <b>yizhang</b> · 判据是<b>生成变量所在的空间</b>，不是是否用了 2D 模型——现有多视角生成器仍可保留为条件来源。覆盖 TRELLIS / TRELLIS.2 / Pixal3D / NaTex / TEXTRIX / Hitem3D 2.0 / SUPRA-Tex / TaoTex / Tex-Zero 九篇，<b>19 张论文原图内嵌</b>，逐篇按「核心贡献 / 原图怎么读 / 架构与训练披露 / 开放程度 / 训练启发」五件事拆解，并给出数据契约、flow 时间方向、训练-推理对齐与分层评测协议。左侧带可跳转目录，含各论文版本与年月。</p>
+        <div class="p-meta">
+          <div><b>9 篇</b>指定论文精读</div>
+          <div><b>19 张</b>论文原图内嵌</div>
+          <div><b>yizhang</b>调研人</div>
+        </div>
+        <div class="p-go">进入资料 →</div>
+      </a>
+
+    </div>
+
+    <div class="recent" aria-label="最新上线的单篇论文解读">
+      <span class="recent-label">最新解读</span>
+      <a href="./texture-consolidation/index.html">Texture Consolidation <small>11-03</small></a>
+      <a href="./supra-tex/index.html">SUPRA-Tex <small>11-03</small></a>
+      <a href="./gate3dgen/index.html">Gate3DGen <small>11-03</small></a>
+    </div>
+
+    <details class="fold" id="topic-fold">
+      <summary class="fold-sum">
+        <span class="fold-ico">📚</span>
+        <span class="fold-text">
+          <span class="fold-title">单篇论文深度解读 <span class="fold-num">16 篇</span></span>
+          <span class="fold-hint">Buffalo / TRELLIS.2 / Luce / GATOR / Hi3D 3.0 / Channel Match … 按上线时间排列，点此展开全部</span>
+        </span>
+        <span class="fold-act"><span class="txt-c">展开 ▾</span><span class="txt-o">收起 ▴</span></span>
+      </summary>
+      <div class="cards fold-cards" aria-label="单篇论文深度解读列表">
+      <a class="p-card" href="./buffalo/index.html">
+        <div class="p-badges"><span class="p-badge b-deep">论文深度解读</span><span class="p-badge b-date">2026-08-06 上线</span></div>
+        <h3>Hunyuan3D-Buffalo 1.0：统一的可扩展 3D 生成、理解与编辑多模态模型</h3>
+        <p class="p-desc">腾讯混元 · arXiv:2608.02711 —— 单架构统一 3D 理解 / 文生 3D / 指令编辑 / 部件生成；87M 训练语料与 Nano3D-v2 数据引擎全解析。</p>
+        <div class="p-meta">
+          <div><b>87M</b>训练语料</div>
+          <div><b>4 in 1</b>统一架构</div>
+          <div><b>−86.7%</b>编辑 CD 降幅</div>
+        </div>
+        <div class="p-go">进入阅读 →</div>
+      </a>
+
+      <a class="p-card" href="./trellis2/index.html">
+        <div class="p-badges"><span class="p-badge b-deep">论文深度解读</span><span class="p-badge b-date">2026-08-06 上线</span></div>
+        <h3>TRELLIS 2：原生且紧凑的结构化 3D 潜空间生成</h3>
+        <p class="p-desc">清华 + Microsoft · arXiv:2512.14692 —— O-Voxel 全向体素（任意拓扑 + PBR 含透明度）+ SC-VAE 16× 压缩 + 4B flow-matching DiT，重建与生成双 SOTA，全量开源。</p>
+        <div class="p-meta">
+          <div><b>16×</b>空间压缩率</div>
+          <div><b>0.971</b>重建 MD F1</div>
+          <div><b>66.5%</b>生成用户偏好</div>
+        </div>
+        <div class="p-go">进入阅读 →</div>
+      </a>
+
+      <a class="p-card" href="./editflow3d/index.html">
+        <div class="p-badges"><span class="p-badge b-deep">论文深度解读</span><span class="p-badge b-date">2026-08-06 上线</span></div>
+        <h3>EditFlow3D：轨迹保持的 3D 资产生成自动化局部编辑</h3>
+        <p class="p-desc">北航 + 上海交大 + 拓竹 · arXiv:2608.03179 —— 免训练免反转局部编辑：VLM 自动构建引导图 + 精修 3D mask，DFG + TPG 软约束流编辑，另建 EditFlow-Bench 基准。</p>
+        <div class="p-meta">
+          <div><b>36.53</b>EditFlow-Bench PSNR</div>
+          <div><b>57%</b>视觉质量用户偏好</div>
+          <div><b>&lt;1min</b>每资产编辑耗时</div>
+        </div>
+        <div class="p-go">进入阅读 →</div>
       </a>
 
       <a class="p-card" href="./luce/index.html">
@@ -309,19 +373,10 @@
         </div>
         <div class="p-go">进入解读 →</div>
       </a>
+      </div>
+    </details>
 
-      <a class="p-card" href="./native-3d-texture/index.html">
-        <div class="p-badges"><span class="p-badge b-survey">📋 调研资料</span><span class="p-badge b-date">2026-11-11 上线</span></div>
-        <h3>原生 3D 纹理生成 · 9 篇论文研究资料</h3>
-        <p class="p-desc">调研人 <b>yizhang</b> · 判据是<b>生成变量所在的空间</b>，不是是否用了 2D 模型——现有多视角生成器仍可保留为条件来源。覆盖 TRELLIS / TRELLIS.2 / Pixal3D / NaTex / TEXTRIX / Hitem3D 2.0 / SUPRA-Tex / TaoTex / Tex-Zero 九篇，<b>19 张论文原图内嵌</b>，逐篇按「核心贡献 / 原图怎么读 / 架构与训练披露 / 开放程度 / 训练启发」五件事拆解，并给出数据契约、flow 时间方向、训练-推理对齐与分层评测协议。左侧带可跳转目录，含各论文版本与年月。</p>
-        <div class="p-meta">
-          <div><b>9 篇</b>指定论文精读</div>
-          <div><b>19 张</b>论文原图内嵌</div>
-          <div><b>yizhang</b>调研人</div>
-        </div>
-        <div class="p-go">进入资料 →</div>
-      </a>
-
+    <div class="cards" style="margin-top:18px">
       <div class="p-card soon">
         <div class="big">🚧</div>
         <div>更多论文解读筹备中<br>敬请期待</div>
